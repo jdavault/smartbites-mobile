@@ -140,13 +140,7 @@ export default function LoginScreen() {
 
             {/* Main */}
             <View style={styles.main}>
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require('@/assets/images/smart-bites-logo.png')}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-              </View>
+              <Text style={styles.brandTitle}>SmartBites™</Text>
               <Text style={styles.subtitle}>
                 Sign in to continue your culinary journey
               </Text>
@@ -283,13 +277,12 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       flex: 1,
     },
 
-    logoContainer: {
-      alignItems: 'center',
+    brandTitle: {
+      fontSize: 47,
+      fontFamily: 'Inter-Bold',
+      color: '#FF8866',
+      textAlign: 'center',
       marginBottom: 15,
-    },
-    logo: {
-      width: 240,
-      height: 240,
     },
     subtitle: {
       fontSize: 16,
