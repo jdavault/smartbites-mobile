@@ -76,7 +76,7 @@ export default function SplashScreen() {
 
             {/* Middle: app-store block on web, native CTAs on devices */}
             <View style={styles.middleGroup}>
-              {Platform.OS === 'web' && (
+              {Platform.OS === 'webTemp' && (
                 <Animated.View
                   style={[styles.appStoreContainer, { opacity: buttonsAnim }]}
                 >
