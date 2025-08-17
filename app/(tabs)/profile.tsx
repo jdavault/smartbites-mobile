@@ -193,7 +193,7 @@ export default function ProfileScreen() {
     header: {
       paddingHorizontal: 24,
       paddingTop: 16,
-      paddingBottom: 24,
+      paddingBottom: 12,
     },
     title: {
       fontSize: 28,
@@ -287,8 +287,8 @@ export default function ProfileScreen() {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
-      marginTop: 24,
-      marginBottom: 12,
+      marginTop: 12,
+      marginBottom: 8,
       paddingHorizontal: 24,
     },
 
