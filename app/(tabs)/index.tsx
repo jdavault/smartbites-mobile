@@ -190,7 +190,7 @@ export default function SearchScreen() {
       marginLeft: 16,
     },
     title: {
-      fontSize: 28,
+      fontSize: 22,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
       marginBottom: 8,
