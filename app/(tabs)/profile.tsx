@@ -221,6 +221,12 @@ export default function ProfileScreen() {
     flex2: { 
       flex: 2 
     },
+    zipContainer: {
+      width: 80,
+    },
+    phoneContainer: {
+      flex: 1,
+    },
     
     input: {
       borderWidth: 1,
@@ -483,23 +489,27 @@ export default function ProfileScreen() {
           </View>
           
           <View style={styles.row}>
-            <TextInput
-              style={[styles.input, styles.flex1]}
-              value={profile.zip}
-              onChangeText={(text) => setProfile(prev => ({ ...prev, zip: text }))}
-              placeholder="ZIP"
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="number-pad"
-              maxLength={10}
-            />
-            <TextInput
-              style={[styles.input, styles.flex2]}
-              value={profile.phone}
-              onChangeText={(text) => setProfile(prev => ({ ...prev, phone: text }))}
-              placeholder="Phone"
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="phone-pad"
-            />
+            <View style={styles.zipContainer}>
+              <TextInput
+                style={styles.input}
+                value={profile.zip}
+                onChangeText={(text) => setProfile(prev => ({ ...prev, zip: text }))}
+                placeholder="ZIP"
+                placeholderTextColor={colors.textSecondary}
+                keyboardType="number-pad"
+                maxLength={10}
+              />
+            </View>
+            <View style={styles.phoneContainer}>
+              <TextInput
+                style={styles.input}
+                value={profile.phone}
+                onChangeText={(text) => setProfile(prev => ({ ...prev, phone: text }))}
+                placeholder="Phone"
+                placeholderTextColor={colors.textSecondary}
+                keyboardType="phone-pad"
+              />
+            </View>
           </View>
         </View>
         </View>
