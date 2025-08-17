@@ -317,6 +317,14 @@ export default function ProfileScreen() {
     sectionTitle: {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
+      color: colors.primary,
+      marginTop: 2,
+      marginBottom: 8,
+      paddingHorizontal: 24,
+    },
+    sectionTitleDiet: {
+      fontSize: 18,
+      fontFamily: 'Inter-SemiBold',
       color: colors.dietary,
       marginTop: 2,
       marginBottom: 8,
@@ -631,7 +639,7 @@ export default function ProfileScreen() {
             </View>
           )}
 
-          <Text style={styles.sectionTitle}>Dietary Preferences</Text>
+          <Text style={styles.sectionTitleDiet}>Dietary Preferences</Text>
           {dietaryLoading ? (
             <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
               <ActivityIndicator size="small" color={colors.dietary} />
