@@ -251,7 +251,7 @@ const getStyles = (colors: any) =>
       fontSize: 20,
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
-      marginTop: 16,
+      marginTop: 8,
       marginBottom: 16,
     },
 
