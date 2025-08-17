@@ -225,7 +225,7 @@ export default function ProfileScreen() {
       width: 80,
     },
     phoneContainer: {
-      flex: 1,
+      width: 140,
     },
     
     input: {
@@ -233,7 +233,7 @@ export default function ProfileScreen() {
       borderColor: colors.border,
       borderRadius: 9,
       paddingHorizontal: 12,
-      paddingVertical: 6,
+      paddingVertical: 9,
       fontSize: 15,
       fontFamily: 'Inter-Regular',
       color: colors.text,
