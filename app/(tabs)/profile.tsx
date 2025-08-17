@@ -233,7 +233,7 @@ export default function ProfileScreen() {
       borderColor: colors.border,
       borderRadius: 9,
       paddingHorizontal: 12,
-      paddingVertical: 9,
+      paddingVertical: 6,
       fontSize: 15,
       fontFamily: 'Inter-Regular',
       color: colors.text,
