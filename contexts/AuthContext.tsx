@@ -185,9 +185,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
       
-      // Navigate to auth screen
-      router.replace('/(auth)');
-      
     } catch (error) {
       console.error('Sign out error:', error);
       
@@ -207,9 +204,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('Storage clear failed:', e);
         }
       }
-      
-      // Navigate to auth screen even if there was an error
-      router.replace('/(auth)');
     }
   };
 
