@@ -85,7 +85,7 @@ export const Colors: ColorsType = {
   warning: '#F59E0B', // keep parity with old constants
   success: '#10B981',
   divider: 'rgba(0,0,0,0.1)',
-  dietary: '#073c51',
+  dietary: '#0B6082',
   dark: {
     50: '#f3f4f4', // Very light gray – "Snow Gray"
     100: '#e6e7e8', // Light gray – "Platinum"
