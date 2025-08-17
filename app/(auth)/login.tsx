@@ -277,12 +277,13 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       flex: 1,
     },
 
-    brandTitle: {
-      fontSize: 47,
-      fontFamily: 'Inter-Bold',
-      color: '#FF8866',
-      textAlign: 'center',
+    logoContainer: {
+      alignItems: 'center',
       marginBottom: 15,
+    },
+    logo: {
+      width: 240,
+      height: 240,
     },
     subtitle: {
       fontSize: 16,
