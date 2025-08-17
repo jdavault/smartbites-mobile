@@ -492,15 +492,15 @@ export default function ProfileScreen() {
               keyboardType="number-pad"
               maxLength={10}
             />
+            <TextInput
+              style={[styles.input, styles.flex2]}
+              value={profile.phone}
+              onChangeText={(text) => setProfile(prev => ({ ...prev, phone: text }))}
+              placeholder="Phone"
+              placeholderTextColor={colors.textSecondary}
+              keyboardType="phone-pad"
+            />
           </View>
-          <TextInput
-            style={styles.input}
-            value={profile.phone}
-            onChangeText={(text) => setProfile(prev => ({ ...prev, phone: text }))}
-            placeholder="Phone"
-            placeholderTextColor={colors.textSecondary}
-            keyboardType="phone-pad"
-          />
         </View>
         </View>
 
