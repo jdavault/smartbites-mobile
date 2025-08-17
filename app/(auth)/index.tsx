@@ -143,7 +143,7 @@ export default function SplashScreen() {
                 </Animated.View>
               )}
 
-              {Platform.OS !== 'web' && (
+              {Platform.OS !== 'webTemp' && (
                 <View style={styles.buttonContainer}>
                   <Link href="/(auth)/login" asChild>
                     <TouchableOpacity style={styles.primaryButton}>
