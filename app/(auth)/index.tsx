@@ -4,16 +4,19 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   Animated,
   useWindowDimensions,
   Linking,
   Platform,
 } from 'react-native';
 import { Link } from 'expo-router';
-import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+
+import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import ThemedLogo from '@/components/ThemedLogo';
 import { Spacing } from '@/constants/Spacing';
 import { Fonts, FontSizes } from '@/constants/Typography';
@@ -43,201 +46,192 @@ export default function SplashScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={{ flex: 1 }}>
+      {/* Gradient is the true page background */}
       <LinearGradient
         colors={[colors.background, colors.textRice]}
-        style={styles.gradient}
-      >
-        {/* New column wrapper spaces top/middle/bottom */}
-        <View style={styles.column}>
-          {/* Top: logo + subtitle*/}
-          <View style={styles.topGroup}>
-            <Animated.View
-              style={[styles.logoContainer, { opacity: logoAnim }]}
-            >
-              <ThemedLogo />
-            </Animated.View>
+        style={StyleSheet.absoluteFillObject}
+      />
 
-            <Animated.Text
-              style={[styles.subtitleTight, { opacity: buttonsAnim }]}
-            >
-              AI-powered recipes + allergy aware restaurant menu search so you
-              can dine in or dine out with confidence.
-            </Animated.Text>
-          </View>
-          {/* Middle: app store block (web only) + your CTA buttons */}
-          <View style={{ width: '100%', alignItems: 'center' }}>
-            {Platform.OS === 'web' && (
+      {/* Only protect the top safe area; footer handles bottom inset */}
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+        {/* Content wrapper restores page padding that used to be on the gradient */}
+        <View style={styles.content}>
+          <View style={styles.column}>
+            {/* Top: logo + subtitle (kept close together) */}
+            <View style={styles.topGroup}>
               <Animated.View
-                style={[styles.appStoreContainer, { opacity: buttonsAnim }]}
+                style={[styles.logoContainer, { opacity: logoAnim }]}
               >
-                <Text
-                  style={[styles.appStoreTitle, { color: colors.textPrimary }]}
+                <ThemedLogo />
+              </Animated.View>
+
+              <Animated.Text
+                style={[styles.subtitleTight, { opacity: buttonsAnim }]}
+              >
+                AI-powered recipes + allergy aware restaurant menu search so you
+                can dine in or dine out with confidence.
+              </Animated.Text>
+            </View>
+
+            {/* Middle: app-store block on web, native CTAs on devices */}
+            <View style={styles.middleGroup}>
+              {Platform.OS === 'web' && (
+                <Animated.View
+                  style={[styles.appStoreContainer, { opacity: buttonsAnim }]}
                 >
-                  Get the SmartBites™ Mobile App
-                </Text>
-                <Text
-                  style={[
-                    styles.appStoreSubtitle,
-                    { color: colors.textSecondary },
-                  ]}
-                >
-                  Download for the best experience on your phone
-                </Text>
-
-                <View style={styles.storeButtonsContainer}>
-                  <TouchableOpacity
-                    style={[
-                      styles.storeButton,
-                      { backgroundColor: colors.card },
-                    ]}
-                    onPress={() =>
-                      Linking.openURL(
-                        'https://apps.apple.com/app/smartbites/id6745743999'
-                      )
-                    }
-                  >
-                    <Text
-                      style={[
-                        styles.storeButtonText,
-                        { color: colors.textPrimary },
-                      ]}
-                    >
-                      📱 Download for iPhone
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.storeButton,
-                      { backgroundColor: colors.card },
-                    ]}
-                    onPress={() =>
-                      Linking.openURL(
-                        'https://play.google.com/store/apps/details?id=cooking.safeplate.allergyawarerecipefinder'
-                      )
-                    }
-                  >
-                    <Text
-                      style={[
-                        styles.storeButtonText,
-                        { color: colors.textPrimary },
-                      ]}
-                    >
-                      🤖 Download for Android
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* <View style={styles.webContinueContainer}>
                   <Text
                     style={[
-                      styles.webContinueText,
+                      styles.appStoreTitle,
+                      { color: colors.textPrimary },
+                    ]}
+                  >
+                    Get the SmartBites™ Mobile App
+                  </Text>
+                  <Text
+                    style={[
+                      styles.appStoreSubtitle,
                       { color: colors.textSecondary },
                     ]}
                   >
-                    Or continue using the web version below
+                    Download for the best experience on your phone
                   </Text>
-                </View> */}
-              </Animated.View>
-            )}
 
-            {/* Your existing “Sign In / Create Account” buttons */}
-            {Platform.OS !== 'web' && (
-              <View style={styles.buttonContainer}>
-                <Link href="/(auth)/login" asChild>
-                  <TouchableOpacity style={styles.primaryButton}>
-                    <Text style={styles.primaryButtonText}>Sign In</Text>
-                  </TouchableOpacity>
-                </Link>
+                  <View style={styles.storeButtonsContainer}>
+                    <TouchableOpacity
+                      style={[
+                        styles.storeButton,
+                        { backgroundColor: colors.card },
+                      ]}
+                      onPress={() =>
+                        Linking.openURL(
+                          'https://apps.apple.com/app/smartbites/id6745743999'
+                        )
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.storeButtonText,
+                          { color: colors.textPrimary },
+                        ]}
+                      >
+                        📱 Download for iPhone
+                      </Text>
+                    </TouchableOpacity>
 
-                <Link href="/(auth)/register" asChild>
-                  <TouchableOpacity style={styles.secondaryButton}>
-                    <Text style={styles.secondaryButtonText}>
-                      Create Account
-                    </Text>
-                  </TouchableOpacity>
-                </Link>
-              </View>
-            )}
-          </View>
+                    <TouchableOpacity
+                      style={[
+                        styles.storeButton,
+                        { backgroundColor: colors.card },
+                      ]}
+                      onPress={() =>
+                        Linking.openURL(
+                          'https://play.google.com/store/apps/details?id=cooking.safeplate.allergyawarerecipefinder'
+                        )
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.storeButtonText,
+                          { color: colors.textPrimary },
+                        ]}
+                      >
+                        🤖 Download for Android
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </Animated.View>
+              )}
 
-          {/* Bottom: footer links (flex pushes this down) */}
-          <View style={styles.footer}>
-            <Link href="/(auth)/about" asChild>
-              <TouchableOpacity>
-                <Text style={styles.footerLink}>About</Text>
-              </TouchableOpacity>
-            </Link>
-            <Link href="/(auth)/contact" asChild>
-              <TouchableOpacity>
-                <Text style={styles.footerLink}>Contact</Text>
-              </TouchableOpacity>
-            </Link>
-            <Link href="/(auth)/support" asChild>
-              <TouchableOpacity>
-                <Text style={styles.footerLink}>Support</Text>
-              </TouchableOpacity>
-            </Link>
+              {Platform.OS !== 'web' && (
+                <View style={styles.buttonContainer}>
+                  <Link href="/(auth)/login" asChild>
+                    <TouchableOpacity style={styles.primaryButton}>
+                      <Text style={styles.primaryButtonText}>Sign In</Text>
+                    </TouchableOpacity>
+                  </Link>
+
+                  <Link href="/(auth)/register" asChild>
+                    <TouchableOpacity style={styles.secondaryButton}>
+                      <Text style={styles.secondaryButtonText}>
+                        Create Account
+                      </Text>
+                    </TouchableOpacity>
+                  </Link>
+                </View>
+              )}
+            </View>
+
+            {/* Bottom: footer links (column uses space-between to push this down) */}
+            <View style={styles.footer}>
+              <Link href="/(auth)/about" asChild>
+                <TouchableOpacity>
+                  <Text style={styles.footerLink}>About</Text>
+                </TouchableOpacity>
+              </Link>
+              <Link href="/(auth)/contact" asChild>
+                <TouchableOpacity>
+                  <Text style={styles.footerLink}>Contact</Text>
+                </TouchableOpacity>
+              </Link>
+              <Link href="/(auth)/support" asChild>
+                <TouchableOpacity>
+                  <Text style={styles.footerLink}>Support</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
           </View>
         </View>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const getStyles = (colors: ThemeColors, height: number, insets: any) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
+    // Restores the padding that used to live on the gradient
+    content: {
+      flex: 1,
+      paddingHorizontal: 32,
+      paddingTop: Spacing.md,
+    },
+
+    // Master vertical layout: top / middle / bottom
     column: {
       flex: 1,
       width: '100%',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingTop: insets.top,
-      paddingBottom: insets.bottom,
     },
 
-    // Keep the subtitle snug to the logo
+    // Top group (logo + subtitle close together)
     topGroup: {
       alignItems: 'center',
-      gap: 6, // keep these two close; if 'gap' not available, use marginTop on subtitle
+      // If RN version doesn't support 'gap', replace with subtitleTight.marginTop
+      gap: 6,
     },
-
+    logoContainer: {
+      marginTop: height * 0.08,
+      alignItems: 'center',
+    },
     subtitleTight: {
       textAlign: 'center',
-      // tighten spacing to the logo:
       marginTop: 6, // small gap under the logo
-      // and *reduce* the push toward the middle:
-      marginBottom: 8, // was large (e.g., 48)
+      marginBottom: 8, // keep it close to the middle group
       fontFamily: 'Lato-Regular',
       fontSize: 18,
       color: colors.textSecondary,
       lineHeight: 24,
     },
 
-    // Give the middle block its own breathing room from the subtitle
+    // Middle group wrapper
     middleGroup: {
       width: '100%',
       alignItems: 'center',
-      marginTop: 12, // bump if you want more separation
+      marginTop: 12,
     },
 
-    // (optional) ensure appStoreContainer itself doesn't add extra top margin
-    appStoreContainer: {
-      // ...existing styles...
-      marginTop: Spacing.sm, // keep modest
-    },
-    mainShift: {
-      width: '100%',
-      alignItems: 'center',
-      transform: [{ translateY: -Math.min(height * 0.1, 72) }],
-    },
-
-    logoContainer: {
-      marginTop: height * 0.08,
-      alignItems: 'center',
-    },
+    // Web-only app store section
     appStoreContainer: {
       width: '100%',
       paddingHorizontal: Spacing.lg,
@@ -278,41 +272,8 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
       fontSize: FontSizes.sm,
       textAlign: 'center',
     },
-    webContinueContainer: { alignItems: 'center' },
-    webContinueText: {
-      fontFamily: Fonts.body,
-      fontSize: FontSizes.sm,
-      fontStyle: 'italic',
-      textAlign: 'center',
-    },
 
-    gradient: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 32,
-    },
-    logo: {
-      width: 180,
-      height: 180,
-      marginBottom: 32,
-      borderRadius: 24,
-    },
-    title: {
-      fontSize: 32,
-      fontFamily: 'Inter-Bold',
-      color: '#FF8866',
-      textAlign: 'center',
-      marginBottom: 16,
-    },
-    subtitle: {
-      fontSize: 18,
-      fontFamily: 'Lato-Regular',
-      color: colors.textSecondary,
-      textAlign: 'center',
-      marginBottom: 48,
-      lineHeight: 24,
-    },
+    // Native CTA buttons (Sign In / Create Account)
     buttonContainer: { width: '100%', gap: 16 },
     primaryButton: {
       backgroundColor: colors.primary,
@@ -341,17 +302,13 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
       color: colors.primary,
     },
 
+    // Footer pinned at the bottom; add bottom inset here (not on column)
     footer: {
       flexDirection: 'row',
       justifyContent: 'space-around',
       width: '100%',
       paddingHorizontal: Spacing.xl,
       paddingBottom: insets.bottom + 8,
-      // position: 'absolute',
-      // bottom: 40,
-      // left: 0,
-      // right: 0,
-      // gap: 24,
     },
     footerLink: {
       fontSize: 14,
