@@ -94,6 +94,26 @@ export default function RecipeCard({
       borderRadius: 8,
       backgroundColor: colors.background,
     },
+    iconActions: {
+      flexDirection: 'row',
+      gap: 12,
+      alignItems: 'center',
+    },
+    iconButton: {
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    saveIconButton: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    favoriteIconButton: {
+      backgroundColor: colors.error,
+      borderColor: colors.error,
+    },
     description: {
       fontSize: 14,
       fontFamily: 'Lato-Regular',
@@ -189,29 +209,6 @@ export default function RecipeCard({
       fontFamily: 'Inter-Medium',
       color: '#FFFFFF',
     },
-    saveButton: {
-      backgroundColor: colors.primary,
-      paddingVertical: 12,
-      borderRadius: 12,
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      gap: 8,
-    },
-    previewSaveButton: {
-      backgroundColor: colors.primary,
-      paddingVertical: 16,
-      borderRadius: 12,
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      gap: 8,
-    },
-    saveButtonText: {
-      fontSize: 16,
-      fontFamily: 'Inter-SemiBold',
-      color: '#FFFFFF',
-    },
   });
 
   // Show preview version for search results (no image)
@@ -254,19 +251,25 @@ export default function RecipeCard({
             ))}
           </View>
 
-          {onSave && (
-            <TouchableOpacity style={styles.previewSaveButton} onPress={onSave}>
-              <BookmarkPlus size={20} color="#FFFFFF" />
-              <Text style={styles.saveButtonText}>Save Recipe</Text>
-            </TouchableOpacity>
-          )}
-
-          {onSaveAndFavorite && (
-            <TouchableOpacity style={[styles.previewSaveButton, { backgroundColor: colors.error, marginTop: 8 }]} onPress={onSaveAndFavorite}>
-              <Heart size={20} color="#FFFFFF" />
-              <Text style={styles.saveButtonText}>Save & Favorite</Text>
-            </TouchableOpacity>
-          )}
+          <View style={styles.iconActions}>
+            {onSave && (
+              <TouchableOpacity 
+                style={[styles.iconButton, styles.saveIconButton]} 
+                onPress={onSave}
+              >
+                <BookmarkPlus size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+            
+            {onSaveAndFavorite && (
+              <TouchableOpacity 
+                style={[styles.iconButton, styles.favoriteIconButton]} 
+                onPress={onSaveAndFavorite}
+              >
+                <Heart size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
     );

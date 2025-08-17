@@ -2,8 +2,7 @@ import React from 'react';
 import { Image, ImageSourcePropType, StyleSheet } from 'react-native';
 import LightLogo from '@/assets/images/smart-bites-logo.png';
 import DarkLogo from '@/assets/images/smart-bites-logo.png';
-import { useTheme } from '@/contexts/ThemeContext';
-import { ColorScheme } from '@/constants/Colors';
+import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 
 const ThemedLogo: React.FC = () => {
   const { colors, isDark } = useTheme();
@@ -16,7 +15,7 @@ const ThemedLogo: React.FC = () => {
 
 export default ThemedLogo;
 
-const getStyles = (colors: typeof ColorScheme.light) =>
+const getStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     container: {
       flex: 1,
