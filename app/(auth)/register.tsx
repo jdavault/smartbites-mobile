@@ -10,6 +10,9 @@ import {
   Modal,
   Linking,
   ActivityIndicator,
+  TouchableWithoutFeedback, // ★ added
+  Keyboard,                 // ★ added
+  Platform,                 // ★ added
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,7 +27,6 @@ import {
   Eye,
   EyeOff,
   ChevronDown,
-  ChevronUp,
 } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import ThemedText from '@/components/ThemedText';
@@ -183,12 +185,8 @@ export default function RegisterScreen() {
   const [showAllergens, setShowAllergens] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
   const [showStates, setShowStates] = useState(false);
-  const [selectedAllergenIds, setSelectedAllergenIds] = useState<
-    Set<string>
-  >(new Set());
-  const [selectedPrefIds, setSelectedPrefIds] = useState<Set<string>>(
-    new Set()
-  );
+  const [selectedAllergenIds, setSelectedAllergenIds] = useState<Set<string>>(new Set());
+  const [selectedPrefIds, setSelectedPrefIds] = useState<Set<string>>(new Set());
 
   const toggle = (
     set: Set<string>,
@@ -202,8 +200,7 @@ export default function RegisterScreen() {
 
   const normalizePhone = (raw: string) => raw.replace(/[^\d+]/g, '');
   const zipOk = (z: string) => /^(\d{5})(-?\d{4})?$/.test(z.trim());
-  const phoneOk = (p: string) =>
-    normalizePhone(p).replace(/\D/g, '').length >= 10;
+  const phoneOk = (p: string) => normalizePhone(p).replace(/\D/g, '').length >= 10;
 
   const handleRegister = async () => {
     if (!email || !password || !confirmPassword || !firstName || !lastName) {
@@ -255,7 +252,6 @@ export default function RegisterScreen() {
 
     setLoading(true);
 
-    // 1) Create auth user with minimal metadata
     const { error: signErr } = await signUp(email, password, {
       first_name: firstName,
       last_name: lastName,
@@ -285,39 +281,31 @@ export default function RegisterScreen() {
       return;
     }
 
-    // 2) Get the created user
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
-    
     if (!userId) {
       setLoading(false);
       return;
     }
 
     try {
-      // 3) Create user profile with all the address/contact info
-      const { error: profileError } = await supabase
+      await supabase
         .from('user_profiles')
-        .upsert({
-          user_id: userId,
-          first_name: firstName,
-          last_name: lastName,
-          address1: address1.trim() || null,
-          address2: address2.trim() || null,
-          city: city.trim() || null,
-          state: state.trim() || null,
-          zip: zip.trim() || null,
-          phone: normalizePhone(phone) || null,
-        }, {
-          onConflict: 'user_id'
-        });
+        .upsert(
+          {
+            user_id: userId,
+            first_name: firstName,
+            last_name: lastName,
+            address1: address1.trim() || null,
+            address2: address2.trim() || null,
+            city: city.trim() || null,
+            state: state.trim() || null,
+            zip: zip.trim() || null,
+            phone: normalizePhone(phone) || null,
+          },
+          { onConflict: 'user_id' }
+        );
 
-      if (profileError) {
-        console.error('Error creating user profile:', profileError);
-        // Continue anyway - profile can be updated later
-      }
-
-      // 4) Save allergen selections
       if (selectedAllergenIds.size) {
         const ua = Array.from(selectedAllergenIds).map((allergenId) => {
           const allergen = allergens.find(a => a.id === allergenId);
@@ -330,7 +318,6 @@ export default function RegisterScreen() {
         await supabase.from('user_allergens').insert(ua);
       }
       
-      // 5) Save dietary preference selections
       if (selectedPrefIds.size) {
         const udp = Array.from(selectedPrefIds).map((prefId) => {
           const dietPref = dietPrefs.find(d => d.id === prefId);
@@ -344,7 +331,6 @@ export default function RegisterScreen() {
       }
     } catch (error) {
       console.error('Error saving user data:', error);
-      // Continue - user can update profile and preferences later
     }
 
     setLoading(false);
@@ -365,47 +351,44 @@ export default function RegisterScreen() {
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        // tighter page padding to fit more content
         content: { flex: 1, paddingHorizontal: 16 },
 
-        // tighter header (keeps back button but removes extra space above title)
         header: {
           flexDirection: 'row',
           alignItems: 'center',
-          paddingTop: 8, // ↓ was 12–16
-          paddingBottom: 8, // ↓ was ~20–32
+          paddingTop: 8,
+          paddingBottom: 8,
         },
         backButton: { padding: 6 },
 
-        // title with NO extra top padding/margin above it
         title: {
-          fontSize: 24, // ↓ a touch smaller
+          fontSize: 24,
           fontFamily: 'Inter-Bold',
           color: '#FF8866',
           textAlign: 'center',
-          marginTop: 0, // ← ensure no top margin
-          marginBottom: 8, // small breathing room
+          marginTop: 0,
+          marginBottom: 8,
         },
 
-        // form spacing + input sizing (compact)
-        form: { gap: 8 }, // ↓ reduced further
+        form: { gap: 8 },
         row: { flexDirection: 'row', gap: 8 },
         flex1: { flex: 1 },
         flex2: { flex: 2 },
 
+        // ★ Platform-specific vertical padding (restores old feel)
         input: {
           borderWidth: 1,
           borderColor: colors.border,
           borderRadius: 9,
           paddingHorizontal: 12,
-          paddingVertical: 7, // ↓ reduced further
-          fontSize: 15, // ↓ was 16
+          paddingVertical: Platform.OS === 'android' ? 10 : 8, // ★
+          fontSize: 15,
           fontFamily: 'Inter-Regular',
           color: colors.text,
           backgroundColor: colors.surface,
         },
 
-        // password with eye (compact)
+        // password with eye
         pwWrap: {
           flexDirection: 'row',
           alignItems: 'center',
@@ -417,14 +400,13 @@ export default function RegisterScreen() {
         pwInput: {
           flex: 1,
           paddingHorizontal: 12,
-          paddingVertical: 7, // ↓ reduced further
-          fontSize: 15, // ↓
+          paddingVertical: Platform.OS === 'android' ? 10 : 8, // ★
+          fontSize: 15,
           fontFamily: 'Inter-Regular',
           color: colors.text,
         },
-        eyeButton: { padding: 6 }, // ↓ reduced further
+        eyeButton: { padding: 6 },
 
-        // state dropdown
         stateDropdown: {
           borderWidth: 1,
           borderColor: colors.border,
@@ -437,7 +419,7 @@ export default function RegisterScreen() {
           justifyContent: 'space-between',
           alignItems: 'center',
           paddingHorizontal: 12,
-          paddingVertical: 7,
+          paddingVertical: Platform.OS === 'android' ? 10 : 8, // ★ match inputs
         },
         stateButtonText: {
           fontSize: 15,
@@ -462,35 +444,27 @@ export default function RegisterScreen() {
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
         },
-        stateItemLast: {
-          borderBottomWidth: 0,
-        },
+        stateItemLast: { borderBottomWidth: 0 },
         stateItemText: {
           fontSize: 15,
           fontFamily: 'Inter-Regular',
           color: colors.text,
         },
 
-        // collapsible section toggles (compact)
-        sectionToggle: {
-          alignItems: 'center',
-          paddingVertical: 2, // ↓ reduced further
-          marginTop: 4, // smaller
-        },
+        sectionToggle: { alignItems: 'center', paddingVertical: 2, marginTop: 4 },
         sectionToggleText: {
-          fontSize: 16, // ↓
+          fontSize: 16,
           fontFamily: 'Inter-SemiBold',
           color: colors.primary,
         },
 
-        // Section titles (matching profile.tsx)
         sectionTitle: {
           fontSize: 18,
           fontFamily: 'Inter-SemiBold',
           color: colors.primary,
           marginTop: 0,
           marginBottom: 6,
-          paddingHorizontal: 16, // Match form padding
+          paddingHorizontal: 16,
         },
         sectionTitleDietary: {
           fontSize: 18,
@@ -498,55 +472,42 @@ export default function RegisterScreen() {
           color: colors.dietary,
           marginTop: 0,
           marginBottom: 6,
-          paddingHorizontal: 16, // Match form padding
+          paddingHorizontal: 16,
         },
 
-        // chips (compact grid + reduced margins to fit screen)
         chipGrid: {
           flexDirection: 'row',
           flexWrap: 'wrap',
-          gap: 4, // ↓ reduced further
-          marginTop: 2, // ↓ reduced further
-          marginBottom: 4, // ↓ reduced further
-          paddingHorizontal: 16, // Match form padding
+          gap: 4,
+          marginTop: 2,
+          marginBottom: 4,
+          paddingHorizontal: 16,
         },
         chip: {
-          paddingVertical: 6, // ↑ increased for better touch target
-          paddingHorizontal: 10, // ↑ increased for better readability
+          paddingVertical: 6,
+          paddingHorizontal: 10,
           borderRadius: 999,
           borderWidth: 1,
           borderColor: colors.border,
           backgroundColor: colors.surface,
         },
-        chipSelected: {
-          backgroundColor: colors.primary,
-          borderColor: colors.primary,
-        },
-        chipSelectedDietary: {
-          backgroundColor: colors.dietary,
-          borderColor: colors.dietary,
-        },
-        chipText: {
-          fontSize: 12, // ↑ increased for better readability
-          fontFamily: 'Inter-Medium',
-          color: colors.text,
-        },
+        chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+        chipSelectedDietary: { backgroundColor: colors.dietary, borderColor: colors.dietary },
+        chipText: { fontSize: 12, fontFamily: 'Inter-Medium', color: colors.text },
         chipTextSelected: { color: '#fff' },
 
-        // Loading container
         loadingContainer: {
           paddingHorizontal: 16,
           paddingVertical: 12,
           alignItems: 'center',
         },
 
-        // terms text (kept small)
         tosText: {
           fontSize: 10,
           textAlign: 'center',
           color: colors.textSecondary,
-          marginTop: 4, // ↓ reduced further
-          lineHeight: 14, // ↓ reduced further
+          marginTop: 4,
+          lineHeight: 14,
         },
         tosLink: {
           textDecorationLine: 'underline',
@@ -554,27 +515,25 @@ export default function RegisterScreen() {
           fontFamily: 'Inter-SemiBold',
         },
 
-        // button (compact height)
         button: {
           backgroundColor: colors.primary,
-          paddingVertical: 10, // ↓ reduced further
+          paddingVertical: 10,
           borderRadius: 10,
           alignItems: 'center',
-          marginTop: 4, // ↓ reduced further
+          marginTop: 4,
         },
         buttonDisabled: { opacity: 0.6 },
         buttonText: {
-          fontSize: 15, // ↓
+          fontSize: 15,
           fontFamily: 'Inter-SemiBold',
           color: '#FFFFFF',
         },
 
-        // footer (compact)
         footer: {
           flexDirection: 'row',
           justifyContent: 'center',
           alignItems: 'center',
-          marginTop: 8, // ↓ reduced further
+          marginTop: 8,
           marginBottom: Math.max(insets.bottom, 8),
         },
         footerText: {
@@ -588,7 +547,6 @@ export default function RegisterScreen() {
           color: colors.primary,
         },
 
-        // modal
         modalOverlay: {
           flex: 1,
           backgroundColor: 'rgba(0,0,0,0.45)',
@@ -637,20 +595,14 @@ export default function RegisterScreen() {
           minWidth: 112,
           alignItems: 'center',
         },
-        modalBtnPrimary: {
-          backgroundColor: colors.primary,
-          borderColor: colors.primary,
-        },
-        modalBtnText: {
-          fontSize: 13,
-          fontFamily: 'Inter-SemiBold',
-          color: colors.text,
-        },
+        modalBtnPrimary: { backgroundColor: colors.primary, borderColor: colors.primary },
+        modalBtnText: { fontSize: 13, fontFamily: 'Inter-SemiBold', color: colors.text },
         modalBtnTextPrimary: { color: '#fff' },
+
         bottom: {
           paddingHorizontal: 24,
           paddingTop: 6,
-          paddingBottom: insets.bottom + 12, // keeps it above the iPhone home indicator
+          paddingBottom: insets.bottom + 12,
         },
         copyright: {
           fontSize: 14,
@@ -658,12 +610,11 @@ export default function RegisterScreen() {
           color: colors.textSecondary,
         },
       }),
-    [colors, insets.bottom]
+    [colors, insets.bottom, state]
   );
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Gradient fills the screen */}
       <LinearGradient
         colors={[colors.background, colors.textRice]}
         style={StyleSheet.absoluteFillObject}
@@ -681,307 +632,320 @@ export default function RegisterScreen() {
           </View>
 
           {/* Body */}
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <Text style={styles.title}>Create Account</Text>
-            {/* subtitle removed on purpose */}
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text style={styles.title}>Create Account</Text>
 
-            <View style={styles.form}>
-              {/* Email + Passwords first (compact, no labels) */}
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Email"
-                placeholderTextColor={colors.textSecondary}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                textContentType="emailAddress"
-                autoComplete="email"
-                returnKeyType="next"
-              />
-
-              <View style={styles.pwWrap}>
+              <View style={styles.form}>
+                {/* Email + Passwords first */}
                 <TextInput
-                  style={styles.pwInput}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Password"
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Email"
                   placeholderTextColor={colors.textSecondary}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  textContentType="newPassword"
-                  autoComplete="new-password"
+                  keyboardType="email-address"
+                  autoCapitalize="none"         // ★ keep none
+                  autoCorrect={false}           // ★ added
+                  textContentType="emailAddress"
+                  autoComplete="email"
                   returnKeyType="next"
                 />
-                <TouchableOpacity
-                  style={styles.eyeButton}
-                  onPress={() => setShowPassword((v) => !v)}
-                >
-                  {showPassword ? (
-                    <EyeOff size={18} color={colors.textSecondary} />
-                  ) : (
-                    <Eye size={18} color={colors.textSecondary} />
-                  )}
-                </TouchableOpacity>
-              </View>
 
-              <View style={styles.pwWrap}>
-                <TextInput
-                  style={styles.pwInput}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Confirm password"
-                  placeholderTextColor={colors.textSecondary}
-                  secureTextEntry={!showConfirmPassword}
-                  autoCapitalize="none"
-                  textContentType="password"
-                  autoComplete="off"
-                  returnKeyType="next"
-                />
-                <TouchableOpacity
-                  style={styles.eyeButton}
-                  onPress={() => setShowConfirmPassword((v) => !v)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff size={18} color={colors.textSecondary} />
-                  ) : (
-                    <Eye size={18} color={colors.textSecondary} />
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {/* Names */}
-              <View style={styles.row}>
-                <TextInput
-                  style={[styles.input, styles.flex1]}
-                  value={firstName}
-                  onChangeText={setFirstName}
-                  placeholder="First name"
-                  placeholderTextColor={colors.textSecondary}
-                  autoCapitalize="words"
-                  textContentType="givenName"
-                />
-                <TextInput
-                  style={[styles.input, styles.flex1]}
-                  value={lastName}
-                  onChangeText={setLastName}
-                  placeholder="Last name"
-                  placeholderTextColor={colors.textSecondary}
-                  autoCapitalize="words"
-                  textContentType="familyName"
-                />
-              </View>
-
-              {/* Address */}
-              <TextInput
-                style={styles.input}
-                value={address1}
-                onChangeText={setAddress1}
-                placeholder="Address line 1"
-                placeholderTextColor={colors.textSecondary}
-                autoCapitalize="words"
-                textContentType="fullStreetAddress"
-                autoComplete="street-address"
-              />
-              <TextInput
-                style={styles.input}
-                value={address2}
-                onChangeText={setAddress2}
-                placeholder="Address line 2 (optional)"
-                placeholderTextColor={colors.textSecondary}
-                autoCapitalize="words"
-              />
-              <View style={styles.row}>
-                <TextInput
-                  style={[styles.input, styles.flex2]}
-                  value={city}
-                  onChangeText={setCity}
-                  placeholder="City"
-                  placeholderTextColor={colors.textSecondary}
-                  autoCapitalize="words"
-                  textContentType="addressCity"
-                />
-                <View style={[styles.stateDropdown, styles.flex1]}>
+                <View style={styles.pwWrap}>
+                  <TextInput
+                    style={styles.pwInput}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Password"
+                    placeholderTextColor={colors.textSecondary}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"       // ★ keep none
+                    autoCorrect={false}         // ★ added
+                    textContentType="newPassword"
+                    autoComplete="new-password"
+                    returnKeyType="next"
+                  />
                   <TouchableOpacity
-                    style={styles.stateButton}
-                    onPress={() => setShowStates(!showStates)}
+                    style={styles.eyeButton}
+                    onPress={() => setShowPassword((v) => !v)}
                   >
-                    <Text style={styles.stateButtonText}>
-                      {state || 'State'}
-                    </Text>
-                    <ChevronDown size={16} color={colors.textSecondary} />
+                    {showPassword ? (
+                      <EyeOff size={18} color={colors.textSecondary} />
+                    ) : (
+                      <Eye size={18} color={colors.textSecondary} />
+                    )}
                   </TouchableOpacity>
-                  
-                  {showStates && (
-                    <ScrollView style={styles.stateList} nestedScrollEnabled>
-                      {US_STATES.map((stateItem, index) => (
+                </View>
+
+                <View style={styles.pwWrap}>
+                  <TextInput
+                    style={styles.pwInput}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    placeholder="Confirm password"
+                    placeholderTextColor={colors.textSecondary}
+                    secureTextEntry={!showConfirmPassword}
+                    autoCapitalize="none"       // ★ keep none
+                    autoCorrect={false}         // ★ added
+                    textContentType="password"
+                    autoComplete="off"
+                    returnKeyType="next"
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeButton}
+                    onPress={() => setShowConfirmPassword((v) => !v)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={18} color={colors.textSecondary} />
+                    ) : (
+                      <Eye size={18} color={colors.textSecondary} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+
+                {/* Names */}
+                <View style={styles.row}>
+                  <TextInput
+                    style={[styles.input, styles.flex1]}
+                    value={firstName}
+                    onChangeText={setFirstName}
+                    placeholder="First name"
+                    placeholderTextColor={colors.textSecondary}
+                    autoCapitalize="words"      // ★ added
+                    autoCorrect={false}         // ★ added
+                    textContentType="givenName"
+                    returnKeyType="next"
+                  />
+                  <TextInput
+                    style={[styles.input, styles.flex1]}
+                    value={lastName}
+                    onChangeText={setLastName}
+                    placeholder="Last name"
+                    placeholderTextColor={colors.textSecondary}
+                    autoCapitalize="words"      // ★ added
+                    autoCorrect={false}         // ★ added
+                    textContentType="familyName"
+                    returnKeyType="next"
+                  />
+                </View>
+
+                {/* Address */}
+                <TextInput
+                  style={styles.input}
+                  value={address1}
+                  onChangeText={setAddress1}
+                  placeholder="Address line 1"
+                  placeholderTextColor={colors.textSecondary}
+                  autoCapitalize="words"        // ★ added
+                  autoCorrect={false}           // ★ added
+                  textContentType="fullStreetAddress"
+                  autoComplete="street-address"
+                  returnKeyType="next"
+                />
+                <TextInput
+                  style={styles.input}
+                  value={address2}
+                  onChangeText={setAddress2}
+                  placeholder="Address line 2 (optional)"
+                  placeholderTextColor={colors.textSecondary}
+                  autoCapitalize="words"        // ★ added
+                  autoCorrect={false}           // ★ added
+                  returnKeyType="next"
+                />
+                <View style={styles.row}>
+                  <TextInput
+                    style={[styles.input, styles.flex2]}
+                    value={city}
+                    onChangeText={setCity}
+                    placeholder="City"
+                    placeholderTextColor={colors.textSecondary}
+                    autoCapitalize="words"      // ★ added
+                    autoCorrect={false}         // ★ added
+                    textContentType="addressCity"
+                    returnKeyType="next"
+                  />
+                  <View style={[styles.stateDropdown, styles.flex1]}>
+                    <TouchableOpacity
+                      style={styles.stateButton}
+                      onPress={() => setShowStates(!showStates)}
+                    >
+                      <Text style={styles.stateButtonText}>
+                        {state || 'State'}
+                      </Text>
+                      <ChevronDown size={16} color={colors.textSecondary} />
+                    </TouchableOpacity>
+                    
+                    {showStates && (
+                      <ScrollView style={styles.stateList} nestedScrollEnabled>
+                        {US_STATES.map((stateItem, index) => (
+                          <TouchableOpacity
+                            key={stateItem.code}
+                            style={[
+                              styles.stateItem,
+                              index === US_STATES.length - 1 && styles.stateItemLast
+                            ]}
+                            onPress={() => {
+                              setState(stateItem.code);
+                              setShowStates(false);
+                            }}
+                          >
+                            <Text style={styles.stateItemText}>
+                              {stateItem.code} - {stateItem.name}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    )}
+                  </View>
+                </View>
+
+                <View style={styles.row}>
+                  <TextInput
+                    style={[styles.input, styles.flex1]}
+                    value={zip}
+                    onChangeText={setZip}
+                    placeholder="ZIP"
+                    placeholderTextColor={colors.textSecondary}
+                    keyboardType="number-pad"
+                    autoCapitalize="none"       // ★ added
+                    autoCorrect={false}         // ★ added
+                    maxLength={10}
+                    textContentType="postalCode"
+                    returnKeyType="next"
+                  />
+                  <TextInput
+                    style={[styles.input, styles.flex2]}
+                    value={phone}
+                    onChangeText={setPhone}
+                    placeholder="Phone"
+                    placeholderTextColor={colors.textSecondary}
+                    keyboardType="phone-pad"
+                    autoCapitalize="none"       // ★ added
+                    autoCorrect={false}         // ★ added
+                    textContentType="telephoneNumber"
+                    autoComplete="tel"
+                    returnKeyType="done"
+                  />
+                </View>
+
+                {/* Allergens */}
+                <Text style={styles.sectionTitle}>Allergens</Text>
+                {loadingTaxonomies ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  </View>
+                ) : (
+                  <View style={styles.chipGrid}>
+                    {allergens.map((a) => {
+                      const selected = selectedAllergenIds.has(a.id);
+                      return (
                         <TouchableOpacity
-                          key={stateItem.code}
-                          style={[
-                            styles.stateItem,
-                            index === US_STATES.length - 1 && styles.stateItemLast
-                          ]}
-                          onPress={() => {
-                            setState(stateItem.code);
-                            setShowStates(false);
-                          }}
+                          key={a.id}
+                          style={[styles.chip, selected && styles.chipSelected]}
+                          onPress={() =>
+                            toggle(selectedAllergenIds, a.id, setSelectedAllergenIds)
+                          }
                         >
-                          <Text style={styles.stateItemText}>
-                            {stateItem.code} - {stateItem.name}
+                          <Text
+                            style={[
+                              styles.chipText,
+                              selected && styles.chipTextSelected,
+                            ]}
+                          >
+                            {a.name}
                           </Text>
                         </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  )}
-                </View>
-              </View>
-              <View style={styles.row}>
-                <TextInput
-                  style={[styles.input, styles.flex1]}
-                  value={zip}
-                  onChangeText={setZip}
-                  placeholder="ZIP"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="number-pad"
-                  autoCapitalize="none"
-                  maxLength={10}
-                  textContentType="postalCode"
-                />
-                <TextInput
-                  style={[styles.input, styles.flex2]}
-                  value={phone}
-                  onChangeText={setPhone}
-                  placeholder="Phone"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="phone-pad"
-                  autoCapitalize="none"
-                  textContentType="telephoneNumber"
-                  autoComplete="tel"
-                />
-              </View>
+                      );
+                    })}
+                  </View>
+                )}
 
-              {/* Allergens Section */}
-              <Text style={styles.sectionTitle}>Allergens</Text>
-              {loadingTaxonomies ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color={colors.primary} />
-                </View>
-              ) : (
-                <View style={styles.chipGrid}>
-                  {allergens.map((a) => {
-                    const selected = selectedAllergenIds.has(a.id);
-                    return (
-                      <TouchableOpacity
-                        key={a.id}
-                        style={[styles.chip, selected && styles.chipSelected]}
-                        onPress={() =>
-                          toggle(
-                            selectedAllergenIds,
-                            a.id,
-                            setSelectedAllergenIds
-                          )
-                        }
-                      >
-                        <Text
-                          style={[
-                            styles.chipText,
-                            selected && styles.chipTextSelected,
-                          ]}
+                {/* Dietary Preferences */}
+                <Text style={styles.sectionTitleDietary}>Dietary Preferences</Text>
+                {loadingTaxonomies ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color={colors.dietary} />
+                  </View>
+                ) : (
+                  <View style={styles.chipGrid}>
+                    {dietPrefs.map((d) => {
+                      const selected = selectedPrefIds.has(d.id);
+                      return (
+                        <TouchableOpacity
+                          key={d.id}
+                          style={[styles.chip, selected && styles.chipSelectedDietary]}
+                          onPress={() => toggle(selectedPrefIds, d.id, setSelectedPrefIds)}
                         >
-                          {a.name}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
+                          <Text
+                            style={[
+                              styles.chipText,
+                              selected && styles.chipTextSelected,
+                            ]}
+                          >
+                            {d.name}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
 
-              {/* Dietary Preferences Section */}
-              <Text style={styles.sectionTitleDietary}>Dietary Preferences</Text>
-              {loadingTaxonomies ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color={colors.dietary} />
-                </View>
-              ) : (
-                <View style={styles.chipGrid}>
-                  {dietPrefs.map((d) => {
-                    const selected = selectedPrefIds.has(d.id);
-                    return (
-                      <TouchableOpacity
-                        key={d.id}
-                        style={[styles.chip, selected && styles.chipSelectedDietary]}
-                        onPress={() =>
-                          toggle(selectedPrefIds, d.id, setSelectedPrefIds)
-                        }
-                      >
-                        <Text
-                          style={[
-                            styles.chipText,
-                            selected && styles.chipTextSelected,
-                          ]}
-                        >
-                          {d.name}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
-
-              {/* Terms of Service (compact) */}
-              <Text style={styles.tosText}>
-                By tapping “Create Account”, I acknowledge that I have read and
-                agree to the{' '}
-                <Text
-                  style={styles.tosLink}
-                  onPress={() =>
-                    Linking.openURL(
-                      'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
-                    )
-                  }
-                >
-                  Privacy Policy
-                </Text>{' '}
-                and{' '}
-                <Text
-                  style={styles.tosLink}
-                  onPress={() =>
-                    Linking.openURL(
-                      'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
-                    )
-                  }
-                >
-                  Terms of Service
+                {/* Terms */}
+                <Text style={styles.tosText}>
+                  By tapping “Create Account”, I acknowledge that I have read and
+                  agree to the{' '}
+                  <Text
+                    style={styles.tosLink}
+                    onPress={() =>
+                      Linking.openURL(
+                        'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                      )
+                    }
+                  >
+                    Privacy Policy
+                  </Text>{' '}
+                  and{' '}
+                  <Text
+                    style={styles.tosLink}
+                    onPress={() =>
+                      Linking.openURL(
+                        'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                      )
+                    }
+                  >
+                    Terms of Service
+                  </Text>
+                  . I also consent to being contacted by SmartBites™ for
+                  account-related communications using the information I provide.
                 </Text>
-                . I also consent to being contacted by SmartBites™ for
-                account-related communications using the information I provide.
-              </Text>
 
-              <TouchableOpacity
-                style={[styles.button, loading && styles.buttonDisabled]}
-                onPress={handleRegister}
-                disabled={loading}
-              >
-                <Text style={styles.buttonText}>
-                  {loading ? 'Creating Account...' : 'Create Account'}
-                </Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, loading && styles.buttonDisabled]}
+                  onPress={handleRegister}
+                  disabled={loading}
+                >
+                  <Text style={styles.buttonText}>
+                    {loading ? 'Creating Account...' : 'Create Account'}
+                  </Text>
+                </TouchableOpacity>
 
-              {/* Inline auth footer (compact) */}
-              <View style={styles.footer}>
-                <Text style={styles.footerText}>Already have an account? </Text>
-                <Link href="/(auth)/login" asChild>
-                  <TouchableOpacity>
-                    <Text style={styles.footerLink}>Sign In</Text>
-                  </TouchableOpacity>
-                </Link>
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>Already have an account? </Text>
+                  <Link href="/(auth)/login" asChild>
+                    <TouchableOpacity>
+                      <Text style={styles.footerLink}>Sign In</Text>
+                    </TouchableOpacity>
+                  </Link>
+                </View>
               </View>
-            </View>
-          </ScrollView>
-          {/* <-- pinned bottom */}
+            </ScrollView>
+          </TouchableWithoutFeedback>
+
+          {/* pinned bottom */}
           <View style={styles.bottom}>
             <ThemedText style={styles.copyright}>
               <Text style={{ fontWeight: 'bold' }}>SmartBites</Text>
@@ -1000,20 +964,14 @@ export default function RegisterScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            {!!modal.emoji && (
-              <Text style={styles.modalEmoji}>{modal.emoji}</Text>
-            )}
+            {!!modal.emoji && <Text style={styles.modalEmoji}>{modal.emoji}</Text>}
             <Text style={styles.modalTitle}>{modal.title}</Text>
-            {!!modal.subtitle && (
-              <Text style={styles.modalSubtitle}>{modal.subtitle}</Text>
-            )}
+            {!!modal.subtitle && <Text style={styles.modalSubtitle}>{modal.subtitle}</Text>}
 
             <View style={styles.modalButtons}>
               {modal.secondary && (
                 <TouchableOpacity style={styles.modalBtn} onPress={closeModal}>
-                  <Text style={styles.modalBtnText}>
-                    {modal.secondary.label}
-                  </Text>
+                  <Text style={styles.modalBtnText}>{modal.secondary.label}</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
