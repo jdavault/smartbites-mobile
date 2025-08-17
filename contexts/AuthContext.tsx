@@ -156,45 +156,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Clear local state immediately
+      // Clear local state immediately for better UX
       setUser(null);
       setSession(null);
       
-      // For web, force a complete logout
+      // Sign out from Supabase first
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Supabase signOut error:', error);
+      }
+      
+      // For web, force complete cleanup
       if (Platform.OS === 'web') {
-        // Clear all possible storage
         try {
+          // Clear all browser storage
           localStorage.clear();
           sessionStorage.clear();
+          
+          // Clear any cookies by setting them to expire
+          document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+          });
         } catch (e) {
           console.log('Storage clear failed:', e);
         }
-        
-        // Sign out from Supabase
-        await supabase.auth.signOut();
-        
-        // Force complete page reload to clear everything
-        window.location.href = window.location.origin;
-        return;
       }
       
-      // Mobile logout
-      await supabase.auth.signOut();
+      // Additional cleanup - clear any cached data
+      try {
+        // Clear any potential cached auth tokens
+        await supabase.auth.refreshSession();
+      } catch (refreshError) {
+        // Ignore refresh errors during logout
+        console.log('Refresh session error during logout (expected):', refreshError);
+      }
+      
     } catch (error) {
       console.error('Sign out error:', error);
-      // Force clear state even if Supabase fails
+      
+      // Force clear state even if Supabase signOut fails
       setUser(null);
       setSession(null);
       
+      // On web, still try to clear storage even if signOut failed
       if (Platform.OS === 'web') {
         try {
           localStorage.clear();
           sessionStorage.clear();
+          document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+          });
         } catch (e) {
           console.log('Storage clear failed:', e);
         }
-        window.location.href = window.location.origin;
       }
+    }
+    
+    // Force a page reload on web to ensure complete cleanup
+    if (Platform.OS === 'web') {
+      // Small delay to ensure state updates are processed
+      setTimeout(() => {
+        window.location.href = window.location.origin;
+      }, 100);
     }
   };
 
