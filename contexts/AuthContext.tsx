@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
@@ -132,15 +133,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    console.log('AuthContext signIn called with email:', email);
+    
+    try {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
+    if (error) {
+      console.error('Supabase signIn error:', error);
+    } else {
+      console.log('Supabase signIn successful');
+    }
+    
     return { error };
+    } catch (err) {
+      console.error('Unexpected error in signIn:', err);
+      return { error: err };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      // Clear local state immediately
+      setUser(null);
+      setSession(null);
+      
+      // For web, force a complete logout
+      if (Platform.OS === 'web') {
+        // Clear all possible storage
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch (e) {
+          console.log('Storage clear failed:', e);
+        }
+        
+        // Sign out from Supabase
+        await supabase.auth.signOut();
+        
+        // Force complete page reload to clear everything
+        window.location.href = window.location.origin;
+        return;
+      }
+      
+      // Mobile logout
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Force clear state even if Supabase fails
+      setUser(null);
+      setSession(null);
+      
+      if (Platform.OS === 'web') {
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch (e) {
+          console.log('Storage clear failed:', e);
+        }
+        window.location.href = window.location.origin;
+      }
+    }
   };
 
   const signInWithGoogle = async () => {
