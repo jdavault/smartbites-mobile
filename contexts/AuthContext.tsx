@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Platform } from 'react-native';
+import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
@@ -191,6 +192,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('Refresh session error during logout (expected):', refreshError);
       }
       
+      // Navigate to auth screen
+      router.replace('/(auth)');
+      
     } catch (error) {
       console.error('Sign out error:', error);
       
@@ -210,14 +214,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('Storage clear failed:', e);
         }
       }
-    }
-    
-    // Force a page reload on web to ensure complete cleanup
-    if (Platform.OS === 'web') {
-      // Small delay to ensure state updates are processed
-      setTimeout(() => {
-        window.location.href = window.location.origin;
-      }, 100);
+      
+      // Navigate to auth screen even if there was an error
+      router.replace('/(auth)');
     }
   };
 
