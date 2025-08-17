@@ -297,8 +297,8 @@ export default function ProfileScreen() {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
-      marginTop: 8,
-      marginBottom: 8,
+      marginTop: 6,
+      marginBottom: 6,
       paddingHorizontal: 24,
     },
 
@@ -308,7 +308,7 @@ export default function ProfileScreen() {
       flexWrap: 'wrap',
       gap: 6,
       paddingHorizontal: 24,
-      marginBottom: 16,
+      marginBottom: 12,
     },
     chip: {
       paddingVertical: 6,
@@ -338,7 +338,7 @@ export default function ProfileScreen() {
     // Theme toggle
     themeContainer: {
       paddingHorizontal: 24,
-      paddingVertical: 12,
+      paddingVertical: 8,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
