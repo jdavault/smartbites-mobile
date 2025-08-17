@@ -41,6 +41,16 @@ interface DietaryPrefRow {
   name: string;
 }
 
+interface AllergenRow {
+  id: string;
+  name: string;
+}
+
+interface DietaryPrefRow {
+  id: string;
+  name: string;
+}
+
 type ModalInfo = {
   visible: boolean;
   title: string;
@@ -77,6 +87,57 @@ export default function RegisterScreen() {
   const openModal = (m: Omit<ModalInfo, 'visible'>) =>
     setModal({ ...m, visible: true });
   const closeModal = () => setModal((prev) => ({ ...prev, visible: false }));
+
+  // taxonomy lists - fetch from Supabase lookup tables
+  const [allergens, setAllergens] = useState<AllergenRow[]>([]);
+  const [dietPrefs, setDietPrefs] = useState<DietaryPrefRow[]>([]);
+  const [loadingTaxonomies, setLoadingTaxonomies] = useState(true);
+
+  // Fetch allergens and dietary preferences from Supabase lookup tables
+  useEffect(() => {
+    const fetchTaxonomies = async () => {
+      try {
+        setLoadingTaxonomies(true);
+        
+        // Fetch allergens from lookup table
+        const { data: allergensData, error: allergensError } = await supabase
+          .from('allergens')
+          .select('id, name')
+          .order('name');
+        
+        if (allergensError) {
+          console.error('Error fetching allergens:', allergensError);
+          // Fallback to constants if table doesn't exist
+          setAllergens(ALLERGENS.map(a => ({ id: a.$id, name: a.name })));
+        } else {
+          setAllergens(allergensData || []);
+        }
+
+        // Fetch dietary preferences from lookup table
+        const { data: dietPrefsData, error: dietPrefsError } = await supabase
+          .from('dietary_prefs')
+          .select('id, name')
+          .order('name');
+        
+        if (dietPrefsError) {
+          console.error('Error fetching dietary preferences:', dietPrefsError);
+          // Fallback to constants if table doesn't exist
+          setDietPrefs(DIETARY_PREFERENCES.map(d => ({ id: d.$id, name: d.name })));
+        } else {
+          setDietPrefs(dietPrefsData || []);
+        }
+      } catch (error) {
+        console.error('Error in fetchTaxonomies:', error);
+        // Fallback to constants
+        setAllergens(ALLERGENS.map(a => ({ id: a.$id, name: a.name })));
+        setDietPrefs(DIETARY_PREFERENCES.map(d => ({ id: d.$id, name: d.name })));
+      } finally {
+        setLoadingTaxonomies(false);
+      }
+    };
+
+    fetchTaxonomies();
+  }, []);
 
   // taxonomy lists - fetch from Supabase lookup tables
   const [allergens, setAllergens] = useState<AllergenRow[]>([]);
@@ -676,11 +737,14 @@ export default function RegisterScreen() {
                 onPress={() => setShowAllergens((v) => !v)}
                 style={styles.sectionToggle}
                 disabled={loadingTaxonomies}
+                disabled={loadingTaxonomies}
               >
                 <Text style={styles.sectionToggleText}>
                   {showAllergens ? 'Hide Allergens' : 'Select Allergens'}
                 </Text>
                 {loadingTaxonomies ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : showAllergens ? (
                   <ActivityIndicator size="small" color={colors.primary} />
                 ) : showAllergens ? (
                   <ChevronUp size={16} color={colors.primary} />
@@ -724,6 +788,7 @@ export default function RegisterScreen() {
                 onPress={() => setShowPrefs((v) => !v)}
                 style={styles.sectionToggle}
                 disabled={loadingTaxonomies}
+                disabled={loadingTaxonomies}
               >
                 <Text style={styles.sectionToggleText}>
                   {showPrefs
@@ -731,6 +796,8 @@ export default function RegisterScreen() {
                     : 'Select Dietary Preferences'}
                 </Text>
                 {loadingTaxonomies ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : showPrefs ? (
                   <ActivityIndicator size="small" color={colors.primary} />
                 ) : showPrefs ? (
                   <ChevronUp size={16} color={colors.primary} />
