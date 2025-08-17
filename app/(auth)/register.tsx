@@ -242,7 +242,7 @@ export default function RegisterScreen() {
       // 3) Create user profile with all the address/contact info
       const { error: profileError } = await supabase
         .from('user_profiles')
-        .insert({
+        .upsert({
           user_id: userId,
           first_name: firstName,
           last_name: lastName,
@@ -252,6 +252,8 @@ export default function RegisterScreen() {
           state: state.trim() || null,
           zip: zip.trim() || null,
           phone: normalizePhone(phone) || null,
+        }, {
+          onConflict: 'user_id'
         });
 
       if (profileError) {
@@ -261,19 +263,27 @@ export default function RegisterScreen() {
 
       // 4) Save allergen selections
       if (selectedAllergenIds.size) {
-        const ua = Array.from(selectedAllergenIds).map((allergenId) => ({
-          user_id: userId,
-          allergen_id: allergenId,
-        }));
+        const ua = Array.from(selectedAllergenIds).map((allergenId) => {
+          const allergen = allergens.find(a => a.id === allergenId);
+          return {
+            user_id: userId,
+            allergen_id: allergenId,
+            allergen: allergen?.name || '',
+          };
+        });
         await supabase.from('user_allergens').insert(ua);
       }
       
       // 5) Save dietary preference selections
       if (selectedPrefIds.size) {
-        const udp = Array.from(selectedPrefIds).map((prefId) => ({
-          user_id: userId,
-          dietary_pref_id: prefId,
-        }));
+        const udp = Array.from(selectedPrefIds).map((prefId) => {
+          const dietPref = dietPrefs.find(d => d.id === prefId);
+          return {
+            user_id: userId,
+            dietary_pref_id: prefId,
+            dietary_pref: dietPref?.name || '',
+          };
+        });
         await supabase.from('user_dietary_prefs').insert(udp);
       }
     } catch (error) {
