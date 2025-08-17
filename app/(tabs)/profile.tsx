@@ -297,7 +297,7 @@ export default function ProfileScreen() {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
-      marginTop: 12,
+      marginTop: 8,
       marginBottom: 8,
       paddingHorizontal: 24,
     },
@@ -403,24 +403,22 @@ export default function ProfileScreen() {
         <View style={styles.formCard}>
           <View style={styles.form}>
           {/* Names */}
-          <View style={styles.row}>
-            <TextInput
-              style={[styles.input, styles.flex1]}
-              value={profile.firstName}
-              onChangeText={(text) => setProfile(prev => ({ ...prev, firstName: text }))}
-              placeholder="First name"
-              placeholderTextColor={colors.textSecondary}
-              autoCapitalize="words"
-            />
-            <TextInput
-              style={[styles.input, styles.flex1]}
-              value={profile.lastName}
-              onChangeText={(text) => setProfile(prev => ({ ...prev, lastName: text }))}
-              placeholder="Last name"
-              placeholderTextColor={colors.textSecondary}
-              autoCapitalize="words"
-            />
-          </View>
+          <TextInput
+            style={styles.input}
+            value={profile.firstName}
+            onChangeText={(text) => setProfile(prev => ({ ...prev, firstName: text }))}
+            placeholder="First name"
+            placeholderTextColor={colors.textSecondary}
+            autoCapitalize="words"
+          />
+          <TextInput
+            style={styles.input}
+            value={profile.lastName}
+            onChangeText={(text) => setProfile(prev => ({ ...prev, lastName: text }))}
+            placeholder="Last name"
+            placeholderTextColor={colors.textSecondary}
+            autoCapitalize="words"
+          />
 
           {/* Address */}
           <TextInput
@@ -494,15 +492,15 @@ export default function ProfileScreen() {
               keyboardType="number-pad"
               maxLength={10}
             />
-            <TextInput
-              style={[styles.input, styles.flex2]}
-              value={profile.phone}
-              onChangeText={(text) => setProfile(prev => ({ ...prev, phone: text }))}
-              placeholder="Phone"
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="phone-pad"
-            />
           </View>
+          <TextInput
+            style={styles.input}
+            value={profile.phone}
+            onChangeText={(text) => setProfile(prev => ({ ...prev, phone: text }))}
+            placeholder="Phone"
+            placeholderTextColor={colors.textSecondary}
+            keyboardType="phone-pad"
+          />
         </View>
         </View>
 
@@ -566,7 +564,6 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>Settings</Text>
         <View style={styles.themeContainer}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             {isDark ? (
