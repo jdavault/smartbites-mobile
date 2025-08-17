@@ -412,6 +412,7 @@ export default function ProfileScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
+        <View>
         <View style={styles.formCard}>
           <View style={styles.form}>
           {/* Names */}
@@ -518,8 +519,6 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
-        </View>
-
         <Text style={styles.sectionTitle}>Allergens</Text>
         {allergensLoading ? (
           <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
@@ -617,7 +616,6 @@ export default function ProfileScreen() {
             <Text style={[styles.buttonText, styles.signOutButtonText]}>Log Out</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+        </View>
     </SafeAreaView>
-  );
 }
