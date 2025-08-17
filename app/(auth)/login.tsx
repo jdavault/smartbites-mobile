@@ -5,10 +5,11 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Platform,
   StyleSheet as RNStyleSheet,
   KeyboardAvoidingView,
+  Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,6 +23,15 @@ import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import { Spacing } from '@/constants/Spacing';
 import { Fonts, FontSizes } from '@/constants/Typography';
 import ThemedText from '@/components/ThemedText';
+import { Image } from 'react-native';
+import SmartBitesLogo from '@/assets/images/smart-bites-logo.png';
+
+type ModalInfo = {
+  visible: boolean;
+  title: string;
+  subtitle?: string;
+  emoji?: string;
+};
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -29,199 +39,224 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { signIn, signInWithGoogle } = useAuth();
+  const [modalInfo, setModalInfo] = useState<ModalInfo>({
+    visible: false,
+    title: '',
+    subtitle: '',
+    emoji: undefined,
+  });
+
+  const { signIn /*, signInWithGoogle */ } = useAuth();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = getStyles(colors, insets);
 
+  const openModal = (info: Omit<ModalInfo, 'visible'>) =>
+    setModalInfo({ ...info, visible: true });
+  const closeModal = () => setModalInfo((m) => ({ ...m, visible: false }));
+
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      if (Platform.OS === 'web') {
-        console.error('Login validation failed: Missing email or password');
-        alert('Please fill in all fields');
-      } else {
-        Alert.alert('Error', 'Please fill in all fields');
-      }
+      openModal({
+        title: 'Missing Fields',
+        subtitle: 'Please fill in all fields before continuing.',
+        emoji: '📝',
+      });
       return;
     }
 
     setLoading(true);
-    
     try {
       console.log('Attempting login for:', email.trim());
       const { error } = await signIn(email.trim(), password);
-      
+
       if (error) {
         console.error('Login error:', error);
-        if (Platform.OS === 'web') {
-          alert(`Login Error: ${error.message}`);
-        } else {
-          Alert.alert('Login Error', error.message);
-        }
+        openModal({
+          title: 'Login Failed',
+          subtitle: error.message || 'Please try again.',
+          emoji: '🚫',
+        });
       } else {
         console.log('Login successful, redirecting...');
         router.replace('/(tabs)');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Unexpected login error:', err);
-      if (Platform.OS === 'web') {
-        alert('An unexpected error occurred. Please try again.');
-      } else {
-        Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-      }
-    }
-    
-    setLoading(false);
-  };
-
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    try {
-      console.log('Attempting Google login...');
-      await signInWithGoogle();
-    } catch (error: any) {
-      console.error('Google login error:', error);
-      if (Platform.OS === 'web') {
-        alert(`Google Login Error: ${error.message || 'Failed to sign in with Google'}`);
-      } else {
-        Alert.alert(
-          'Google Login Error',
-          error.message || 'Failed to sign in with Google'
-        );
-      }
+      openModal({
+        title: 'Unexpected Error',
+        subtitle: 'Something went wrong. Please try again.',
+        emoji: '⚠️',
+      });
     }
     setLoading(false);
   };
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Gradient is the true page background */}
+      {/* Background */}
       <LinearGradient
         colors={[colors.background, colors.textRice]}
         style={RNStyleSheet.absoluteFillObject}
       />
 
-      {/* Protect top safe area only; bottom inset applied in footer */}
+      {/* Modal */}
+      {modalInfo.visible && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={modalInfo.visible}
+          onRequestClose={closeModal}
+        >
+          <TouchableWithoutFeedback onPress={closeModal}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                {modalInfo.emoji ? (
+                  <Text style={styles.emoji}>{modalInfo.emoji}</Text>
+                ) : null}
+                <Text style={styles.modalTitle}>{modalInfo.title}</Text>
+                {!!modalInfo.subtitle && (
+                  <Text style={styles.modalSubtitle}>{modalInfo.subtitle}</Text>
+                )}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
+
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <KeyboardAvoidingView 
-          style={{ flex: 1 }} 
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Link href="/(auth)" asChild>
-              <TouchableOpacity style={styles.backButton}>
-                <ArrowLeft size={24} color={colors.textPrimary} />
-              </TouchableOpacity>
-            </Link>
-          </View>
+            {/* Header */}
+            <View style={styles.header}>
+              <Link href="/(auth)" asChild>
+                <TouchableOpacity style={styles.backButton}>
+                  <ArrowLeft size={24} color={colors.textPrimary} />
+                </TouchableOpacity>
+              </Link>
+            </View>
 
-          {/* Main fills space */}
-          <View style={styles.main}>
-            <Text style={styles.brandTitle}>SmartBites™</Text>
-            <Text style={styles.subtitle}>
-              Sign in to continue your culinary journey
-            </Text>
-
-            <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Enter your email"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.passwordInputContainer}>
+            {/* Main */}
+            <View style={styles.main}>
+              <Image
+                source={SmartBitesLogo}
+                style={styles.brandLogo}
+                accessible
+                accessibilityLabel="SmartBites logo"
+              />
+              <Text style={styles.subtitle}>
+                Sign in to continue your culinary journey
+              </Text>
+              <View style={styles.form}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Email</Text>
                   <TextInput
-                    style={styles.passwordInput}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="Enter your password"
+                    style={styles.input}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="Enter your email"
                     placeholderTextColor={colors.textSecondary}
-                    secureTextEntry={!showPassword}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
                   />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Password</Text>
+                  <View style={styles.passwordInputContainer}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder="Enter your password"
+                      placeholderTextColor={colors.textSecondary}
+                      secureTextEntry={!showPassword}
+                      returnKeyType="done"
+                      onSubmitEditing={handleLogin}
+                    />
+                    <TouchableOpacity
+                      style={styles.eyeButton}
+                      onPress={() => setShowPassword((v) => !v)}
+                    >
+                      {showPassword ? (
+                        <EyeOff size={20} color={colors.textSecondary} />
+                      ) : (
+                        <Eye size={20} color={colors.textSecondary} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.actions}>
                   <TouchableOpacity
-                    style={styles.eyeButton}
-                    onPress={() => setShowPassword((v) => !v)}
+                    style={[styles.button, loading && styles.buttonDisabled]}
+                    onPress={handleLogin}
+                    disabled={loading}
                   >
-                    {showPassword ? (
-                      <EyeOff size={20} color={colors.textSecondary} />
-                    ) : (
-                      <Eye size={20} color={colors.textSecondary} />
-                    )}
+                    <Text style={styles.buttonText}>
+                      {loading ? 'Signing In...' : 'Sign In'}
+                    </Text>
                   </TouchableOpacity>
-                </View>
-              </View>
 
-              <View style={styles.actions}>
-                <TouchableOpacity
-                  style={[styles.button, loading && styles.buttonDisabled]}
-                  onPress={handleLogin}
-                  disabled={loading}
-                >
-                  <Text style={styles.buttonText}>
-                    {loading ? 'Signing In...' : 'Sign In'}
-                  </Text>
-                </TouchableOpacity>
+                  <View style={styles.divider}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>OR</Text>
+                    <View style={styles.dividerLine} />
+                  </View>
 
-                <View style={styles.divider}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>OR</Text>
-                  <View style={styles.dividerLine} />
-                </View>
+                  {/* Google => "coming soon" modal */}
+                  <TouchableOpacity
+                    style={styles.googleButton}
+                    onPress={() =>
+                      openModal({
+                        title: 'Google Login Not Available',
+                        subtitle: "We're working on it — coming soon!",
+                        emoji: '😔',
+                      })
+                    }
+                    disabled={loading}
+                  >
+                    <Text style={styles.googleButtonText}>
+                      Continue with Google
+                    </Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.googleButton}
-                  onPress={handleGoogleLogin}
-                  disabled={loading}
-                >
-                  <Text style={styles.googleButtonText}>
-                    Continue with Google
-                  </Text>
-                </TouchableOpacity>
+                  {/* Sign up */}
+                  <View className="signupRow" style={styles.signupRow}>
+                    <Text style={styles.footerText}>
+                      Don&apos;t have an account?{' '}
+                    </Text>
+                    <Link href="/(auth)/register" asChild>
+                      <TouchableOpacity>
+                        <Text style={styles.footerLink}>Sign Up</Text>
+                      </TouchableOpacity>
+                    </Link>
+                  </View>
 
-                {/* Keep Sign up near Google */}
-                <View style={styles.signupRow}>
-                  <Text style={styles.footerText}>
-                    Don&apos;t have an account?{' '}
-                  </Text>
-                  <Link href="/(auth)/register" asChild>
-                    <TouchableOpacity>
-                      <Text style={styles.footerLink}>Sign Up</Text>
-                    </TouchableOpacity>
-                  </Link>
-                </View>
-
-                <View style={styles.forgotPasswordContainer}>
-                  <Link href="/(auth)/forgot-password" asChild>
-                    <TouchableOpacity>
-                      <Text style={styles.forgotPasswordLink}>
-                        Forgot Password?
-                      </Text>
-                    </TouchableOpacity>
-                  </Link>
+                  <View style={styles.forgotPasswordContainer}>
+                    <Link href="/(auth)/forgot-password" asChild>
+                      <TouchableOpacity>
+                        <Text style={styles.forgotPasswordLink}>
+                          Forgot Password?
+                        </Text>
+                      </TouchableOpacity>
+                    </Link>
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
 
-          {/* Footer pinned at bottom */}
-          <View style={styles.footer}>
-            <ThemedText style={styles.copyright}>
-              <Text style={{ fontWeight: 'bold' }}>SmartBites</Text>
-              <Text>™ © 2025</Text>
-            </ThemedText>
-          </View>
+            {/* Footer */}
+            <View style={styles.footer}>
+              <ThemedText style={styles.copyright}>
+                <Text style={{ fontWeight: 'bold' }}>SmartBites</Text>
+                <Text>™ © 2025</Text>
+              </ThemedText>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -231,7 +266,6 @@ export default function LoginScreen() {
 
 const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
   StyleSheet.create({
-    // Page padding that used to be on a container
     content: {
       flex: 1,
       paddingHorizontal: 24,
@@ -241,28 +275,35 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       flexDirection: 'row',
       alignItems: 'center',
       paddingTop: 16,
-      paddingBottom: 32,
+      paddingBottom: 20,
     },
     backButton: { padding: 8 },
 
-    // Main fills space between header and footer
     main: {
       flex: 1,
     },
-
-    brandTitle: {
-      fontSize: 47,
-      fontFamily: 'Inter-Bold',
-      color: '#FF8866',
-      textAlign: 'center',
-      marginBottom: 15,
+    // brandTitle: {
+    //   fontSize: 47,
+    //   fontFamily: 'Inter-Bold',
+    //   color: '#FF8866',
+    //   textAlign: 'center',
+    //   marginBottom: 15,
+    // },
+    brandLogo: {
+      width: 200,
+      height: 200,
+      alignSelf: 'center',
+      marginBottom: 0, // keeps the same spacing the text had
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: 20, // was 16 — bigger subtitle
+      lineHeight: 24, // keeps it tidy at larger size
       fontFamily: Fonts.heading,
       color: colors.textSecondary,
       textAlign: 'center',
-      marginBottom: 40,
+      fontWeight: '700',
+      marginTop: 0, // ensure no extra gap above
+      marginBottom: 10, // was 40 — tighter before the form
     },
 
     form: { gap: 20 },
@@ -373,7 +414,6 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       textDecorationLine: 'underline',
     },
 
-    // Footer: add bottom safe-area inset here
     footer: {
       paddingTop: 8,
       paddingBottom: insets.bottom + 24,
@@ -382,5 +422,43 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     copyright: {
       fontSize: 14,
       textAlign: 'center',
+    },
+
+    // Modal styles (mirrors your old look/feel)
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: '#FFFFFF',
+      padding: 24,
+      borderRadius: 12,
+      width: '80%',
+      maxWidth: 420,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 5,
+    },
+    modalTitle: {
+      fontFamily: Fonts.headingBold,
+      fontSize: FontSizes.lg,
+      color: '#222',
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    modalSubtitle: {
+      fontFamily: Fonts.body,
+      fontSize: FontSizes.md,
+      color: '#555',
+      textAlign: 'center',
+    },
+    emoji: {
+      fontSize: 40,
+      marginBottom: 12,
     },
   });

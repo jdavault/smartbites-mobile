@@ -15,6 +15,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRecipes } from '@/contexts/RecipesContext';
+import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useAllergens } from '@/contexts/AllergensContext';
 import { useDietary } from '@/contexts/DietaryContext';
 import { generateRecipes } from '@/lib/openai';
@@ -27,6 +28,7 @@ import DietaryFilter from '@/components/DietaryFilter';
 export default function SearchScreen() {
   const { user } = useAuth();
   const { colors } = useTheme();
+  const { profile } = useUserProfile();
   const {
     savedRecipes,
     favoriteRecipes,
@@ -174,24 +176,24 @@ export default function SearchScreen() {
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: 24,
-      paddingTop: 16,
-      paddingBottom: 16,
+      paddingTop: 8,
+      paddingBottom: 8,
       backgroundColor: '#FFFFFF',
-      marginBottom: 16,
+      marginBottom: 12,
     },
     headerContent: {
       flex: 1,
     },
     headerLogo: {
-      width: 52,
-      height: 52,
+      width: 72,
+      height: 72,
       marginLeft: 16,
     },
     title: {
-      fontSize: 28,
+      fontSize: 22,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
-      marginBottom: 8,
+      marginBottom: 4,
     },
     subtitle: {
       fontSize: 16,
@@ -289,7 +291,9 @@ export default function SearchScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.title}>Hi, Joe!</Text>
+          <Text style={styles.title}>
+            Hi, {profile?.firstName || 'there'}!
+          </Text>
           <Text style={styles.subtitle}>
             What would you like to cook today?
           </Text>

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ChefHat, MapPin, Calendar, Globe, Star, Clock } from 'lucide-react-native';
@@ -19,16 +20,27 @@ export default function RestaurantsScreen() {
     },
     header: {
       paddingHorizontal: 24,
-      paddingTop: 16,
-      paddingBottom: 32,
+      paddingTop: 8,
+      paddingBottom: 8,
       backgroundColor: colors.surface,
-      marginBottom: 24,
+      marginBottom: 12,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    headerContent: {
+      flex: 1,
+    },
+    headerLogo: {
+      width: 72,
+      height: 72,
+      marginLeft: 16,
     },
     title: {
       fontSize: 28,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
-      marginBottom: 8,
+      marginBottom: 4,
     },
     subtitle: {
       fontSize: 16,
@@ -197,8 +209,15 @@ export default function RestaurantsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Restaurants</Text>
-        <Text style={styles.subtitle}>Find allergy-friendly dining options</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Restaurants</Text>
+          <Text style={styles.subtitle}>Find allergy-friendly dining options</Text>
+        </View>
+        <Image
+          source={require('@/assets/images/smart-bites-logo.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
