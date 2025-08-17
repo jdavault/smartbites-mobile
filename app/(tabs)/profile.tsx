@@ -114,6 +114,7 @@ export default function ProfileScreen() {
   });
   const [loading, setLoading] = useState(false);
   const [showStates, setShowStates] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
     if (user) loadProfile();
@@ -377,23 +378,37 @@ export default function ProfileScreen() {
     signOutButton: { backgroundColor: '#FFFFFF', borderColor: colors.error },
     signOutButtonText: { color: colors.error },
 
-    // Profile-specific styles (moved inside StyleSheet)
+    aboutToggle: {
+      alignItems: 'center',
+      paddingVertical: 6,
+      marginBottom: 4,
+    },
+    aboutToggleText: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.primary,
+    },
+
+    // tighten the legal section spacing
     legalSection: {
       paddingHorizontal: 24,
-      paddingTop: 16,
-      paddingBottom: 32,
+      paddingTop: 8, // was larger
+      paddingBottom: 12, // was larger
     },
     disclaimerBox: {
       flexDirection: 'row',
       alignItems: 'flex-start',
       backgroundColor: colors.surface,
-      padding: 16,
+      padding: 10, // was 16
       borderRadius: 12,
-      marginBottom: 16,
+      marginBottom: 8, // was 16
       borderWidth: 1,
       borderColor: '#f59e0b',
     },
-    disclaimerIcon: { marginRight: 12, marginTop: 2 },
+    disclaimerIcon: {
+      marginRight: 10,
+      marginTop: 2,
+    },
     disclaimerText: {
       flex: 1,
       fontSize: 14,
@@ -401,25 +416,26 @@ export default function ProfileScreen() {
       color: colors.textSecondary,
       lineHeight: 20,
     },
+
     link: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 12,
-      marginBottom: 8,
+      paddingVertical: 8, // was 12
+      marginBottom: 4, // was 8
     },
     linkText: {
-      fontSize: 14,
+      fontSize: 13, // was 14
       fontFamily: 'Inter-Medium',
       color: colors.primary,
-      marginRight: 8,
+      marginRight: 6, // was 8
     },
     versionText: {
       fontSize: 12,
       fontFamily: 'Inter-Regular',
       color: colors.textSecondary,
       textAlign: 'center',
-      marginTop: 16,
+      marginTop: 6, // was 16
     },
   });
 
@@ -673,45 +689,58 @@ export default function ProfileScreen() {
           </View>
 
           {/* Legal Section */}
-          <View style={styles.legalSection}>
-            <View style={styles.disclaimerBox}>
-              <AlertCircle
-                size={20}
-                color="#f59e0b"
-                style={styles.disclaimerIcon}
-              />
-              <Text style={styles.disclaimerText}>
-                This app helps avoid allergens in recipes but is not a
-                substitute for professional advice. Always verify ingredients if
-                you have severe allergies.
+          <View>
+            <TouchableOpacity
+              onPress={() => setShowAbout(!showAbout)}
+              style={styles.aboutToggle}
+            >
+              <Text style={styles.aboutToggleText}>
+                {showAbout ? 'Hide About ▲' : 'Show About ▼'}
               </Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.link}
-              onPress={() =>
-                Linking.openURL(
-                  'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
-                )
-              }
-            >
-              <Text style={styles.linkText}>Terms of Service</Text>
-              <ExternalLink size={16} color={colors.primary} />
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.link}
-              onPress={() =>
-                Linking.openURL(
-                  'https://www.privacypolicies.com/live/1a6f589d-84cc-4f85-82b9-802b08c501b2'
-                )
-              }
-            >
-              <Text style={styles.linkText}>Privacy Policy</Text>
-              <ExternalLink size={16} color={colors.primary} />
-            </TouchableOpacity>
+            {showAbout && (
+              <View style={styles.legalSection}>
+                <View style={styles.disclaimerBox}>
+                  <AlertCircle
+                    size={20}
+                    color="#f59e0b"
+                    style={styles.disclaimerIcon}
+                  />
+                  <Text style={styles.disclaimerText}>
+                    This app helps avoid allergens in recipes but is not a
+                    substitute for professional advice. Always verify
+                    ingredients if you have severe allergies.
+                  </Text>
+                </View>
 
-            <Text style={styles.versionText}>Version {APP_VERSION}</Text>
+                <TouchableOpacity
+                  style={styles.link}
+                  onPress={() =>
+                    Linking.openURL(
+                      'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                    )
+                  }
+                >
+                  <Text style={styles.linkText}>Terms of Service</Text>
+                  <ExternalLink size={16} color={colors.primary} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.link}
+                  onPress={() =>
+                    Linking.openURL(
+                      'https://www.privacypolicies.com/live/1a6f589d-84cc-4f85-82b9-802b08c501b2'
+                    )
+                  }
+                >
+                  <Text style={styles.linkText}>Privacy Policy</Text>
+                  <ExternalLink size={16} color={colors.primary} />
+                </TouchableOpacity>
+
+                <Text style={styles.versionText}>Version {APP_VERSION}</Text>
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>
