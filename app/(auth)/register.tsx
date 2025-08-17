@@ -31,6 +31,16 @@ import ThemedText from '@/components/ThemedText';
 import { ALLERGENS } from '@/contexts/AllergensContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 
+interface AllergenRow {
+  id: string;
+  name: string;
+}
+
+interface DietaryPrefRow {
+  id: string;
+  name: string;
+}
+
 type ModalInfo = {
   visible: boolean;
   title: string;
@@ -70,10 +80,56 @@ export default function RegisterScreen() {
     setModal({ ...m, visible: true });
   const closeModal = () => setModal((prev) => ({ ...prev, visible: false }));
 
-  // taxonomy lists - use imported constants
-  const allergens = ALLERGENS.map(a => ({ id: a.$id, name: a.name }));
-  const dietPrefs = DIETARY_PREFERENCES.map(d => ({ id: d.$id, name: d.name }));
-  const loadingTaxonomies = false;
+  // taxonomy lists - fetch from Supabase
+  const [allergens, setAllergens] = useState<AllergenRow[]>([]);
+  const [dietPrefs, setDietPrefs] = useState<DietaryPrefRow[]>([]);
+  const [loadingTaxonomies, setLoadingTaxonomies] = useState(true);
+
+  // Fetch allergens and dietary preferences from Supabase
+  useEffect(() => {
+    const fetchTaxonomies = async () => {
+      try {
+        setLoadingTaxonomies(true);
+        
+        // Fetch allergens
+        const { data: allergensData, error: allergensError } = await supabase
+          .from('allergens')
+          .select('id, name')
+          .order('name');
+        
+        if (allergensError) {
+          console.error('Error fetching allergens:', allergensError);
+          // Fallback to constants if table doesn't exist
+          setAllergens(ALLERGENS.map(a => ({ id: a.$id, name: a.name })));
+        } else {
+          setAllergens(allergensData || []);
+        }
+
+        // Fetch dietary preferences
+        const { data: dietPrefsData, error: dietPrefsError } = await supabase
+          .from('dietary_prefs')
+          .select('id, name')
+          .order('name');
+        
+        if (dietPrefsError) {
+          console.error('Error fetching dietary preferences:', dietPrefsError);
+          // Fallback to constants if table doesn't exist
+          setDietPrefs(DIETARY_PREFERENCES.map(d => ({ id: d.$id, name: d.name })));
+        } else {
+          setDietPrefs(dietPrefsData || []);
+        }
+      } catch (error) {
+        console.error('Error in fetchTaxonomies:', error);
+        // Fallback to constants
+        setAllergens(ALLERGENS.map(a => ({ id: a.$id, name: a.name })));
+        setDietPrefs(DIETARY_PREFERENCES.map(d => ({ id: d.$id, name: d.name })));
+      } finally {
+        setLoadingTaxonomies(false);
+      }
+    };
+
+    fetchTaxonomies();
+  }, []);
 
   // selections
   const [showAllergens, setShowAllergens] = useState(false);
@@ -198,32 +254,18 @@ export default function RegisterScreen() {
 
     try {
       if (selectedAllergenIds.size) {
-        const selectedAllergenNames = Array.from(selectedAllergenIds).map(id => {
-          const allergen = allergens.find(a => a.id === id);
-          return allergen?.name;
-        }).filter(Boolean);
-        
-        const ua = selectedAllergenNames.map((allergen) => ({
+        const ua = Array.from(selectedAllergenIds).map((allergenId) => ({
           user_id: userId,
-          allergen,
+          allergen_id: allergenId,
         }));
-        await supabase.from('user_allergens').upsert(ua, {
-          onConflict: 'user_id,allergen',
-        });
+        await supabase.from('user_allergens').insert(ua);
       }
       if (selectedPrefIds.size) {
-        const selectedPrefNames = Array.from(selectedPrefIds).map(id => {
-          const pref = dietPrefs.find(d => d.id === id);
-          return pref?.name;
-        }).filter(Boolean);
-        
-        const udp = selectedPrefNames.map((dietary_pref) => ({
+        const udp = Array.from(selectedPrefIds).map((prefId) => ({
           user_id: userId,
-          dietary_pref,
+          dietary_pref_id: prefId,
         }));
-        await supabase.from('user_dietary_prefs').upsert(udp, {
-          onConflict: 'user_id,dietary_pref',
-        });
+        await supabase.from('user_dietary_prefs').insert(udp);
       }
     } catch (error) {
       console.error('Error saving preferences:', error);
