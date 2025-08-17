@@ -661,7 +661,55 @@ export default function ProfileScreen() {
           </View>
         </View>
       </ScrollView>
-      </ScrollView>
+    </SafeAreaView>
     </SafeAreaView>
   );
 }
+
+    // Profile-specific styles that were missing
+    legalSection: {
+      paddingHorizontal: 24,
+      paddingTop: 16,
+      paddingBottom: 32,
+    },
+    disclaimerBox: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      backgroundColor: colors.surface,
+      padding: 16,
+      borderRadius: 12,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: '#f59e0b',
+    },
+    disclaimerIcon: {
+      marginRight: 12,
+      marginTop: 2,
+    },
+    disclaimerText: {
+      flex: 1,
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
+    link: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      marginBottom: 8,
+    },
+    linkText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+      color: colors.primary,
+      marginRight: 8,
+    },
+    versionText: {
+      fontSize: 12,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 16,
+    },
