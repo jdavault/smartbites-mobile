@@ -617,7 +617,7 @@ export default function ProfileScreen() {
             <Text style={[styles.buttonText, styles.signOutButtonText]}>Log Out</Text>
           </TouchableOpacity>
         </View>
-
+      </ScrollView>
     </SafeAreaView>
   );
 }
