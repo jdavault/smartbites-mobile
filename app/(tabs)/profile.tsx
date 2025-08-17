@@ -304,7 +304,7 @@ export default function ProfileScreen() {
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
       marginTop: 6,
-      marginBottom: 6,
+      marginBottom: 12,
       paddingHorizontal: 24,
     },
 
@@ -314,7 +314,7 @@ export default function ProfileScreen() {
       flexWrap: 'wrap',
       gap: 6,
       paddingHorizontal: 24,
-      marginBottom: 12,
+      marginBottom: 16,
     },
     chip: {
       paddingVertical: 6,
@@ -352,6 +352,7 @@ export default function ProfileScreen() {
       marginHorizontal: 24,
       borderRadius: 12,
       marginBottom: 16,
+      marginTop: 8,
       borderWidth: 1,
       borderColor: colors.accent,
     },
