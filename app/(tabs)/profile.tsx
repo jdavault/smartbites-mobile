@@ -11,7 +11,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { router, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAllergens, ALLERGENS } from '@/contexts/AllergensContext';
@@ -125,13 +125,20 @@ export default function ProfileScreen() {
               setLoading(true);
               await signOut();
               
-              // Force redirect for web context (Bolt)
-              setTimeout(() => {
+              // For web context, force a page reload to clear all state
+              if (Platform.OS === 'web') {
+                window.location.href = '/';
+              } else {
                 router.replace('/(auth)');
-              }, 100);
+              }
             } catch (error) {
               console.error('Sign out error:', error);
-              Alert.alert('Error', 'Failed to sign out. Please try again.');
+              // Even if there's an error, try to redirect
+              if (Platform.OS === 'web') {
+                window.location.href = '/';
+              } else {
+                router.replace('/(auth)');
+              }
             } finally {
               setLoading(false);
             }
