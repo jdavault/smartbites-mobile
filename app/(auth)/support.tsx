@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // <- use this SafeAreaView
 import { LinearGradient } from 'expo-linear-gradient';
@@ -49,11 +50,19 @@ export default function SupportScreen() {
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <Link href="/(auth)" asChild>
-              <TouchableOpacity style={styles.backButton}>
-                <ArrowLeft size={24} color={colors.text} />
-              </TouchableOpacity>
-            </Link>
+            <View style={styles.headerContent}>
+              <Link href="/(auth)" asChild>
+                <TouchableOpacity style={styles.backButton}>
+                  <ArrowLeft size={24} color={colors.text} />
+                </TouchableOpacity>
+              </Link>
+              <Text style={styles.headerTitle}>Support</Text>
+            </View>
+            <Image
+              source={require('@/assets/images/smart-bites-logo.png')}
+              style={styles.headerLogo}
+              resizeMode="contain"
+            />
           </View>
 
           {/* Body */}
@@ -62,8 +71,6 @@ export default function SupportScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.title}>Support</Text>
-
             <Text style={styles.paragraph}>
               Need help using the{' '}
               <Text style={styles.brandName}>SmartBites</Text>
@@ -186,24 +193,36 @@ const getStyles = (colors: any) =>
 
     header: {
       flexDirection: 'row',
+      justifyContent: 'space-between',
       alignItems: 'center',
-      paddingTop: 4,
+      paddingTop: 8,
       paddingBottom: 8,
     },
-    backButton: { padding: 8 },
+    headerContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    backButton: {
+      padding: 8,
+      marginRight: 12,
+    },
+    headerTitle: {
+      fontSize: 28,
+      fontFamily: 'Inter-Bold',
+      color: '#FF8866',
+    },
+    headerLogo: {
+      width: 72,
+      height: 72,
+      marginLeft: 16,
+    },
 
     // Scroll content padding; add bottom space so it’s not flush with the home indicator
     scrollInner: {
       paddingBottom: 32,
     },
 
-    title: {
-      fontSize: 28,
-      fontFamily: 'Inter-Bold',
-      color: '#FF8866',
-      textAlign: 'center',
-      marginBottom: 16,
-    },
     paragraph: {
       fontSize: 16,
       fontFamily: 'Lato-Regular',
