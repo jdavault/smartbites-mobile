@@ -9,7 +9,9 @@ import {
   ScrollView,
   Switch,
   Alert,
+  Platform,
 } from 'react-native';
+import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAllergens, ALLERGENS } from '@/contexts/AllergensContext';
@@ -123,14 +125,18 @@ export default function ProfileScreen() {
           style: 'destructive', 
           onPress: async () => {
             try {
-             setLoading(true);
+              setLoading(true);
               await signOut();
-             // Navigation will be handled automatically by the auth context
+              // For web context, explicitly redirect to auth
+              if (Platform.OS === 'web') {
+                router.replace('/(auth)');
+              }
+              // Navigation will be handled automatically by the auth context for mobile
             } catch (error) {
               console.error('Sign out error:', error);
               Alert.alert('Error', 'Failed to sign out. Please try again.');
-           } finally {
-             setLoading(false);
+            } finally {
+              setLoading(false);
             }
           }
         },
