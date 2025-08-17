@@ -121,27 +121,9 @@ export default function ProfileScreen() {
           text: 'Sign Out', 
           style: 'destructive', 
           onPress: async () => {
-            try {
-              setLoading(true);
-              await signOut();
-              
-              // For web context, force a page reload to clear all state
-              if (Platform.OS === 'web') {
-                window.location.href = '/';
-              } else {
-                router.replace('/(auth)');
-              }
-            } catch (error) {
-              console.error('Sign out error:', error);
-              // Even if there's an error, try to redirect
-              if (Platform.OS === 'web') {
-                window.location.href = '/';
-              } else {
-                router.replace('/(auth)');
-              }
-            } finally {
-              setLoading(false);
-            }
+            setLoading(true);
+            await signOut();
+            setLoading(false);
           }
         },
       ]

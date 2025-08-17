@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
@@ -141,17 +142,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Sign out from Supabase first
-      await supabase.auth.signOut();
-      
       // Clear local state
       setUser(null);
       setSession(null);
+      
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // For web, force a complete page reload to clear everything
+      if (Platform.OS === 'web') {
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
     } catch (error) {
       console.error('Sign out error:', error);
       // Even if Supabase signOut fails, clear local state
       setUser(null);
       setSession(null);
+      
+      // Still try to reload on web even if signOut failed
+      if (Platform.OS === 'web') {
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
     }
   };
 
