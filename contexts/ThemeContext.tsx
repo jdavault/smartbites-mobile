@@ -180,7 +180,7 @@ export const ColorScheme = {
     warning: Colors.warning,
 
     // Extras
-    dietary: Colors.cerulean[700],
+    dietary: '#0B6082',
   },
 };
 
