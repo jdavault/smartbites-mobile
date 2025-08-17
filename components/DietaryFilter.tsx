@@ -26,15 +26,15 @@ export default function DietaryFilter({
   const styles = StyleSheet.create({
     container: {
       backgroundColor: colors.surface,
-      paddingTop: 8,
-      marginBottom: 16,
+      paddingTop: 4,
+      marginBottom: 8,
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: 24,
-      marginBottom: 12,
+      marginBottom: 6,
     },
     titleContainer: {
       flexDirection: 'row',
@@ -56,7 +56,7 @@ export default function DietaryFilter({
     },
     filters: {
       paddingHorizontal: 24,
-      paddingBottom: 16,
+      paddingBottom: 8,
     },
     filterItem: {
       flexDirection: 'row',
@@ -64,9 +64,9 @@ export default function DietaryFilter({
       borderWidth: 1,
       borderColor: '#000000',
       borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      marginRight: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      marginRight: 6,
       backgroundColor: colors.surface,
     },
     activeFilterItem: {
@@ -87,8 +87,8 @@ export default function DietaryFilter({
     activeFiltersContainer: {
       backgroundColor: colors.surface,
       paddingHorizontal: 24,
-      paddingVertical: 12,
-      marginBottom: 12,
+      paddingVertical: 8,
+      marginBottom: 6,
     },
     activeFiltersText: {
       fontFamily: 'Inter-Regular',
