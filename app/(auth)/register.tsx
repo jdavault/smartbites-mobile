@@ -904,8 +904,13 @@ export default function RegisterScreen() {
               {/* Terms of Service (compact) */}
               <Text style={styles.tosText}>
                 By tapping “Create Account”, I acknowledge that I have read and
-    sectionTitle: {
-      fontSize: 18,
+                agree to the{' '}
+                <Text
+                  style={styles.tosLink}
+                  onPress={() =>
+                    Linking.openURL(
+                      'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                    )
                   }
                 >
                   Privacy Policy
