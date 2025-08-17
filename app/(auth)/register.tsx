@@ -463,7 +463,7 @@ export default function RegisterScreen() {
           fontFamily: 'Inter-SemiBold',
           color: colors.primary,
           marginTop: 0,
-          marginBottom: 6,
+          marginBottom: 2,
           paddingHorizontal: 16,
         },
         sectionTitleDietary: {
@@ -471,7 +471,7 @@ export default function RegisterScreen() {
           fontFamily: 'Inter-SemiBold',
           color: colors.dietary,
           marginTop: 0,
-          marginBottom: 6,
+          marginBottom: 2,
           paddingHorizontal: 16,
         },
 
