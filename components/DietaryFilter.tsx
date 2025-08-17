@@ -43,7 +43,7 @@ export default function DietaryFilter({
     title: {
       fontFamily: 'Inter-SemiBold',
       fontSize: 16,
-      color: '#094e6a',
+      color: '#0B6082',
       marginLeft: 8,
     },
     clearButton: {
@@ -52,7 +52,7 @@ export default function DietaryFilter({
     clearButtonText: {
       fontFamily: 'Inter-Regular',
       fontSize: 14,
-      color: '#094e6a',
+      color: '#0B6082',
     },
     filters: {
       paddingHorizontal: 24,
@@ -70,8 +70,8 @@ export default function DietaryFilter({
       backgroundColor: colors.surface,
     },
     activeFilterItem: {
-      backgroundColor: '#094e6a',
-      borderColor: '#094e6a',
+      backgroundColor: '#0B6082',
+      borderColor: '#0B6082',
     },
     filterText: {
       fontSize: 14,
@@ -97,7 +97,7 @@ export default function DietaryFilter({
     },
     activeFiltersHighlight: {
       fontFamily: 'Inter-SemiBold',
-      color: '#094e6a',
+      color: '#0B6082',
     },
   });
 
