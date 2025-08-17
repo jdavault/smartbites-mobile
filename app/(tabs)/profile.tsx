@@ -214,7 +214,7 @@ export default function ProfileScreen() {
     },
     header: {
       paddingHorizontal: 24,
-      paddingTop: 4,
+      paddingTop: 8,
       paddingBottom: 12,
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -232,7 +232,7 @@ export default function ProfileScreen() {
       fontSize: 28,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
-      marginBottom: 8,
+      marginBottom: 4,
     },
     subtitle: {
       fontSize: 16,
@@ -474,7 +474,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.title}>Account</Text>
+          <Text style={styles.title}>Profile</Text>
           <Text style={styles.subtitle}>User preferences</Text>
         </View>
         <Image
