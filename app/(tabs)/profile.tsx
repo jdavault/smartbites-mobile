@@ -51,13 +51,9 @@ export default function ProfileScreen() {
         .from('user_profiles')
         .select('*')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          // No profile exists yet - this is expected for new users
-          return;
-        }
         if (error.code === '42P01') {
           console.warn('Database tables not created yet. Please run the migration.');
           return;
