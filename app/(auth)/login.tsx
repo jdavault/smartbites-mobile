@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -140,6 +141,14 @@ export default function LoginScreen() {
 
             {/* Main */}
             <View style={styles.main}>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require('@/assets/images/smart-bites-logo.png')}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+              </View>
+
               <Text style={styles.brandTitle}>SmartBites™</Text>
               <Text style={styles.subtitle}>
                 Sign in to continue your culinary journey
@@ -277,12 +286,21 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       flex: 1,
     },
 
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    logoImage: {
+      width: 120,
+      height: 120,
+    },
+
     brandTitle: {
-      fontSize: 47,
+      fontSize: 42,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
       textAlign: 'center',
-      marginBottom: 15,
+      marginBottom: 12,
     },
     subtitle: {
       fontSize: 16,
