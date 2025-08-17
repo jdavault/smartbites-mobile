@@ -511,8 +511,8 @@ export default function RegisterScreen() {
           paddingHorizontal: 16, // Match form padding
         },
         chip: {
-          paddingVertical: 4, // ↓ reduced further
-          paddingHorizontal: 8, // ↓ reduced further
+          paddingVertical: 6, // ↑ increased for better touch target
+          paddingHorizontal: 10, // ↑ increased for better readability
           borderRadius: 999,
           borderWidth: 1,
           borderColor: colors.border,
@@ -527,7 +527,7 @@ export default function RegisterScreen() {
           borderColor: colors.dietary,
         },
         chipText: {
-          fontSize: 11, // ↓ reduced further
+          fontSize: 12, // ↑ increased for better readability
           fontFamily: 'Inter-Medium',
           color: colors.text,
         },
