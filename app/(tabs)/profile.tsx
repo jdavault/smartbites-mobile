@@ -301,8 +301,8 @@ export default function ProfileScreen() {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
-      marginTop: 6,
-      marginBottom: 12,
+      marginTop: 2,
+      marginBottom: 8,
       paddingHorizontal: 24,
     },
 
@@ -356,7 +356,7 @@ export default function ProfileScreen() {
 
     // Buttons
     button: {
-      paddingVertical: 12,
+      paddingVertical: 8,
       borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
@@ -366,7 +366,8 @@ export default function ProfileScreen() {
       flexDirection: 'row',
       paddingHorizontal: 24,
       gap: 12,
-      marginBottom: 16,
+      marginTop: 8,
+      marginBottom: 12,
     },
     halfButton: { flex: 1 },
     saveButton: {
