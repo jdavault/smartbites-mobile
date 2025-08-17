@@ -833,25 +833,13 @@ export default function RegisterScreen() {
                 />
               </View>
 
-              {/* Allergens */}
-              <TouchableOpacity
-                onPress={() => setShowAllergens((v) => !v)}
-                style={styles.sectionToggle}
-                disabled={loadingTaxonomies}
-              >
-                <Text style={styles.sectionToggleText}>
-                  {showAllergens ? 'Hide Allergens' : 'Select Allergens'}
-                </Text>
-                {loadingTaxonomies ? (
+              {/* Allergens Section */}
+              <Text style={styles.sectionTitle}>Allergens</Text>
+              {loadingTaxonomies ? (
+                <View style={styles.loadingContainer}>
                   <ActivityIndicator size="small" color={colors.primary} />
-                ) : showAllergens ? (
-                  <ChevronUp size={16} color={colors.primary} />
-                ) : (
-                  <ChevronDown size={16} color={colors.primary} />
-                )}
-              </TouchableOpacity>
-
-              {showAllergens && !loadingTaxonomies && (
+                </View>
+              ) : (
                 <View style={styles.chipGrid}>
                   {allergens.map((a) => {
                     const selected = selectedAllergenIds.has(a.id);
@@ -881,34 +869,20 @@ export default function RegisterScreen() {
                 </View>
               )}
 
-              {/* Dietary Preferences */}
-              <TouchableOpacity
-                onPress={() => setShowPrefs((v) => !v)}
-                style={styles.sectionToggle}
-                disabled={loadingTaxonomies}
-              >
-                <Text style={styles.sectionToggleText}>
-                  {showPrefs
-                    ? 'Hide Dietary Preferences'
-                    : 'Select Dietary Preferences'}
-                </Text>
-                {loadingTaxonomies ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
-                ) : showPrefs ? (
-                  <ChevronUp size={16} color={colors.primary} />
-                ) : (
-                  <ChevronDown size={16} color={colors.primary} />
-                )}
-              </TouchableOpacity>
-
-              {showPrefs && !loadingTaxonomies && (
+              {/* Dietary Preferences Section */}
+              <Text style={styles.sectionTitleDietary}>Dietary Preferences</Text>
+              {loadingTaxonomies ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color={colors.dietary} />
+                </View>
+              ) : (
                 <View style={styles.chipGrid}>
                   {dietPrefs.map((d) => {
                     const selected = selectedPrefIds.has(d.id);
                     return (
                       <TouchableOpacity
                         key={d.id}
-                        style={[styles.chip, selected && styles.chipSelected]}
+                        style={[styles.chip, selected && styles.chipSelectedDietary]}
                         onPress={() =>
                           toggle(selectedPrefIds, d.id, setSelectedPrefIds)
                         }
@@ -930,13 +904,8 @@ export default function RegisterScreen() {
               {/* Terms of Service (compact) */}
               <Text style={styles.tosText}>
                 By tapping “Create Account”, I acknowledge that I have read and
-                agree to the{' '}
-                <Text
-                  style={styles.tosLink}
-                  onPress={() =>
-                    Linking.openURL(
-                      'https://www.privacypolicies.com/live/1a6f589d-84cc-4f85-82b9-802b08c501b2'
-                    )
+    sectionTitle: {
+      fontSize: 18,
                   }
                 >
                   Privacy Policy
