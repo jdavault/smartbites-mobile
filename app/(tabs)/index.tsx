@@ -185,8 +185,8 @@ export default function SearchScreen() {
       flex: 1,
     },
     headerLogo: {
-      width: 44,
-      height: 44,
+      width: 52,
+      height: 52,
       marginLeft: 16,
     },
     title: {
