@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Platform } from 'react-native';
+import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
@@ -156,44 +157,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Clear local state immediately
+      // Clear local state immediately for better UX
       setUser(null);
       setSession(null);
       
-      // For web, force a complete logout
-      if (Platform.OS === 'web') {
-        // Clear all possible storage
-        try {
-          localStorage.clear();
-          sessionStorage.clear();
-        } catch (e) {
-          console.log('Storage clear failed:', e);
+      // Only sign out from Supabase if we have an active session
+      if (session) {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          console.error('Supabase signOut error:', error);
         }
-        
-        // Sign out from Supabase
-        await supabase.auth.signOut();
-        
-        // Force complete page reload to clear everything
-        window.location.href = window.location.origin;
-        return;
       }
       
-      // Mobile logout
-      await supabase.auth.signOut();
+      // For web, force complete cleanup
+      if (Platform.OS === 'web') {
+        try {
+          // Clear all browser storage
+          localStorage.clear();
+          sessionStorage.clear();
+          
+          // Clear any cookies by setting them to expire
+          document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+          });
+        } catch (e) {
+          console.log('Storage clear failed:', e);
+        }
+      }
+      
     } catch (error) {
       console.error('Sign out error:', error);
-      // Force clear state even if Supabase fails
+      
+      // Force clear state even if Supabase signOut fails
       setUser(null);
       setSession(null);
       
+      // On web, still try to clear storage even if signOut failed
       if (Platform.OS === 'web') {
         try {
           localStorage.clear();
           sessionStorage.clear();
+          document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+          });
         } catch (e) {
           console.log('Storage clear failed:', e);
         }
-        window.location.href = window.location.origin;
       }
     }
   };

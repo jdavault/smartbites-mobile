@@ -13,6 +13,7 @@ import {
   Platform,
   ActivityIndicator,
   Linking,
+  Image,
   type ScrollView as RNScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -203,16 +204,7 @@ export default function ProfileScreen() {
   };
 
   const handleSignOut = async () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          await signOut();
-        },
-      },
-    ]);
+    await signOut();
   };
 
   const styles = StyleSheet.create({
@@ -222,14 +214,25 @@ export default function ProfileScreen() {
     },
     header: {
       paddingHorizontal: 24,
-      paddingTop: 16,
+      paddingTop: 8,
       paddingBottom: 12,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    headerContent: {
+      flex: 1,
+    },
+    headerLogo: {
+      width: 72,
+      height: 72,
+      marginLeft: 16,
     },
     title: {
       fontSize: 28,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
-      marginBottom: 8,
+      marginBottom: 4,
     },
     subtitle: {
       fontSize: 16,
@@ -307,7 +310,7 @@ export default function ProfileScreen() {
       backgroundColor: colors.surface,
       marginHorizontal: 24,
       borderRadius: 12,
-      padding: 20,
+      padding: 16,
       marginBottom: 16,
       borderWidth: 1,
       borderColor: colors.border,
@@ -318,16 +321,16 @@ export default function ProfileScreen() {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
       color: colors.primary,
-      marginTop: 2,
-      marginBottom: 8,
+      marginTop: 0,
+      marginBottom: 6,
       paddingHorizontal: 24,
     },
     sectionTitleDiet: {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
       color: colors.dietary,
-      marginTop: 2,
-      marginBottom: 8,
+      marginTop: 0,
+      marginBottom: 6,
       paddingHorizontal: 24,
     },
 
@@ -470,8 +473,15 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Profile</Text>
-        <Text style={styles.subtitle}>Manage your account and preferences</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Profile</Text>
+          <Text style={styles.subtitle}>User preferences</Text>
+        </View>
+        <Image
+          source={require('@/assets/images/smart-bites-logo.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
       </View>
 
       <ScrollView
