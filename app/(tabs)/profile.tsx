@@ -317,7 +317,7 @@ export default function ProfileScreen() {
     sectionTitle: {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
-      color: '#FF8866',
+      color: colors.dietary,
       marginTop: 2,
       marginBottom: 8,
       paddingHorizontal: 24,
