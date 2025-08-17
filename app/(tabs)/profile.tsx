@@ -1,3 +1,4 @@
+// app/(tabs)/profile.tsx (or wherever your ProfileScreen lives)
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -19,7 +20,13 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAllergens, ALLERGENS } from '@/contexts/AllergensContext';
 import { useDietary, DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 import { supabase } from '@/lib/supabase';
-import { LogOut, Moon, Sun, Save, ChevronDown, CircleAlert as AlertCircle, ExternalLink } from 'lucide-react-native';
+import {
+  Moon,
+  Sun,
+  ChevronDown,
+  CircleAlert as AlertCircle,
+  ExternalLink,
+} from 'lucide-react-native';
 
 // Get version from package.json
 const packageJson = require('../../package.json');
@@ -84,10 +91,16 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const { colors, toggleTheme, isDark } = useTheme();
-  const { userAllergens, toggleAllergen } = useAllergens();
-  const { userDietaryPrefs, toggleDietaryPref } = useDietary();
-  const { loading: allergensLoading } = useAllergens();
-  const { loading: dietaryLoading } = useDietary();
+  const {
+    userAllergens,
+    toggleAllergen,
+    loading: allergensLoading,
+  } = useAllergens();
+  const {
+    userDietaryPrefs,
+    toggleDietaryPref,
+    loading: dietaryLoading,
+  } = useDietary();
 
   const [profile, setProfile] = useState({
     firstName: '',
@@ -103,9 +116,7 @@ export default function ProfileScreen() {
   const [showStates, setShowStates] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      loadProfile();
-    }
+    if (user) loadProfile();
   }, [user]);
 
   const loadProfile = async () => {
@@ -118,7 +129,9 @@ export default function ProfileScreen() {
 
       if (error) {
         if (error.code === '42P01') {
-          console.warn('Database tables not created yet. Please run the migration.');
+          console.warn(
+            'Database tables not created yet. Please run the migration.'
+          );
           return;
         }
         throw error;
@@ -136,19 +149,17 @@ export default function ProfileScreen() {
           phone: data.phone || '',
         });
       }
-    } catch (error) {
-      console.error('Error loading profile:', error);
+    } catch (err) {
+      console.error('Error loading profile:', err);
     }
   };
 
   const saveProfile = async () => {
     if (!user) return;
-
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .upsert({
+      const { error } = await supabase.from('user_profiles').upsert(
+        {
           user_id: user.id,
           first_name: profile.firstName,
           last_name: profile.lastName,
@@ -159,35 +170,31 @@ export default function ProfileScreen() {
           zip: profile.zip,
           phone: profile.phone,
           updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id'
-        });
+        },
+        { onConflict: 'user_id' }
+      );
 
       if (error) throw error;
       Alert.alert('Success', 'Profile updated successfully!');
-    } catch (error) {
+    } catch (err) {
       Alert.alert('Error', 'Failed to update profile. Please try again.');
-      console.error('Save profile error:', error);
+      console.error('Save profile error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSignOut = async () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Sign Out', 
-          style: 'destructive', 
-          onPress: async () => {
-            await signOut();
-          }
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: async () => {
+          await signOut();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const styles = StyleSheet.create({
@@ -211,28 +218,15 @@ export default function ProfileScreen() {
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
     },
-    
+
     // Form styling matching registration
-    form: { 
-      gap: 12,
-    },
-    row: { 
-      flexDirection: 'row', 
-      gap: 8 
-    },
-    flex1: { 
-      flex: 1 
-    },
-    flex2: { 
-      flex: 2 
-    },
-    zipContainer: {
-      width: 80,
-    },
-    phoneContainer: {
-      width: 140,
-    },
-    
+    form: { gap: 12 },
+    row: { flexDirection: 'row', gap: 8 },
+    flex1: { flex: 1 },
+    flex2: { flex: 2 },
+    zipContainer: { width: 80 },
+    phoneContainer: { width: 140 },
+
     input: {
       borderWidth: 1,
       borderColor: colors.border,
@@ -283,9 +277,7 @@ export default function ProfileScreen() {
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },
-    stateItemLast: {
-      borderBottomWidth: 0,
-    },
+    stateItemLast: { borderBottomWidth: 0 },
     stateItemText: {
       fontSize: 15,
       fontFamily: 'Inter-Regular',
@@ -313,7 +305,7 @@ export default function ProfileScreen() {
       paddingHorizontal: 24,
     },
 
-    // Chip grid styling matching registration
+    // Chip grid styling
     chipGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -337,14 +329,8 @@ export default function ProfileScreen() {
       backgroundColor: colors.dietary,
       borderColor: colors.dietary,
     },
-    chipText: {
-      fontSize: 12,
-      fontFamily: 'Inter-Medium',
-      color: colors.text,
-    },
-    chipTextSelected: { 
-      color: '#fff' 
-    },
+    chipText: { fontSize: 12, fontFamily: 'Inter-Medium', color: colors.text },
+    chipTextSelected: { color: '#fff' },
 
     // Theme toggle
     themeContainer: {
@@ -366,6 +352,8 @@ export default function ProfileScreen() {
       fontFamily: 'Inter-Medium',
       color: colors.accent,
     },
+
+    // Buttons
     button: {
       paddingVertical: 12,
       borderRadius: 12,
@@ -379,27 +367,17 @@ export default function ProfileScreen() {
       gap: 12,
       marginBottom: 16,
     },
-    halfButton: {
-      flex: 1,
-    },
+    halfButton: { flex: 1 },
     saveButton: {
       backgroundColor: colors.primary,
       borderColor: colors.primary,
     },
-    buttonText: {
-      fontSize: 14,
-      fontFamily: 'Inter-SemiBold',
-    },
-    saveButtonText: {
-      color: '#FFFFFF',
-    },
-    signOutButton: {
-      backgroundColor: '#FFFFFF',
-      borderColor: colors.error,
-    },
-    signOutButtonText: {
-      color: colors.error,
-    },
+    buttonText: { fontSize: 14, fontFamily: 'Inter-SemiBold' },
+    saveButtonText: { color: '#FFFFFF' },
+    signOutButton: { backgroundColor: '#FFFFFF', borderColor: colors.error },
+    signOutButtonText: { color: colors.error },
+
+    // Profile-specific styles (moved inside StyleSheet)
     legalSection: {
       paddingHorizontal: 24,
       paddingTop: 16,
@@ -415,10 +393,7 @@ export default function ProfileScreen() {
       borderWidth: 1,
       borderColor: '#f59e0b',
     },
-    disclaimerIcon: {
-      marginRight: 12,
-      marginTop: 2,
-    },
+    disclaimerIcon: { marginRight: 12, marginTop: 2 },
     disclaimerText: {
       flex: 1,
       fontSize: 14,
@@ -457,209 +432,244 @@ export default function ProfileScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View>
-        <View style={styles.formCard}>
-          <View style={styles.form}>
-          {/* Names */}
-          <TextInput
-            style={styles.input}
-            value={profile.firstName}
-            onChangeText={(text) => setProfile(prev => ({ ...prev, firstName: text }))}
-            placeholder="First name"
-            placeholderTextColor={colors.textSecondary}
-            autoCapitalize="words"
-          />
-          <TextInput
-            style={styles.input}
-            value={profile.lastName}
-            onChangeText={(text) => setProfile(prev => ({ ...prev, lastName: text }))}
-            placeholder="Last name"
-            placeholderTextColor={colors.textSecondary}
-            autoCapitalize="words"
-          />
+          <View style={styles.formCard}>
+            <View style={styles.form}>
+              {/* Names */}
+              <TextInput
+                style={styles.input}
+                value={profile.firstName}
+                onChangeText={(text) =>
+                  setProfile((prev) => ({ ...prev, firstName: text }))
+                }
+                placeholder="First name"
+                placeholderTextColor={colors.textSecondary}
+                autoCapitalize="words"
+              />
+              <TextInput
+                style={styles.input}
+                value={profile.lastName}
+                onChangeText={(text) =>
+                  setProfile((prev) => ({ ...prev, lastName: text }))
+                }
+                placeholder="Last name"
+                placeholderTextColor={colors.textSecondary}
+                autoCapitalize="words"
+              />
 
-          {/* Address */}
-          <TextInput
-            style={styles.input}
-            value={profile.address1}
-            onChangeText={(text) => setProfile(prev => ({ ...prev, address1: text }))}
-            placeholder="Address line 1"
-            placeholderTextColor={colors.textSecondary}
-            autoCapitalize="words"
-          />
-          <TextInput
-            style={styles.input}
-            value={profile.address2}
-            onChangeText={(text) => setProfile(prev => ({ ...prev, address2: text }))}
-            placeholder="Address line 2 (optional)"
-            placeholderTextColor={colors.textSecondary}
-            autoCapitalize="words"
-          />
-          
-          <View style={styles.row}>
-            <TextInput
-              style={[styles.input, styles.flex2]}
-              value={profile.city}
-              onChangeText={(text) => setProfile(prev => ({ ...prev, city: text }))}
-              placeholder="City"
-              placeholderTextColor={colors.textSecondary}
-              autoCapitalize="words"
-            />
-            <View style={[styles.stateDropdown, styles.flex1]}>
-              <TouchableOpacity
-                style={styles.stateButton}
-                onPress={() => setShowStates(!showStates)}
-              >
-                <Text style={styles.stateButtonText}>
-                  {profile.state || 'State'}
-                </Text>
-                <ChevronDown size={16} color={colors.textSecondary} />
-              </TouchableOpacity>
-              
-              {showStates && (
-                <ScrollView style={styles.stateList} nestedScrollEnabled>
-                  {US_STATES.map((stateItem, index) => (
-                    <TouchableOpacity
-                      key={stateItem.code}
+              {/* Address */}
+              <TextInput
+                style={styles.input}
+                value={profile.address1}
+                onChangeText={(text) =>
+                  setProfile((prev) => ({ ...prev, address1: text }))
+                }
+                placeholder="Address line 1"
+                placeholderTextColor={colors.textSecondary}
+                autoCapitalize="words"
+              />
+              <TextInput
+                style={styles.input}
+                value={profile.address2}
+                onChangeText={(text) =>
+                  setProfile((prev) => ({ ...prev, address2: text }))
+                }
+                placeholder="Address line 2 (optional)"
+                placeholderTextColor={colors.textSecondary}
+                autoCapitalize="words"
+              />
+
+              <View style={styles.row}>
+                <TextInput
+                  style={[styles.input, styles.flex2]}
+                  value={profile.city}
+                  onChangeText={(text) =>
+                    setProfile((prev) => ({ ...prev, city: text }))
+                  }
+                  placeholder="City"
+                  placeholderTextColor={colors.textSecondary}
+                  autoCapitalize="words"
+                />
+                <View style={[styles.stateDropdown, styles.flex1]}>
+                  <TouchableOpacity
+                    style={styles.stateButton}
+                    onPress={() => setShowStates(!showStates)}
+                  >
+                    <Text style={styles.stateButtonText}>
+                      {profile.state || 'State'}
+                    </Text>
+                    <ChevronDown size={16} color={colors.textSecondary} />
+                  </TouchableOpacity>
+
+                  {showStates && (
+                    <ScrollView style={styles.stateList} nestedScrollEnabled>
+                      {US_STATES.map((stateItem, index) => (
+                        <TouchableOpacity
+                          key={stateItem.code}
+                          style={[
+                            styles.stateItem,
+                            index === US_STATES.length - 1 &&
+                              styles.stateItemLast,
+                          ]}
+                          onPress={() => {
+                            setProfile((prev) => ({
+                              ...prev,
+                              state: stateItem.code,
+                            }));
+                            setShowStates(false);
+                          }}
+                        >
+                          <Text style={styles.stateItemText}>
+                            {stateItem.code} - {stateItem.name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  )}
+                </View>
+              </View>
+
+              <View className="row" style={styles.row}>
+                <View style={styles.zipContainer}>
+                  <TextInput
+                    style={styles.input}
+                    value={profile.zip}
+                    onChangeText={(text) =>
+                      setProfile((prev) => ({ ...prev, zip: text }))
+                    }
+                    placeholder="ZIP"
+                    placeholderTextColor={colors.textSecondary}
+                    keyboardType="number-pad"
+                    maxLength={10}
+                  />
+                </View>
+                <View style={styles.phoneContainer}>
+                  <TextInput
+                    style={styles.input}
+                    value={profile.phone}
+                    onChangeText={(text) =>
+                      setProfile((prev) => ({ ...prev, phone: text }))
+                    }
+                    placeholder="Phone"
+                    placeholderTextColor={colors.textSecondary}
+                    keyboardType="phone-pad"
+                  />
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <Text style={styles.sectionTitle}>Allergens</Text>
+          {allergensLoading ? (
+            <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          ) : (
+            <View style={styles.chipGrid}>
+              {ALLERGENS.map((allergen) => {
+                const selected = userAllergens.some(
+                  (a) => a.$id === allergen.$id
+                );
+                return (
+                  <TouchableOpacity
+                    key={allergen.$id}
+                    style={[styles.chip, selected && styles.chipSelected]}
+                    onPress={() => toggleAllergen(allergen)}
+                    disabled={allergensLoading}
+                  >
+                    <Text
                       style={[
-                        styles.stateItem,
-                        index === US_STATES.length - 1 && styles.stateItemLast
+                        styles.chipText,
+                        selected && styles.chipTextSelected,
                       ]}
-                      onPress={() => {
-                        setProfile(prev => ({ ...prev, state: stateItem.code }));
-                        setShowStates(false);
-                      }}
                     >
-                      <Text style={styles.stateItemText}>
-                        {stateItem.code} - {stateItem.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                      {allergen.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          <Text style={styles.sectionTitle}>Dietary Preferences</Text>
+          {dietaryLoading ? (
+            <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
+              <ActivityIndicator size="small" color={colors.dietary} />
+            </View>
+          ) : (
+            <View style={styles.chipGrid}>
+              {DIETARY_PREFERENCES.map((pref) => {
+                const selected = userDietaryPrefs.some(
+                  (p) => p.$id === pref.$id
+                );
+                return (
+                  <TouchableOpacity
+                    key={pref.$id}
+                    style={[
+                      styles.chip,
+                      selected && styles.chipSelectedDietary,
+                    ]}
+                    onPress={() => toggleDietaryPref(pref)}
+                    disabled={dietaryLoading}
+                  >
+                    <Text
+                      style={[
+                        styles.chipText,
+                        selected && styles.chipTextSelected,
+                      ]}
+                    >
+                      {pref.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          <View style={styles.themeContainer}>
+            <View
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+            >
+              {isDark ? (
+                <Moon size={20} color={colors.text} />
+              ) : (
+                <Sun size={20} color={colors.text} />
               )}
+              <Text style={styles.themeText}>
+                {isDark ? 'Dark Mode' : 'Light Mode'}
+              </Text>
             </View>
+            <Switch
+              value={isDark}
+              onValueChange={toggleTheme}
+              trackColor={{ false: '#e6e2d6', true: colors.primary }}
+              thumbColor="#FFFFFF"
+            />
           </View>
-          
-          <View style={styles.row}>
-            <View style={styles.zipContainer}>
-              <TextInput
-                style={styles.input}
-                value={profile.zip}
-                onChangeText={(text) => setProfile(prev => ({ ...prev, zip: text }))}
-                placeholder="ZIP"
-                placeholderTextColor={colors.textSecondary}
-                keyboardType="number-pad"
-                maxLength={10}
-              />
-            </View>
-            <View style={styles.phoneContainer}>
-              <TextInput
-                style={styles.input}
-                value={profile.phone}
-                onChangeText={(text) => setProfile(prev => ({ ...prev, phone: text }))}
-                placeholder="Phone"
-                placeholderTextColor={colors.textSecondary}
-                keyboardType="phone-pad"
-              />
-            </View>
-          </View>
-        </View>
-        </View>
-        <Text style={styles.sectionTitle}>Allergens</Text>
-        {allergensLoading ? (
-          <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
-            <ActivityIndicator size="small" color={colors.primary} />
-          </View>
-        ) : (
-          <View style={styles.chipGrid}>
-            {ALLERGENS.map((allergen) => {
-              const selected = userAllergens.some(a => a.$id === allergen.$id);
-              return (
-                <TouchableOpacity
-                  key={allergen.$id}
-                  style={[styles.chip, selected && styles.chipSelected]}
-                  onPress={() => toggleAllergen(allergen)}
-                  disabled={allergensLoading}
-                >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      selected && styles.chipTextSelected,
-                    ]}
-                  >
-                    {allergen.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
 
-        <Text style={styles.sectionTitle}>Dietary Preferences</Text>
-        {dietaryLoading ? (
-          <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
-            <ActivityIndicator size="small" color={colors.dietary} />
-          </View>
-        ) : (
-          <View style={styles.chipGrid}>
-            {DIETARY_PREFERENCES.map((pref) => {
-              const selected = userDietaryPrefs.some(p => p.$id === pref.$id);
-              return (
-                <TouchableOpacity
-                  key={pref.$id}
-                  style={[styles.chip, selected && styles.chipSelectedDietary]}
-                  onPress={() => toggleDietaryPref(pref)}
-                  disabled={dietaryLoading}
-                >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      selected && styles.chipTextSelected,
-                    ]}
-                  >
-                    {pref.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                styles.saveButton,
+                styles.halfButton,
+                loading && { opacity: 0.6 },
+              ]}
+              onPress={saveProfile}
+              disabled={loading}
+            >
+              <Text style={[styles.buttonText, styles.saveButtonText]}>
+                {loading ? 'Saving...' : 'Save'}
+              </Text>
+            </TouchableOpacity>
 
-        <View style={styles.themeContainer}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            {isDark ? (
-              <Moon size={20} color={colors.text} />
-            ) : (
-              <Sun size={20} color={colors.text} />
-            )}
-            <Text style={styles.themeText}>
-              {isDark ? 'Dark Mode' : 'Light Mode'}
-            </Text>
-          </View>
-          <Switch
-            value={isDark}
-            onValueChange={toggleTheme}
-            trackColor={{ false: '#e6e2d6', true: colors.primary }}
-            thumbColor="#FFFFFF"
-          />
-        </View>
-
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={[styles.button, styles.saveButton, styles.halfButton, loading && { opacity: 0.6 }]}
-            onPress={saveProfile}
-            disabled={loading}
-          >
-            <Text style={[styles.buttonText, styles.saveButtonText]}>
-              {loading ? 'Saving...' : 'Save'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, styles.signOutButton, styles.halfButton]}
-            onPress={handleSignOut}
-          >
-            <Text style={[styles.buttonText, styles.signOutButtonText]}>Log Out</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.signOutButton, styles.halfButton]}
+              onPress={handleSignOut}
+            >
+              <Text style={[styles.buttonText, styles.signOutButtonText]}>
+                Log Out
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* Legal Section */}
@@ -671,9 +681,9 @@ export default function ProfileScreen() {
                 style={styles.disclaimerIcon}
               />
               <Text style={styles.disclaimerText}>
-                This app helps avoid allergens in recipes but is not a substitute
-                for professional advice. Always verify ingredients if you have
-                severe allergies.
+                This app helps avoid allergens in recipes but is not a
+                substitute for professional advice. Always verify ingredients if
+                you have severe allergies.
               </Text>
             </View>
 
@@ -708,4 +718,3 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
