@@ -32,6 +32,7 @@ import { supabase } from '@/lib/supabase';
 import ThemedText from '@/components/ThemedText';
 import { ALLERGENS } from '@/contexts/AllergensContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
+import SmartBitesLogo from '@/assets/images/smart-bites-logo.png';
 
 // US States list
 const US_STATES = [
@@ -363,6 +364,11 @@ export default function RegisterScreen() {
           paddingBottom: 8,
         },
         backButton: { padding: 6 },
+        headerLogo: {
+          width: 72,
+          height: 72,
+          marginLeft: 'auto',
+        },
 
         title: {
           fontSize: 24,
@@ -643,6 +649,11 @@ export default function RegisterScreen() {
                 <ArrowLeft size={22} color={colors.text} />
               </TouchableOpacity>
             </Link>
+            <Image
+              source={SmartBitesLogo}
+              style={styles.headerLogo}
+              resizeMode="contain"
+            />
           </View>
 
           {/* Body */}
