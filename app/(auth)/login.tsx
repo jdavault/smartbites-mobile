@@ -23,6 +23,8 @@ import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import { Spacing } from '@/constants/Spacing';
 import { Fonts, FontSizes } from '@/constants/Typography';
 import ThemedText from '@/components/ThemedText';
+import { Image } from 'react-native';
+import SmartBitesLogo from '@/assets/images/smart-bites-logo.png';
 
 type ModalInfo = {
   visible: boolean;
@@ -140,11 +142,15 @@ export default function LoginScreen() {
 
             {/* Main */}
             <View style={styles.main}>
-              <Text style={styles.brandTitle}>SmartBites™</Text>
+              <Image
+                source={SmartBitesLogo}
+                style={styles.brandLogo}
+                accessible
+                accessibilityLabel="SmartBites logo"
+              />
               <Text style={styles.subtitle}>
                 Sign in to continue your culinary journey
               </Text>
-
               <View style={styles.form}>
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Email</Text>
@@ -269,27 +275,35 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       flexDirection: 'row',
       alignItems: 'center',
       paddingTop: 16,
-      paddingBottom: 32,
+      paddingBottom: 20,
     },
     backButton: { padding: 8 },
 
     main: {
       flex: 1,
     },
-
-    brandTitle: {
-      fontSize: 47,
-      fontFamily: 'Inter-Bold',
-      color: '#FF8866',
-      textAlign: 'center',
-      marginBottom: 15,
+    // brandTitle: {
+    //   fontSize: 47,
+    //   fontFamily: 'Inter-Bold',
+    //   color: '#FF8866',
+    //   textAlign: 'center',
+    //   marginBottom: 15,
+    // },
+    brandLogo: {
+      width: 200,
+      height: 200,
+      alignSelf: 'center',
+      marginBottom: 0, // keeps the same spacing the text had
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: 20, // was 16 — bigger subtitle
+      lineHeight: 24, // keeps it tidy at larger size
       fontFamily: Fonts.heading,
       color: colors.textSecondary,
       textAlign: 'center',
-      marginBottom: 40,
+      fontWeight: '700',
+      marginTop: 0, // ensure no extra gap above
+      marginBottom: 10, // was 40 — tighter before the form
     },
 
     form: { gap: 20 },
