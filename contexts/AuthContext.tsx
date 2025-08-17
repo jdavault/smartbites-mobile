@@ -142,30 +142,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Clear local state
+      // Clear local state immediately
       setUser(null);
       setSession(null);
       
-      // Sign out from Supabase
-      await supabase.auth.signOut();
-      
-      // For web, force a complete page reload to clear everything
+      // For web, force a complete logout
       if (Platform.OS === 'web') {
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
+        // Clear all possible storage
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch (e) {
+          console.log('Storage clear failed:', e);
+        }
+        
+        // Sign out from Supabase
+        await supabase.auth.signOut();
+        
+        // Force complete page reload to clear everything
+        window.location.href = window.location.origin;
+        return;
       }
+      
+      // Mobile logout
+      await supabase.auth.signOut();
     } catch (error) {
       console.error('Sign out error:', error);
-      // Even if Supabase signOut fails, clear local state
+      // Force clear state even if Supabase fails
       setUser(null);
       setSession(null);
       
-      // Still try to reload on web even if signOut failed
       if (Platform.OS === 'web') {
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch (e) {
+          console.log('Storage clear failed:', e);
+        }
+        window.location.href = window.location.origin;
       }
     }
   };
