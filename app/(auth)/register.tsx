@@ -31,6 +31,16 @@ import ThemedText from '@/components/ThemedText';
 import { ALLERGENS } from '@/contexts/AllergensContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 
+interface AllergenRow {
+  id: string;
+  name: string;
+}
+
+interface DietaryPrefRow {
+  id: string;
+  name: string;
+}
+
 type ModalInfo = {
   visible: boolean;
   title: string;
@@ -68,27 +78,74 @@ export default function RegisterScreen() {
     setModal({ ...m, visible: true });
   const closeModal = () => setModal((prev) => ({ ...prev, visible: false }));
 
-  // Use the constants directly since we store names as text in user tables
-  const allergens = ALLERGENS;
-  const dietPrefs = DIETARY_PREFERENCES;
+  // taxonomy lists - fetch from Supabase lookup tables
+  const [allergens, setAllergens] = useState<AllergenRow[]>([]);
+  const [dietPrefs, setDietPrefs] = useState<DietaryPrefRow[]>([]);
+  const [loadingTaxonomies, setLoadingTaxonomies] = useState(true);
+
+  // Fetch allergens and dietary preferences from Supabase lookup tables
+  useEffect(() => {
+    const fetchTaxonomies = async () => {
+      try {
+        setLoadingTaxonomies(true);
+        
+        // Fetch allergens from lookup table
+        const { data: allergensData, error: allergensError } = await supabase
+          .from('allergens')
+          .select('id, name')
+          .order('name');
+        
+        if (allergensError) {
+          console.error('Error fetching allergens:', allergensError);
+          // Fallback to constants if table doesn't exist
+          setAllergens(ALLERGENS.map(a => ({ id: a.$id, name: a.name })));
+        } else {
+          setAllergens(allergensData || []);
+        }
+
+        // Fetch dietary preferences from lookup table
+        const { data: dietPrefsData, error: dietPrefsError } = await supabase
+          .from('dietary_prefs')
+          .select('id, name')
+          .order('name');
+        
+        if (dietPrefsError) {
+          console.error('Error fetching dietary preferences:', dietPrefsError);
+          // Fallback to constants if table doesn't exist
+          setDietPrefs(DIETARY_PREFERENCES.map(d => ({ id: d.$id, name: d.name })));
+        } else {
+          setDietPrefs(dietPrefsData || []);
+        }
+      } catch (error) {
+        console.error('Error in fetchTaxonomies:', error);
+        // Fallback to constants
+        setAllergens(ALLERGENS.map(a => ({ id: a.$id, name: a.name })));
+        setDietPrefs(DIETARY_PREFERENCES.map(d => ({ id: d.$id, name: d.name })));
+      } finally {
+        setLoadingTaxonomies(false);
+      }
+    };
+
+    fetchTaxonomies();
+  }, []);
 
   // selections
   const [showAllergens, setShowAllergens] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
-  const [selectedAllergenNames, setSelectedAllergenNames] = useState<
+  const [selectedAllergenIds, setSelectedAllergenIds] = useState<
     Set<string>
   >(new Set());
-  const [selectedPrefNames, setSelectedPrefNames] = useState<Set<string>>(
+  const [selectedPrefIds, setSelectedPrefIds] = useState<Set<string>>(
     new Set()
   );
 
   const toggle = (
     set: Set<string>,
-    name: string,
+    id: string,
     setter: (s: Set<string>) => void
   ) => {
     const next = new Set(set);
-    next.has(name) ? next.delete(name) : next.add(name);
+    next.has(id) ? next.delete(id) : next.add(id);
     setter(next);
   };
 
@@ -191,17 +248,17 @@ export default function RegisterScreen() {
     }
 
     try {
-      if (selectedAllergenNames.size) {
-        const ua = Array.from(selectedAllergenNames).map((allergenName) => ({
+      if (selectedAllergenIds.size) {
+        const ua = Array.from(selectedAllergenIds).map((allergenId) => ({
           user_id: userId,
-          allergen: allergenName,
+          allergen_id: allergenId,
         }));
         await supabase.from('user_allergens').insert(ua);
       }
-      if (selectedPrefNames.size) {
-        const udp = Array.from(selectedPrefNames).map((prefName) => ({
+      if (selectedPrefIds.size) {
+        const udp = Array.from(selectedPrefIds).map((prefId) => ({
           user_id: userId,
-          dietary_pref: prefName,
+          dietary_pref_id: prefId,
         }));
         await supabase.from('user_dietary_prefs').insert(udp);
       }
@@ -618,30 +675,33 @@ export default function RegisterScreen() {
               <TouchableOpacity
                 onPress={() => setShowAllergens((v) => !v)}
                 style={styles.sectionToggle}
+                disabled={loadingTaxonomies}
               >
                 <Text style={styles.sectionToggleText}>
                   {showAllergens ? 'Hide Allergens' : 'Select Allergens'}
                 </Text>
-                {showAllergens ? (
+                {loadingTaxonomies ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : showAllergens ? (
                   <ChevronUp size={16} color={colors.primary} />
                 ) : (
                   <ChevronDown size={16} color={colors.primary} />
                 )}
               </TouchableOpacity>
 
-              {showAllergens && (
+              {showAllergens && !loadingTaxonomies && (
                 <View style={styles.chipGrid}>
                   {allergens.map((a) => {
-                    const selected = selectedAllergenNames.has(a.name);
+                    const selected = selectedAllergenIds.has(a.id);
                     return (
                       <TouchableOpacity
-                        key={a.$id}
+                        key={a.id}
                         style={[styles.chip, selected && styles.chipSelected]}
                         onPress={() =>
                           toggle(
-                            selectedAllergenNames,
-                            a.name,
-                            setSelectedAllergenNames
+                            selectedAllergenIds,
+                            a.id,
+                            setSelectedAllergenIds
                           )
                         }
                       >
@@ -663,29 +723,32 @@ export default function RegisterScreen() {
               <TouchableOpacity
                 onPress={() => setShowPrefs((v) => !v)}
                 style={styles.sectionToggle}
+                disabled={loadingTaxonomies}
               >
                 <Text style={styles.sectionToggleText}>
                   {showPrefs
                     ? 'Hide Dietary Preferences'
                     : 'Select Dietary Preferences'}
                 </Text>
-                {showPrefs ? (
+                {loadingTaxonomies ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : showPrefs ? (
                   <ChevronUp size={16} color={colors.primary} />
                 ) : (
                   <ChevronDown size={16} color={colors.primary} />
                 )}
               </TouchableOpacity>
 
-              {showPrefs && (
+              {showPrefs && !loadingTaxonomies && (
                 <View style={styles.chipGrid}>
                   {dietPrefs.map((d) => {
-                    const selected = selectedPrefNames.has(d.name);
+                    const selected = selectedPrefIds.has(d.id);
                     return (
                       <TouchableOpacity
-                        key={d.$id}
+                        key={d.id}
                         style={[styles.chip, selected && styles.chipSelected]}
                         onPress={() =>
-                          toggle(selectedPrefNames, d.name, setSelectedPrefNames)
+                          toggle(selectedPrefIds, d.id, setSelectedPrefIds)
                         }
                       >
                         <Text
