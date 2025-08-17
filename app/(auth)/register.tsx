@@ -381,7 +381,7 @@ export default function RegisterScreen() {
           borderColor: colors.border,
           borderRadius: 9,
           paddingHorizontal: 12,
-          paddingVertical: Platform.OS === 'android' ? 10 : 8, // ★
+          paddingVertical: Platform.select({ android: 10, ios: 8, default: 10 }),
           fontSize: 15,
           fontFamily: 'Inter-Regular',
           color: colors.text,
@@ -400,7 +400,7 @@ export default function RegisterScreen() {
         pwInput: {
           flex: 1,
           paddingHorizontal: 12,
-          paddingVertical: Platform.OS === 'android' ? 10 : 8, // ★
+          paddingVertical: Platform.select({ android: 10, ios: 8, default: 10 }),
           fontSize: 15,
           fontFamily: 'Inter-Regular',
           color: colors.text,
@@ -419,7 +419,7 @@ export default function RegisterScreen() {
           justifyContent: 'space-between',
           alignItems: 'center',
           paddingHorizontal: 12,
-          paddingVertical: Platform.OS === 'android' ? 10 : 8, // ★ match inputs
+          paddingVertical: Platform.select({ android: 10, ios: 8, default: 10 }),
         },
         stateButtonText: {
           fontSize: 15,
@@ -648,11 +648,10 @@ export default function RegisterScreen() {
                   placeholder="Email"
                   placeholderTextColor={colors.textSecondary}
                   keyboardType="email-address"
-                  autoCapitalize="none"         // ★ keep none
-                  autoCorrect={false}           // ★ added
+                  autoCapitalize="none"
+                  autoCorrect={false}
                   textContentType="emailAddress"
                   autoComplete="email"
-                  returnKeyType="next"
                 />
 
                 <View style={styles.pwWrap}>
@@ -663,11 +662,10 @@ export default function RegisterScreen() {
                     placeholder="Password"
                     placeholderTextColor={colors.textSecondary}
                     secureTextEntry={!showPassword}
-                    autoCapitalize="none"       // ★ keep none
-                    autoCorrect={false}         // ★ added
+                    autoCapitalize="none"
+                    autoCorrect={false}
                     textContentType="newPassword"
                     autoComplete="new-password"
-                    returnKeyType="next"
                   />
                   <TouchableOpacity
                     style={styles.eyeButton}
@@ -689,11 +687,10 @@ export default function RegisterScreen() {
                     placeholder="Confirm password"
                     placeholderTextColor={colors.textSecondary}
                     secureTextEntry={!showConfirmPassword}
-                    autoCapitalize="none"       // ★ keep none
-                    autoCorrect={false}         // ★ added
+                    autoCapitalize="none"
+                    autoCorrect={false}
                     textContentType="password"
                     autoComplete="off"
-                    returnKeyType="next"
                   />
                   <TouchableOpacity
                     style={styles.eyeButton}
@@ -715,10 +712,9 @@ export default function RegisterScreen() {
                     onChangeText={setFirstName}
                     placeholder="First name"
                     placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"      // ★ added
-                    autoCorrect={false}         // ★ added
+                    autoCapitalize="words"
+                    autoCorrect={false}
                     textContentType="givenName"
-                    returnKeyType="next"
                   />
                   <TextInput
                     style={[styles.input, styles.flex1]}
@@ -726,10 +722,9 @@ export default function RegisterScreen() {
                     onChangeText={setLastName}
                     placeholder="Last name"
                     placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"      // ★ added
-                    autoCorrect={false}         // ★ added
+                    autoCapitalize="words"
+                    autoCorrect={false}
                     textContentType="familyName"
-                    returnKeyType="next"
                   />
                 </View>
 
@@ -740,11 +735,10 @@ export default function RegisterScreen() {
                   onChangeText={setAddress1}
                   placeholder="Address line 1"
                   placeholderTextColor={colors.textSecondary}
-                  autoCapitalize="words"        // ★ added
-                  autoCorrect={false}           // ★ added
+                  autoCapitalize="words"
+                  autoCorrect={false}
                   textContentType="fullStreetAddress"
                   autoComplete="street-address"
-                  returnKeyType="next"
                 />
                 <TextInput
                   style={styles.input}
@@ -752,9 +746,8 @@ export default function RegisterScreen() {
                   onChangeText={setAddress2}
                   placeholder="Address line 2 (optional)"
                   placeholderTextColor={colors.textSecondary}
-                  autoCapitalize="words"        // ★ added
-                  autoCorrect={false}           // ★ added
-                  returnKeyType="next"
+                  autoCapitalize="words"
+                  autoCorrect={false}
                 />
                 <View style={styles.row}>
                   <TextInput
@@ -763,10 +756,9 @@ export default function RegisterScreen() {
                     onChangeText={setCity}
                     placeholder="City"
                     placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"      // ★ added
-                    autoCorrect={false}         // ★ added
+                    autoCapitalize="words"
+                    autoCorrect={false}
                     textContentType="addressCity"
-                    returnKeyType="next"
                   />
                   <View style={[styles.stateDropdown, styles.flex1]}>
                     <TouchableOpacity
@@ -811,11 +803,10 @@ export default function RegisterScreen() {
                     placeholder="ZIP"
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="number-pad"
-                    autoCapitalize="none"       // ★ added
-                    autoCorrect={false}         // ★ added
+                    autoCapitalize="none"
+                    autoCorrect={false}
                     maxLength={10}
                     textContentType="postalCode"
-                    returnKeyType="next"
                   />
                   <TextInput
                     style={[styles.input, styles.flex2]}
@@ -824,11 +815,10 @@ export default function RegisterScreen() {
                     placeholder="Phone"
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="phone-pad"
-                    autoCapitalize="none"       // ★ added
-                    autoCorrect={false}         // ★ added
+                    autoCapitalize="none"
+                    autoCorrect={false}
                     textContentType="telephoneNumber"
                     autoComplete="tel"
-                    returnKeyType="done"
                   />
                 </View>
 
