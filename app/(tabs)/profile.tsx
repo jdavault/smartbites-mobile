@@ -1,5 +1,5 @@
-// app/(tabs)/profile.tsx (or wherever your ProfileScreen lives)
-import React, { useState, useEffect } from 'react';
+// app/(tabs)/profile.tsx
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   Platform,
   ActivityIndicator,
   Linking,
+  type ScrollView as RNScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -115,6 +116,22 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [showStates, setShowStates] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+
+  // --------- NEW: Scroll to bottom when expanding About ----------
+  const scrollRef = useRef<RNScrollView | null>(null);
+  useEffect(() => {
+    if (showAbout) {
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      });
+    }
+  }, [showAbout]);
+  const handleContentSizeChange = () => {
+    if (showAbout) {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }
+  };
+  // --------------------------------------------------------------
 
   useEffect(() => {
     if (user) loadProfile();
@@ -390,19 +407,19 @@ export default function ProfileScreen() {
       color: colors.primary,
     },
 
-    // tighten the legal section spacing
+    // tightened legal section spacing
     legalSection: {
       paddingHorizontal: 24,
-      paddingTop: 8, // was larger
-      paddingBottom: 12, // was larger
+      paddingTop: 8,
+      paddingBottom: 12,
     },
     disclaimerBox: {
       flexDirection: 'row',
       alignItems: 'flex-start',
       backgroundColor: colors.surface,
-      padding: 10, // was 16
+      padding: 10,
       borderRadius: 12,
-      marginBottom: 8, // was 16
+      marginBottom: 8,
       borderWidth: 1,
       borderColor: '#f59e0b',
     },
@@ -422,21 +439,23 @@ export default function ProfileScreen() {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 8, // was 12
-      marginBottom: 4, // was 8
+      paddingVertical: 8,
+      marginBottom: 0,
+      paddingBottom: 0,
     },
     linkText: {
-      fontSize: 13, // was 14
+      fontSize: 13,
       fontFamily: 'Inter-Medium',
       color: colors.primary,
-      marginRight: 6, // was 8
+      marginRight: 6,
     },
     versionText: {
-      fontSize: 12,
+      fontSize: 14,
+      fontWeight: '700',
       fontFamily: 'Inter-Regular',
       color: colors.textSecondary,
       textAlign: 'center',
-      marginTop: 6, // was 16
+      marginTop: 10,
     },
   });
 
@@ -447,7 +466,12 @@ export default function ProfileScreen() {
         <Text style={styles.subtitle}>Manage your account and preferences</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollRef}
+        showsVerticalScrollIndicator={false}
+        onContentSizeChange={handleContentSizeChange}
+        contentContainerStyle={{ paddingBottom: 5 }}
+      >
         <View>
           <View style={styles.formCard}>
             <View style={styles.form}>
@@ -545,7 +569,7 @@ export default function ProfileScreen() {
                 </View>
               </View>
 
-              <View className="row" style={styles.row}>
+              <View style={styles.row}>
                 <View style={styles.zipContainer}>
                   <TextInput
                     style={styles.input}
@@ -689,10 +713,10 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Legal Section */}
+          {/* About / Legal Section (collapsible) */}
           <View>
             <TouchableOpacity
-              onPress={() => setShowAbout(!showAbout)}
+              onPress={() => setShowAbout((v) => !v)}
               style={styles.aboutToggle}
             >
               <Text style={styles.aboutToggleText}>
