@@ -369,7 +369,7 @@ export default function RegisterScreen() {
           fontFamily: 'Inter-Bold',
           color: '#FF8866',
           textAlign: 'center',
-          marginTop: -2,
+          marginTop: 0,
           marginBottom: 8,
         },
 
@@ -481,8 +481,8 @@ export default function RegisterScreen() {
         chipGrid: {
           flexDirection: 'row',
           flexWrap: 'wrap',
-          paddingVertical: 2,
-          marginTop: 0,
+          gap: 4,
+          marginTop: 2,
           marginBottom: 4,
           paddingHorizontal: 16,
         },
@@ -507,8 +507,8 @@ export default function RegisterScreen() {
 
         consentToggle: {
           alignItems: 'center',
-          paddingVertical: 6,
-          marginTop: 4,
+          paddingVertical: 3,
+          marginTop: 2,
         },
         consentToggleText: {
           fontSize: 14,
@@ -534,7 +534,7 @@ export default function RegisterScreen() {
           paddingVertical: 10,
           borderRadius: 10,
           alignItems: 'center',
-          marginTop: 0,
+          marginTop: 2,
         },
         buttonDisabled: { opacity: 0.6 },
         buttonText: {
