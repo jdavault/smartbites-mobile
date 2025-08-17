@@ -599,8 +599,7 @@ export default function ProfileScreen() {
           />
         </View>
 
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
+        </ScrollView>
             style={[styles.button, styles.saveButton, styles.halfButton, loading && { opacity: 0.6 }]}
             onPress={saveProfile}
             disabled={loading}
