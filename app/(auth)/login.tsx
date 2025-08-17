@@ -150,6 +150,7 @@ export default function LoginScreen() {
               </View>
 
               <Text style={styles.brandTitle}>SmartBites™</Text>
+              <Text style={styles.brandTitle}>SmartBites™</Text>
               <Text style={styles.subtitle}>
                 Sign in to continue your culinary journey
               </Text>
@@ -293,6 +294,14 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     logoImage: {
       width: 240,
       height: 240,
+    },
+
+    brandTitle: {
+      fontSize: 47,
+      fontFamily: Fonts.headingBold,
+      color: colors.primary,
+      textAlign: 'center',
+      marginBottom: 15,
     },
 
     subtitle: {
