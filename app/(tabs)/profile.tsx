@@ -599,7 +599,8 @@ export default function ProfileScreen() {
           />
         </View>
 
-        </ScrollView>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
             style={[styles.button, styles.saveButton, styles.halfButton, loading && { opacity: 0.6 }]}
             onPress={saveProfile}
             disabled={loading}
@@ -615,8 +616,51 @@ export default function ProfileScreen() {
           >
             <Text style={[styles.buttonText, styles.signOutButtonText]}>Log Out</Text>
           </TouchableOpacity>
+          </View>
+
+          {/* Legal Section */}
+          <View style={styles.legalSection}>
+            <View style={styles.disclaimerBox}>
+              <AlertCircle
+                size={20}
+                color="#f59e0b"
+                style={styles.disclaimerIcon}
+              />
+              <Text style={styles.disclaimerText}>
+                This app helps avoid allergens in recipes but is not a substitute
+                for professional advice. Always verify ingredients if you have
+                severe allergies.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.link}
+              onPress={() =>
+                Linking.openURL(
+                  'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                )
+              }
+            >
+              <Text style={styles.linkText}>Terms of Service</Text>
+              <ExternalLink size={16} color={colors.primary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.link}
+              onPress={() =>
+                Linking.openURL(
+                  'https://www.privacypolicies.com/live/1a6f589d-84cc-4f85-82b9-802b08c501b2'
+                )
+              }
+            >
+              <Text style={styles.linkText}>Privacy Policy</Text>
+              <ExternalLink size={16} color={colors.primary} />
+            </TouchableOpacity>
+
+            <Text style={styles.versionText}>Version {APP_VERSION}</Text>
+          </View>
         </View>
-        </View>
+      </ScrollView>
       </ScrollView>
     </SafeAreaView>
   );
