@@ -19,6 +19,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { RecipesProvider } from '@/contexts/RecipesContext';
 import { AllergensProvider } from '@/contexts/AllergensContext';
 import { DietaryProvider } from '@/contexts/DietaryContext';
+import { UserProfileProvider } from '@/contexts/UserProfileContext';
 
 export default function RootLayout() {
   useFrameworkReady();
@@ -50,18 +51,20 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AllergensProvider>
-          <DietaryProvider>
-            <RecipesProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="+not-found" />
-              </Stack>
-              <StatusBar style="auto" />
-            </RecipesProvider>
-          </DietaryProvider>
-        </AllergensProvider>
+        <UserProfileProvider>
+          <AllergensProvider>
+            <DietaryProvider>
+              <RecipesProvider>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="+not-found" />
+                </Stack>
+                <StatusBar style="auto" />
+              </RecipesProvider>
+            </DietaryProvider>
+          </AllergensProvider>
+        </UserProfileProvider>
       </AuthProvider>
     </ThemeProvider>
   );
