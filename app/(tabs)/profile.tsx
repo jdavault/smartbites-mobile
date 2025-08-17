@@ -11,6 +11,7 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,7 +19,11 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAllergens, ALLERGENS } from '@/contexts/AllergensContext';
 import { useDietary, DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 import { supabase } from '@/lib/supabase';
-import { LogOut, Moon, Sun, Save, ChevronDown } from 'lucide-react-native';
+import { LogOut, Moon, Sun, Save, ChevronDown, AlertCircle, ExternalLink } from 'lucide-react-native';
+
+// Get version from package.json
+const packageJson = require('../../package.json');
+const APP_VERSION = packageJson.version;
 
 // US States list
 const US_STATES = [
@@ -397,6 +402,60 @@ export default function ProfileScreen() {
     signOutButtonText: {
       color: colors.error,
     },
+
+    // Legal section
+    legalSection: {
+      paddingHorizontal: 24,
+      paddingTop: 16,
+      paddingBottom: 32,
+    },
+    disclaimerBox: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      backgroundColor: colors.surface,
+      padding: 16,
+      borderRadius: 12,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: colors.warning,
+      borderLeftWidth: 4,
+      borderLeftColor: colors.warning,
+    },
+    disclaimerIcon: {
+      marginRight: 12,
+      marginTop: 2,
+    },
+    disclaimerText: {
+      flex: 1,
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
+    link: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    linkText: {
+      fontSize: 16,
+      fontFamily: 'Inter-Medium',
+      color: colors.primary,
+    },
+    versionText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 16,
+    },
   });
 
   return (
@@ -613,6 +672,48 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+        {/* Terms of Service and Privacy Policy Section */}
+        <View style={styles.legalSection}>
+          <View style={styles.disclaimerBox}>
+            <AlertCircle
+              size={20}
+              color={colors.warning}
+              style={styles.disclaimerIcon}
+            />
+            <Text style={styles.disclaimerText}>
+              This app helps avoid allergens in recipes but is not a substitute
+              for professional advice. Always verify ingredients if you have
+              severe allergies.
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.link}
+            onPress={() =>
+              Linking.openURL(
+                'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+              )
+            }
+          >
+            <Text style={styles.linkText}>Terms of Service</Text>
+            <ExternalLink size={16} color={colors.primary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.link}
+            onPress={() =>
+              Linking.openURL(
+                'https://www.privacypolicies.com/live/1a6f589d-84cc-4f85-82b9-802b08c501b2'
+              )
+            }
+          >
+            <Text style={styles.linkText}>Privacy Policy</Text>
+            <ExternalLink size={16} color={colors.primary} />
+          </TouchableOpacity>
+
+          <Text style={styles.versionText}>Version {APP_VERSION}</Text>
+        </View>
+
     </SafeAreaView>
   );
 }
