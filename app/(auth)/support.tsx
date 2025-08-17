@@ -187,8 +187,8 @@ const getStyles = (colors: any) =>
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingTop: 8,
-      paddingBottom: 16,
+      paddingTop: 4,
+      paddingBottom: 8,
     },
     backButton: { padding: 8 },
 
@@ -202,7 +202,7 @@ const getStyles = (colors: any) =>
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
       textAlign: 'center',
-      marginBottom: 32,
+      marginBottom: 16,
     },
     paragraph: {
       fontSize: 16,
