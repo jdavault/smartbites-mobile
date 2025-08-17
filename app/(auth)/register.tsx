@@ -483,6 +483,24 @@ export default function RegisterScreen() {
           color: colors.primary,
         },
 
+        // Section titles (matching profile.tsx)
+        sectionTitle: {
+          fontSize: 18,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.primary,
+          marginTop: 2,
+          marginBottom: 8,
+          paddingHorizontal: 16, // Match form padding
+        },
+        sectionTitleDietary: {
+          fontSize: 18,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.dietary,
+          marginTop: 2,
+          marginBottom: 8,
+          paddingHorizontal: 16, // Match form padding
+        },
+
         // chips (compact grid + reduced margins to fit screen)
         chipGrid: {
           flexDirection: 'row',
@@ -490,6 +508,7 @@ export default function RegisterScreen() {
           gap: 6, // ↓
           marginTop: 4, // ↓
           marginBottom: 6, // ↓ keep very small bottom space
+          paddingHorizontal: 16, // Match form padding
         },
         chip: {
           paddingVertical: 6, // ↓
@@ -503,12 +522,23 @@ export default function RegisterScreen() {
           backgroundColor: colors.primary,
           borderColor: colors.primary,
         },
+        chipSelectedDietary: {
+          backgroundColor: colors.dietary,
+          borderColor: colors.dietary,
+        },
         chipText: {
           fontSize: 12, // ↓
           fontFamily: 'Inter-Medium',
           color: colors.text,
         },
         chipTextSelected: { color: '#fff' },
+
+        // Loading container
+        loadingContainer: {
+          paddingHorizontal: 16,
+          paddingVertical: 20,
+          alignItems: 'center',
+        },
 
         // terms text (kept small)
         tosText: {
