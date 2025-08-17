@@ -328,40 +328,50 @@ export default function ProfileScreen() {
     // Theme toggle
     themeContainer: {
       paddingHorizontal: 24,
-      paddingVertical: 16,
+      paddingVertical: 12,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      backgroundColor: colors.surface,
+      backgroundColor: '#FFFFFF',
       marginHorizontal: 24,
       borderRadius: 12,
       marginBottom: 16,
+      borderWidth: 1,
+      borderColor: colors.accent,
     },
     themeText: {
       fontSize: 16,
       fontFamily: 'Inter-Medium',
-      color: colors.text,
+      color: colors.accent,
     },
 
     // Buttons
     button: {
-      backgroundColor: colors.primary,
-      paddingVertical: 16,
+      paddingVertical: 12,
       borderRadius: 12,
       alignItems: 'center',
       marginHorizontal: 24,
       marginBottom: 16,
-      flexDirection: 'row',
       justifyContent: 'center',
-      gap: 8,
+      borderWidth: 1,
+    },
+    saveButton: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
     },
     buttonText: {
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: 'Inter-SemiBold',
+    },
+    saveButtonText: {
       color: '#FFFFFF',
     },
     signOutButton: {
-      backgroundColor: colors.error,
+      backgroundColor: '#FFFFFF',
+      borderColor: colors.error,
+    },
+    signOutButtonText: {
+      color: colors.error,
     },
   });
 
@@ -560,13 +570,12 @@ export default function ProfileScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.button, loading && { opacity: 0.6 }]}
+          style={[styles.button, styles.saveButton, loading && { opacity: 0.6 }]}
           onPress={saveProfile}
           disabled={loading}
         >
-          <Save size={20} color="#FFFFFF" />
-          <Text style={styles.buttonText}>
-            {loading ? 'Saving...' : 'Save Profile'}
+          <Text style={[styles.buttonText, styles.saveButtonText]}>
+            {loading ? 'Saving...' : 'Save'}
           </Text>
         </TouchableOpacity>
 
@@ -574,8 +583,7 @@ export default function ProfileScreen() {
           style={[styles.button, styles.signOutButton]}
           onPress={handleSignOut}
         >
-          <LogOut size={20} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Sign Out</Text>
+          <Text style={[styles.buttonText, styles.signOutButtonText]}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
