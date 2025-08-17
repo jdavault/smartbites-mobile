@@ -161,10 +161,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setSession(null);
       
-      // Sign out from Supabase first
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Supabase signOut error:', error);
+      // Only sign out from Supabase if we have an active session
+      if (session) {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          console.error('Supabase signOut error:', error);
+        }
       }
       
       // For web, force complete cleanup
@@ -181,15 +183,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (e) {
           console.log('Storage clear failed:', e);
         }
-      }
-      
-      // Additional cleanup - clear any cached data
-      try {
-        // Clear any potential cached auth tokens
-        await supabase.auth.refreshSession();
-      } catch (refreshError) {
-        // Ignore refresh errors during logout
-        console.log('Refresh session error during logout (expected):', refreshError);
       }
       
       // Navigate to auth screen
