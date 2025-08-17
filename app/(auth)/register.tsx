@@ -28,6 +28,8 @@ import {
 } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import ThemedText from '@/components/ThemedText';
+import { ALLERGENS } from '@/contexts/AllergensContext';
+import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 
 type ModalInfo = {
   visible: boolean;
@@ -68,10 +70,10 @@ export default function RegisterScreen() {
     setModal({ ...m, visible: true });
   const closeModal = () => setModal((prev) => ({ ...prev, visible: false }));
 
-  // taxonomy lists
-  const [allergens, setAllergens] = useState<Row[]>([]);
-  const [dietPrefs, setDietPrefs] = useState<Row[]>([]);
-  const [loadingTaxonomies, setLoadingTaxonomies] = useState(true);
+  // taxonomy lists - use imported constants
+  const allergens = ALLERGENS.map(a => ({ id: a.$id, name: a.name }));
+  const dietPrefs = DIETARY_PREFERENCES.map(d => ({ id: d.$id, name: d.name }));
+  const loadingTaxonomies = false;
 
   // selections
   const [showAllergens, setShowAllergens] = useState(false);
@@ -83,18 +85,6 @@ export default function RegisterScreen() {
     new Set()
   );
 
-  useEffect(() => {
-    (async () => {
-      setLoadingTaxonomies(true);
-      const [{ data: aData }, { data: dData }] = await Promise.all([
-        supabase.from('allergens').select('id, name').order('name'),
-        supabase.from('dietary_prefs').select('id, name').order('name'),
-      ]);
-      setAllergens(aData ?? []);
-      setDietPrefs(dData ?? []);
-      setLoadingTaxonomies(false);
-    })();
-  }, []);
 
   const toggle = (
     set: Set<string | number>,
@@ -198,35 +188,46 @@ export default function RegisterScreen() {
     }
 
     // 2) Persist selections into relation tables
-    let userId = user?.id as string | undefined;
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    
     if (!userId) {
-      const { data } = await supabase.auth.getUser();
-      userId = data.user?.id;
+      setLoading(false);
+      return;
     }
-    if (userId) {
-      try {
-        if (selectedAllergenIds.size) {
-          const ua = Array.from(selectedAllergenIds).map((allergen_id) => ({
-            user_id: userId!,
-            allergen_id,
-          }));
-          await supabase.from('user_allergens').upsert(ua, {
-            onConflict: 'user_id,allergen_id',
-          });
-        }
-        if (selectedPrefIds.size) {
-          const udp = Array.from(selectedPrefIds).map((pref_id) => ({
-            user_id: userId!,
-            // change to dietary_pref_id if that’s your schema
-            pref_id,
-          }));
-          await supabase.from('user_dietary_prefs').upsert(udp, {
-            onConflict: 'user_id,pref_id',
-          });
-        }
-      } catch {
-        // continue; user can add later
+
+    try {
+      if (selectedAllergenIds.size) {
+        const selectedAllergenNames = Array.from(selectedAllergenIds).map(id => {
+          const allergen = allergens.find(a => a.id === id);
+          return allergen?.name;
+        }).filter(Boolean);
+        
+        const ua = selectedAllergenNames.map((allergen) => ({
+          user_id: userId,
+          allergen,
+        }));
+        await supabase.from('user_allergens').upsert(ua, {
+          onConflict: 'user_id,allergen',
+        });
       }
+      if (selectedPrefIds.size) {
+        const selectedPrefNames = Array.from(selectedPrefIds).map(id => {
+          const pref = dietPrefs.find(d => d.id === id);
+          return pref?.name;
+        }).filter(Boolean);
+        
+        const udp = selectedPrefNames.map((dietary_pref) => ({
+          user_id: userId,
+          dietary_pref,
+        }));
+        await supabase.from('user_dietary_prefs').upsert(udp, {
+          onConflict: 'user_id,dietary_pref',
+        });
+      }
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+      // continue; user can add later
     }
 
     setLoading(false);
