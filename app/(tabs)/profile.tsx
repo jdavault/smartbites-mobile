@@ -10,6 +10,7 @@ import {
   Switch,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,7 +18,62 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAllergens, ALLERGENS } from '@/contexts/AllergensContext';
 import { useDietary, DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 import { supabase } from '@/lib/supabase';
-import { LogOut, Moon, Sun, Save } from 'lucide-react-native';
+import { LogOut, Moon, Sun, Save, ChevronDown } from 'lucide-react-native';
+
+// US States list
+const US_STATES = [
+  { code: 'AL', name: 'Alabama' },
+  { code: 'AK', name: 'Alaska' },
+  { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' },
+  { code: 'CA', name: 'California' },
+  { code: 'CO', name: 'Colorado' },
+  { code: 'CT', name: 'Connecticut' },
+  { code: 'DE', name: 'Delaware' },
+  { code: 'FL', name: 'Florida' },
+  { code: 'GA', name: 'Georgia' },
+  { code: 'HI', name: 'Hawaii' },
+  { code: 'ID', name: 'Idaho' },
+  { code: 'IL', name: 'Illinois' },
+  { code: 'IN', name: 'Indiana' },
+  { code: 'IA', name: 'Iowa' },
+  { code: 'KS', name: 'Kansas' },
+  { code: 'KY', name: 'Kentucky' },
+  { code: 'LA', name: 'Louisiana' },
+  { code: 'ME', name: 'Maine' },
+  { code: 'MD', name: 'Maryland' },
+  { code: 'MA', name: 'Massachusetts' },
+  { code: 'MI', name: 'Michigan' },
+  { code: 'MN', name: 'Minnesota' },
+  { code: 'MS', name: 'Mississippi' },
+  { code: 'MO', name: 'Missouri' },
+  { code: 'MT', name: 'Montana' },
+  { code: 'NE', name: 'Nebraska' },
+  { code: 'NV', name: 'Nevada' },
+  { code: 'NH', name: 'New Hampshire' },
+  { code: 'NJ', name: 'New Jersey' },
+  { code: 'NM', name: 'New Mexico' },
+  { code: 'NY', name: 'New York' },
+  { code: 'NC', name: 'North Carolina' },
+  { code: 'ND', name: 'North Dakota' },
+  { code: 'OH', name: 'Ohio' },
+  { code: 'OK', name: 'Oklahoma' },
+  { code: 'OR', name: 'Oregon' },
+  { code: 'PA', name: 'Pennsylvania' },
+  { code: 'RI', name: 'Rhode Island' },
+  { code: 'SC', name: 'South Carolina' },
+  { code: 'SD', name: 'South Dakota' },
+  { code: 'TN', name: 'Tennessee' },
+  { code: 'TX', name: 'Texas' },
+  { code: 'UT', name: 'Utah' },
+  { code: 'VT', name: 'Vermont' },
+  { code: 'VA', name: 'Virginia' },
+  { code: 'WA', name: 'Washington' },
+  { code: 'WV', name: 'West Virginia' },
+  { code: 'WI', name: 'Wisconsin' },
+  { code: 'WY', name: 'Wyoming' },
+  { code: 'DC', name: 'District of Columbia' },
+];
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
@@ -39,6 +95,7 @@ export default function ProfileScreen() {
     phone: '',
   });
   const [loading, setLoading] = useState(false);
+  const [showStates, setShowStates] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -141,7 +198,7 @@ export default function ProfileScreen() {
     title: {
       fontSize: 28,
       fontFamily: 'Inter-Bold',
-      color: colors.text,
+      color: '#FF8866',
       marginBottom: 8,
     },
     subtitle: {
@@ -149,70 +206,126 @@ export default function ProfileScreen() {
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
     },
-    section: {
-      marginBottom: 32,
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontFamily: 'Inter-SemiBold',
-      color: colors.text,
-      marginBottom: 16,
-      paddingHorizontal: 24,
-    },
-    form: {
-      paddingHorizontal: 24,
-      gap: 16,
-    },
-    row: {
-      flexDirection: 'row',
+    
+    // Form styling matching registration
+    form: { 
       gap: 12,
+      paddingHorizontal: 24,
     },
-    flex1: {
-      flex: 1,
+    row: { 
+      flexDirection: 'row', 
+      gap: 8 
     },
-    inputContainer: {
-      gap: 8,
+    flex1: { 
+      flex: 1 
     },
-    label: {
-      fontSize: 14,
-      fontFamily: 'Inter-Medium',
-      color: colors.text,
+    flex2: { 
+      flex: 2 
     },
+    
     input: {
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      fontSize: 16,
+      borderRadius: 9,
+      paddingHorizontal: 12,
+      paddingVertical: 9,
+      fontSize: 15,
       fontFamily: 'Inter-Regular',
       color: colors.text,
       backgroundColor: colors.surface,
     },
-    allergenContainer: {
-      paddingHorizontal: 24,
-      gap: 12,
+
+    // State dropdown matching registration
+    stateDropdown: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 9,
+      backgroundColor: colors.surface,
+      position: 'relative',
     },
-    allergenItem: {
+    stateButton: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 9,
+    },
+    stateButtonText: {
+      fontSize: 15,
+      fontFamily: 'Inter-Regular',
+      color: profile.state ? colors.text : colors.textSecondary,
+    },
+    stateList: {
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      right: 0,
       backgroundColor: colors.surface,
-      borderRadius: 12,
       borderWidth: 1,
       borderColor: colors.border,
-      opacity: 1,
+      borderRadius: 9,
+      maxHeight: 200,
+      zIndex: 1000,
     },
-    allergenItemLoading: {
-      opacity: 0.6,
+    stateItem: {
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
     },
-    allergenText: {
-      fontSize: 16,
+    stateItemLast: {
+      borderBottomWidth: 0,
+    },
+    stateItemText: {
+      fontSize: 15,
       fontFamily: 'Inter-Regular',
       color: colors.text,
     },
+
+    // Section styling
+    sectionTitle: {
+      fontSize: 18,
+      fontFamily: 'Inter-SemiBold',
+      color: '#FF8866',
+      marginTop: 24,
+      marginBottom: 12,
+      paddingHorizontal: 24,
+    },
+
+    // Chip grid styling matching registration
+    chipGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      paddingHorizontal: 24,
+      marginBottom: 16,
+    },
+    chip: {
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    chipSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    chipSelectedDietary: {
+      backgroundColor: colors.dietary,
+      borderColor: colors.dietary,
+    },
+    chipText: {
+      fontSize: 12,
+      fontFamily: 'Inter-Medium',
+      color: colors.text,
+    },
+    chipTextSelected: { 
+      color: '#fff' 
+    },
+
+    // Theme toggle
     themeContainer: {
       paddingHorizontal: 24,
       paddingVertical: 16,
@@ -222,12 +335,15 @@ export default function ProfileScreen() {
       backgroundColor: colors.surface,
       marginHorizontal: 24,
       borderRadius: 12,
+      marginBottom: 16,
     },
     themeText: {
       fontSize: 16,
       fontFamily: 'Inter-Medium',
       color: colors.text,
     },
+
+    // Buttons
     button: {
       backgroundColor: colors.primary,
       paddingVertical: 16,
@@ -235,6 +351,9 @@ export default function ProfileScreen() {
       alignItems: 'center',
       marginHorizontal: 24,
       marginBottom: 16,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 8,
     },
     buttonText: {
       fontSize: 16,
@@ -243,10 +362,6 @@ export default function ProfileScreen() {
     },
     signOutButton: {
       backgroundColor: colors.error,
-      flexDirection: 'row',
-      gap: 8,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
   });
 
@@ -258,166 +373,190 @@ export default function ProfileScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
-          <View style={styles.form}>
-            <View style={styles.row}>
-              <View style={[styles.inputContainer, styles.flex1]}>
-                <Text style={styles.label}>First Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={profile.firstName}
-                  onChangeText={(text) => setProfile(prev => ({ ...prev, firstName: text }))}
-                  placeholder="First name"
-                  placeholderTextColor={colors.textSecondary}
-                />
-              </View>
-              
-              <View style={[styles.inputContainer, styles.flex1]}>
-                <Text style={styles.label}>Last Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={profile.lastName}
-                  onChangeText={(text) => setProfile(prev => ({ ...prev, lastName: text }))}
-                  placeholder="Last name"
-                  placeholderTextColor={colors.textSecondary}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Address</Text>
-              <TextInput
-                style={styles.input}
-                value={profile.address1}
-                onChangeText={(text) => setProfile(prev => ({ ...prev, address1: text }))}
-                placeholder="Street address"
-                placeholderTextColor={colors.textSecondary}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Address Line 2</Text>
-              <TextInput
-                style={styles.input}
-                value={profile.address2}
-                onChangeText={(text) => setProfile(prev => ({ ...prev, address2: text }))}
-                placeholder="Apartment, suite, etc. (optional)"
-                placeholderTextColor={colors.textSecondary}
-              />
-            </View>
-
-            <View style={styles.row}>
-              <View style={[styles.inputContainer, styles.flex1]}>
-                <Text style={styles.label}>City</Text>
-                <TextInput
-                  style={styles.input}
-                  value={profile.city}
-                  onChangeText={(text) => setProfile(prev => ({ ...prev, city: text }))}
-                  placeholder="City"
-                  placeholderTextColor={colors.textSecondary}
-                />
-              </View>
-              
-              <View style={[styles.inputContainer, { flex: 0.6 }]}>
-                <Text style={styles.label}>State</Text>
-                <TextInput
-                  style={styles.input}
-                  value={profile.state}
-                  onChangeText={(text) => setProfile(prev => ({ ...prev, state: text }))}
-                  placeholder="State"
-                  placeholderTextColor={colors.textSecondary}
-                />
-              </View>
-              
-              <View style={[styles.inputContainer, { flex: 0.6 }]}>
-                <Text style={styles.label}>ZIP</Text>
-                <TextInput
-                  style={styles.input}
-                  value={profile.zip}
-                  onChangeText={(text) => setProfile(prev => ({ ...prev, zip: text }))}
-                  placeholder="ZIP"
-                  placeholderTextColor={colors.textSecondary}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Phone</Text>
-              <TextInput
-                style={styles.input}
-                value={profile.phone}
-                onChangeText={(text) => setProfile(prev => ({ ...prev, phone: text }))}
-                placeholder="Phone number"
-                placeholderTextColor={colors.textSecondary}
-                keyboardType="phone-pad"
-              />
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Allergens</Text>
-          <View style={styles.allergenContainer}>
-            {ALLERGENS.map((allergen) => (
-              <View key={allergen.$id} style={[
-                styles.allergenItem,
-                allergensLoading && styles.allergenItemLoading
-              ]}>
-                <Text style={styles.allergenText}>{allergen.name}</Text>
-                <Switch
-                  value={userAllergens.some(a => a.$id === allergen.$id)}
-                  onValueChange={() => !allergensLoading && toggleAllergen(allergen)}
-                  disabled={allergensLoading}
-                  trackColor={{ false: '#e6e2d6', true: '#FF8866' }}
-                  thumbColor="#FFFFFF"
-                />
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dietary Preferences</Text>
-          <View style={styles.allergenContainer}>
-            {DIETARY_PREFERENCES.map((pref) => (
-              <View key={pref.$id} style={[
-                styles.allergenItem,
-                dietaryLoading && styles.allergenItemLoading
-              ]}>
-                <Text style={styles.allergenText}>{pref.name}</Text>
-                <Switch
-                  value={userDietaryPrefs.some(p => p.$id === pref.$id)}
-                  onValueChange={() => !dietaryLoading && toggleDietaryPref(pref)}
-                  disabled={dietaryLoading}
-                  trackColor={{ false: '#e6e2d6', true: '#073c51' }}
-                  thumbColor="#FFFFFF"
-                />
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
-          <View style={styles.themeContainer}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              {isDark ? (
-                <Moon size={20} color={colors.text} />
-              ) : (
-                <Sun size={20} color={colors.text} />
-              )}
-              <Text style={styles.themeText}>
-                {isDark ? 'Dark Mode' : 'Light Mode'}
-              </Text>
-            </View>
-            <Switch
-              value={isDark}
-              onValueChange={toggleTheme}
-              trackColor={{ false: '#e6e2d6', true: colors.primary }}
-              thumbColor="#FFFFFF"
+        <Text style={styles.sectionTitle}>Personal Information</Text>
+        
+        <View style={styles.form}>
+          {/* Names */}
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, styles.flex1]}
+              value={profile.firstName}
+              onChangeText={(text) => setProfile(prev => ({ ...prev, firstName: text }))}
+              placeholder="First name"
+              placeholderTextColor={colors.textSecondary}
+              autoCapitalize="words"
+            />
+            <TextInput
+              style={[styles.input, styles.flex1]}
+              value={profile.lastName}
+              onChangeText={(text) => setProfile(prev => ({ ...prev, lastName: text }))}
+              placeholder="Last name"
+              placeholderTextColor={colors.textSecondary}
+              autoCapitalize="words"
             />
           </View>
+
+          {/* Address */}
+          <TextInput
+            style={styles.input}
+            value={profile.address1}
+            onChangeText={(text) => setProfile(prev => ({ ...prev, address1: text }))}
+            placeholder="Address line 1"
+            placeholderTextColor={colors.textSecondary}
+            autoCapitalize="words"
+          />
+          <TextInput
+            style={styles.input}
+            value={profile.address2}
+            onChangeText={(text) => setProfile(prev => ({ ...prev, address2: text }))}
+            placeholder="Address line 2 (optional)"
+            placeholderTextColor={colors.textSecondary}
+            autoCapitalize="words"
+          />
+          
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, styles.flex2]}
+              value={profile.city}
+              onChangeText={(text) => setProfile(prev => ({ ...prev, city: text }))}
+              placeholder="City"
+              placeholderTextColor={colors.textSecondary}
+              autoCapitalize="words"
+            />
+            <View style={[styles.stateDropdown, styles.flex1]}>
+              <TouchableOpacity
+                style={styles.stateButton}
+                onPress={() => setShowStates(!showStates)}
+              >
+                <Text style={styles.stateButtonText}>
+                  {profile.state || 'State'}
+                </Text>
+                <ChevronDown size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+              
+              {showStates && (
+                <ScrollView style={styles.stateList} nestedScrollEnabled>
+                  {US_STATES.map((stateItem, index) => (
+                    <TouchableOpacity
+                      key={stateItem.code}
+                      style={[
+                        styles.stateItem,
+                        index === US_STATES.length - 1 && styles.stateItemLast
+                      ]}
+                      onPress={() => {
+                        setProfile(prev => ({ ...prev, state: stateItem.code }));
+                        setShowStates(false);
+                      }}
+                    >
+                      <Text style={styles.stateItemText}>
+                        {stateItem.code} - {stateItem.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+          </View>
+          
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, styles.flex1]}
+              value={profile.zip}
+              onChangeText={(text) => setProfile(prev => ({ ...prev, zip: text }))}
+              placeholder="ZIP"
+              placeholderTextColor={colors.textSecondary}
+              keyboardType="number-pad"
+              maxLength={10}
+            />
+            <TextInput
+              style={[styles.input, styles.flex2]}
+              value={profile.phone}
+              onChangeText={(text) => setProfile(prev => ({ ...prev, phone: text }))}
+              placeholder="Phone"
+              placeholderTextColor={colors.textSecondary}
+              keyboardType="phone-pad"
+            />
+          </View>
+        </View>
+
+        <Text style={styles.sectionTitle}>Allergens</Text>
+        {allergensLoading ? (
+          <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
+            <ActivityIndicator size="small" color={colors.primary} />
+          </View>
+        ) : (
+          <View style={styles.chipGrid}>
+            {ALLERGENS.map((allergen) => {
+              const selected = userAllergens.some(a => a.$id === allergen.$id);
+              return (
+                <TouchableOpacity
+                  key={allergen.$id}
+                  style={[styles.chip, selected && styles.chipSelected]}
+                  onPress={() => toggleAllergen(allergen)}
+                  disabled={allergensLoading}
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      selected && styles.chipTextSelected,
+                    ]}
+                  >
+                    {allergen.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
+        <Text style={styles.sectionTitle}>Dietary Preferences</Text>
+        {dietaryLoading ? (
+          <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
+            <ActivityIndicator size="small" color={colors.dietary} />
+          </View>
+        ) : (
+          <View style={styles.chipGrid}>
+            {DIETARY_PREFERENCES.map((pref) => {
+              const selected = userDietaryPrefs.some(p => p.$id === pref.$id);
+              return (
+                <TouchableOpacity
+                  key={pref.$id}
+                  style={[styles.chip, selected && styles.chipSelectedDietary]}
+                  onPress={() => toggleDietaryPref(pref)}
+                  disabled={dietaryLoading}
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      selected && styles.chipTextSelected,
+                    ]}
+                  >
+                    {pref.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
+        <Text style={styles.sectionTitle}>Settings</Text>
+        <View style={styles.themeContainer}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {isDark ? (
+              <Moon size={20} color={colors.text} />
+            ) : (
+              <Sun size={20} color={colors.text} />
+            )}
+            <Text style={styles.themeText}>
+              {isDark ? 'Dark Mode' : 'Light Mode'}
+            </Text>
+          </View>
+          <Switch
+            value={isDark}
+            onValueChange={toggleTheme}
+            trackColor={{ false: '#e6e2d6', true: colors.primary }}
+            thumbColor="#FFFFFF"
+          />
         </View>
 
         <TouchableOpacity
@@ -425,12 +564,10 @@ export default function ProfileScreen() {
           onPress={saveProfile}
           disabled={loading}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Save size={20} color="#FFFFFF" />
-            <Text style={styles.buttonText}>
-              {loading ? 'Saving...' : 'Save Profile'}
-            </Text>
-          </View>
+          <Save size={20} color="#FFFFFF" />
+          <Text style={styles.buttonText}>
+            {loading ? 'Saving...' : 'Save Profile'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
