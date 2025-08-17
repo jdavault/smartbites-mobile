@@ -351,7 +351,7 @@ export default function ProfileScreen() {
     themeText: {
       fontSize: 16,
       fontFamily: 'Inter-Medium',
-      color: colors.accent,
+      color: colors.accentDark,
     },
 
     // Buttons
