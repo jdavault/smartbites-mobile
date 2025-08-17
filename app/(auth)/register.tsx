@@ -10,29 +10,22 @@ import {
   Modal,
   Linking,
   ActivityIndicator,
-  TouchableWithoutFeedback, // ★ added
-  Keyboard,                 // ★ added
-  Platform,                 // ★ added
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
+  Image,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import {
-  ArrowLeft,
-  Eye,
-  EyeOff,
-  ChevronDown,
-} from 'lucide-react-native';
+import { ArrowLeft, Eye, EyeOff, ChevronDown } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import ThemedText from '@/components/ThemedText';
 import { ALLERGENS } from '@/contexts/AllergensContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
-import SmartBitesLogo from '@/assets/images/smart-bites-logo.png';
+import SmartBitesLogo from '@/assets/images/smart-bites-logo.png'; // 72x72
 
 // US States list
 const US_STATES = [
@@ -146,15 +139,15 @@ export default function RegisterScreen() {
     const fetchTaxonomies = async () => {
       try {
         setLoadingTaxonomies(true);
-        
+
         const { data: allergensData, error: allergensError } = await supabase
           .from('allergens')
           .select('id, name')
           .order('name');
-        
+
         if (allergensError) {
           console.error('Error fetching allergens:', allergensError);
-          setAllergens(ALLERGENS.map(a => ({ id: a.$id, name: a.name })));
+          setAllergens(ALLERGENS.map((a) => ({ id: a.$id, name: a.name })));
         } else {
           setAllergens(allergensData || []);
         }
@@ -163,17 +156,21 @@ export default function RegisterScreen() {
           .from('dietary_prefs')
           .select('id, name')
           .order('name');
-        
+
         if (dietPrefsError) {
           console.error('Error fetching dietary preferences:', dietPrefsError);
-          setDietPrefs(DIETARY_PREFERENCES.map(d => ({ id: d.$id, name: d.name })));
+          setDietPrefs(
+            DIETARY_PREFERENCES.map((d) => ({ id: d.$id, name: d.name }))
+          );
         } else {
           setDietPrefs(dietPrefsData || []);
         }
       } catch (error) {
         console.error('Error in fetchTaxonomies:', error);
-        setAllergens(ALLERGENS.map(a => ({ id: a.$id, name: a.name })));
-        setDietPrefs(DIETARY_PREFERENCES.map(d => ({ id: d.$id, name: d.name })));
+        setAllergens(ALLERGENS.map((a) => ({ id: a.$id, name: a.name })));
+        setDietPrefs(
+          DIETARY_PREFERENCES.map((d) => ({ id: d.$id, name: d.name }))
+        );
       } finally {
         setLoadingTaxonomies(false);
       }
@@ -186,8 +183,12 @@ export default function RegisterScreen() {
   const [showAllergens, setShowAllergens] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
   const [showStates, setShowStates] = useState(false);
-  const [selectedAllergenIds, setSelectedAllergenIds] = useState<Set<string>>(new Set());
-  const [selectedPrefIds, setSelectedPrefIds] = useState<Set<string>>(new Set());
+  const [selectedAllergenIds, setSelectedAllergenIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectedPrefIds, setSelectedPrefIds] = useState<Set<string>>(
+    new Set()
+  );
 
   // consent toggle
   const [showConsent, setShowConsent] = useState(false);
@@ -260,7 +261,7 @@ export default function RegisterScreen() {
       first_name: firstName,
       last_name: lastName,
     });
-    
+
     if (signErr) {
       setLoading(false);
       openModal({
@@ -312,7 +313,7 @@ export default function RegisterScreen() {
 
       if (selectedAllergenIds.size) {
         const ua = Array.from(selectedAllergenIds).map((allergenId) => {
-          const allergen = allergens.find(a => a.id === allergenId);
+          const allergen = allergens.find((a) => a.id === allergenId);
           return {
             user_id: userId,
             allergen_id: allergenId,
@@ -321,10 +322,10 @@ export default function RegisterScreen() {
         });
         await supabase.from('user_allergens').insert(ua);
       }
-      
+
       if (selectedPrefIds.size) {
         const udp = Array.from(selectedPrefIds).map((prefId) => {
-          const dietPref = dietPrefs.find(d => d.id === prefId);
+          const dietPref = dietPrefs.find((d) => d.id === prefId);
           return {
             user_id: userId,
             dietary_pref_id: prefId,
@@ -360,6 +361,7 @@ export default function RegisterScreen() {
         header: {
           flexDirection: 'row',
           alignItems: 'center',
+          justifyContent: 'space-between', // spread back button and logo
           paddingTop: 8,
           paddingBottom: 8,
         },
@@ -367,7 +369,6 @@ export default function RegisterScreen() {
         headerLogo: {
           width: 72,
           height: 72,
-          marginLeft: 'auto',
         },
 
         title: {
@@ -384,7 +385,7 @@ export default function RegisterScreen() {
         flex1: { flex: 1 },
         flex2: { flex: 2 },
 
-        // ★ Platform-specific vertical padding (restores old feel)
+        // Platform-specific vertical padding (web-safe)
         input: {
           borderWidth: 1,
           borderColor: colors.border,
@@ -635,6 +636,7 @@ export default function RegisterScreen() {
 
   return (
     <View style={{ flex: 1 }}>
+      {/* Gradient fills the screen */}
       <LinearGradient
         colors={[colors.background, colors.textRice]}
         style={StyleSheet.absoluteFillObject}
@@ -653,6 +655,8 @@ export default function RegisterScreen() {
               source={SmartBitesLogo}
               style={styles.headerLogo}
               resizeMode="contain"
+              accessible
+              accessibilityLabel="SmartBites logo"
             />
           </View>
 
@@ -665,7 +669,7 @@ export default function RegisterScreen() {
               <Text style={styles.title}>Create Account</Text>
 
               <View style={styles.form}>
-                {/* Email + Passwords first */}
+                {/* Email + Passwords first (compact, no labels) */}
                 <TextInput
                   style={styles.input}
                   value={email}
@@ -795,7 +799,7 @@ export default function RegisterScreen() {
                       </Text>
                       <ChevronDown size={16} color={colors.textSecondary} />
                     </TouchableOpacity>
-                    
+
                     {showStates && (
                       <ScrollView style={styles.stateList} nestedScrollEnabled>
                         {US_STATES.map((stateItem, index) => (
@@ -803,7 +807,7 @@ export default function RegisterScreen() {
                             key={stateItem.code}
                             style={[
                               styles.stateItem,
-                              index === US_STATES.length - 1 && styles.stateItemLast
+                              index === US_STATES.length - 1 && styles.stateItemLast,
                             ]}
                             onPress={() => {
                               setState(stateItem.code);
@@ -862,7 +866,11 @@ export default function RegisterScreen() {
                           key={a.id}
                           style={[styles.chip, selected && styles.chipSelected]}
                           onPress={() =>
-                            toggle(selectedAllergenIds, a.id, setSelectedAllergenIds)
+                            toggle(
+                              selectedAllergenIds,
+                              a.id,
+                              setSelectedAllergenIds
+                            )
                           }
                         >
                           <Text
@@ -880,7 +888,9 @@ export default function RegisterScreen() {
                 )}
 
                 {/* Dietary Preferences */}
-                <Text style={styles.sectionTitleDietary}>Dietary Preferences</Text>
+                <Text style={styles.sectionTitleDietary}>
+                  Dietary Preferences
+                </Text>
                 {loadingTaxonomies ? (
                   <View style={styles.loadingContainer}>
                     <ActivityIndicator size="small" color={colors.dietary} />
@@ -892,8 +902,13 @@ export default function RegisterScreen() {
                       return (
                         <TouchableOpacity
                           key={d.id}
-                          style={[styles.chip, selected && styles.chipSelectedDietary]}
-                          onPress={() => toggle(selectedPrefIds, d.id, setSelectedPrefIds)}
+                          style={[
+                            styles.chip,
+                            selected && styles.chipSelectedDietary,
+                          ]}
+                          onPress={() =>
+                            toggle(selectedPrefIds, d.id, setSelectedPrefIds)
+                          }
                         >
                           <Text
                             style={[
@@ -921,8 +936,8 @@ export default function RegisterScreen() {
 
                 {showConsent && (
                   <Text style={styles.tosText}>
-                    By tapping "Create Account", I acknowledge that I have read and
-                    agree to the{' '}
+                    By tapping "Create Account", I acknowledge that I have read
+                    and agree to the{' '}
                     <Text
                       style={styles.tosLink}
                       onPress={() =>
@@ -945,10 +960,10 @@ export default function RegisterScreen() {
                       Terms of Service
                     </Text>
                     . I also consent to being contacted by SmartBites™ for
-                    account-related communications using the information I provide.
+                    account-related communications using the information I
+                    provide.
                   </Text>
                 )}
-
 
                 <TouchableOpacity
                   style={[styles.button, loading && styles.buttonDisabled]}
@@ -961,7 +976,9 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.footer}>
-                  <Text style={styles.footerText}>Already have an account? </Text>
+                  <Text style={styles.footerText}>
+                    Already have an account?{' '}
+                  </Text>
                   <Link href="/(auth)/login" asChild>
                     <TouchableOpacity>
                       <Text style={styles.footerLink}>Sign In</Text>
@@ -991,14 +1008,20 @@ export default function RegisterScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            {!!modal.emoji && <Text style={styles.modalEmoji}>{modal.emoji}</Text>}
+            {!!modal.emoji && (
+              <Text style={styles.modalEmoji}>{modal.emoji}</Text>
+            )}
             <Text style={styles.modalTitle}>{modal.title}</Text>
-            {!!modal.subtitle && <Text style={styles.modalSubtitle}>{modal.subtitle}</Text>}
+            {!!modal.subtitle && (
+              <Text style={styles.modalSubtitle}>{modal.subtitle}</Text>
+            )}
 
             <View style={styles.modalButtons}>
               {modal.secondary && (
                 <TouchableOpacity style={styles.modalBtn} onPress={closeModal}>
-                  <Text style={styles.modalBtnText}>{modal.secondary.label}</Text>
+                  <Text style={styles.modalBtnText}>
+                    {modal.secondary.label}
+                  </Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
@@ -1008,7 +1031,9 @@ export default function RegisterScreen() {
                   else closeModal();
                 }}
               >
-                <Text style={[styles.modalBtnText, styles.modalBtnTextPrimary]}>
+                <Text
+                  style={[styles.modalBtnText, styles.modalBtnTextPrimary]}
+                >
                   {modal.primary?.label ?? 'OK'}
                 </Text>
               </TouchableOpacity>
