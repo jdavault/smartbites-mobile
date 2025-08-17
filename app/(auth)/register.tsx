@@ -361,24 +361,27 @@ export default function RegisterScreen() {
         header: {
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between', // spread back button and logo
+          justifyContent: 'space-between',
           paddingTop: 8,
           paddingBottom: 8,
         },
+        headerContent: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          flex: 1,
+        },
         backButton: { padding: 6 },
+        headerTitle: {
+          fontSize: 28,
+          fontFamily: 'Inter-Bold',
+          color: '#FF8866',
+          marginLeft: 12,
+        },
         headerLogo: {
           width: 72,
           height: 72,
         },
 
-        title: {
-          fontSize: 24,
-          fontFamily: 'Inter-Bold',
-          color: '#FF8866',
-          textAlign: 'center',
-          marginTop: 0,
-          marginBottom: 8,
-        },
 
         form: { gap: 8 },
         row: { flexDirection: 'row', gap: 8 },
@@ -646,11 +649,14 @@ export default function RegisterScreen() {
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <Link href="/(auth)" asChild>
-              <TouchableOpacity style={styles.backButton}>
-                <ArrowLeft size={22} color={colors.text} />
-              </TouchableOpacity>
-            </Link>
+            <View style={styles.headerContent}>
+              <Link href="/(auth)" asChild>
+                <TouchableOpacity style={styles.backButton}>
+                  <ArrowLeft size={22} color={colors.text} />
+                </TouchableOpacity>
+              </Link>
+              <Text style={styles.headerTitle}>Create Account</Text>
+            </View>
             <Image
               source={SmartBitesLogo}
               style={styles.headerLogo}
@@ -666,7 +672,6 @@ export default function RegisterScreen() {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              <Text style={styles.title}>Create Account</Text>
 
               <View style={styles.form}>
                 {/* Email + Passwords first (compact, no labels) */}
