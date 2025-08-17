@@ -188,6 +188,9 @@ export default function RegisterScreen() {
   const [selectedAllergenIds, setSelectedAllergenIds] = useState<Set<string>>(new Set());
   const [selectedPrefIds, setSelectedPrefIds] = useState<Set<string>>(new Set());
 
+  // consent toggle
+  const [showConsent, setShowConsent] = useState(false);
+
   const toggle = (
     set: Set<string>,
     id: string,
@@ -500,6 +503,17 @@ export default function RegisterScreen() {
           paddingHorizontal: 16,
           paddingVertical: 12,
           alignItems: 'center',
+        },
+
+        consentToggle: {
+          alignItems: 'center',
+          paddingVertical: 6,
+          marginTop: 4,
+        },
+        consentToggleText: {
+          fontSize: 14,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.primary,
         },
 
         tosText: {
@@ -884,34 +898,46 @@ export default function RegisterScreen() {
                   </View>
                 )}
 
-                {/* Terms */}
-                <Text style={styles.tosText}>
-                  By tapping “Create Account”, I acknowledge that I have read and
-                  agree to the{' '}
-                  <Text
-                    style={styles.tosLink}
-                    onPress={() =>
-                      Linking.openURL(
-                        'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
-                      )
-                    }
-                  >
-                    Privacy Policy
-                  </Text>{' '}
-                  and{' '}
-                  <Text
-                    style={styles.tosLink}
-                    onPress={() =>
-                      Linking.openURL(
-                        'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
-                      )
-                    }
-                  >
-                    Terms of Service
+                {/* Collapsible Consent Section */}
+                <TouchableOpacity
+                  style={styles.consentToggle}
+                  onPress={() => setShowConsent(!showConsent)}
+                >
+                  <Text style={styles.consentToggleText}>
+                    Consent {showConsent ? '▲' : '▼'}
                   </Text>
-                  . I also consent to being contacted by SmartBites™ for
-                  account-related communications using the information I provide.
-                </Text>
+                </TouchableOpacity>
+
+                {showConsent && (
+                  <Text style={styles.tosText}>
+                    By tapping "Create Account", I acknowledge that I have read and
+                    agree to the{' '}
+                    <Text
+                      style={styles.tosLink}
+                      onPress={() =>
+                        Linking.openURL(
+                          'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                        )
+                      }
+                    >
+                      Privacy Policy
+                    </Text>{' '}
+                    and{' '}
+                    <Text
+                      style={styles.tosLink}
+                      onPress={() =>
+                        Linking.openURL(
+                          'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                        )
+                      }
+                    >
+                      Terms of Service
+                    </Text>
+                    . I also consent to being contacted by SmartBites™ for
+                    account-related communications using the information I provide.
+                  </Text>
+                )}
+
 
                 <TouchableOpacity
                   style={[styles.button, loading && styles.buttonDisabled]}
