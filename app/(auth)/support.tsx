@@ -187,8 +187,8 @@ const getStyles = (colors: any) =>
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingTop: 16,
-      paddingBottom: 32,
+      paddingTop: 8,
+      paddingBottom: 16,
     },
     backButton: { padding: 8 },
 
