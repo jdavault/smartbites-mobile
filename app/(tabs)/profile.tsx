@@ -474,8 +474,8 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.title}>Profile</Text>
-          <Text style={styles.subtitle}>Manage your account and preferences</Text>
+          <Text style={styles.title}>Account</Text>
+          <Text style={styles.subtitle}>User preferences</Text>
         </View>
         <Image
           source={require('@/assets/images/smart-bites-logo.png')}
