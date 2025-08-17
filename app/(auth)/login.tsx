@@ -140,7 +140,13 @@ export default function LoginScreen() {
 
             {/* Main */}
             <View style={styles.main}>
-              <Text style={styles.brandTitle}>SmartBites™</Text>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require('@/assets/images/smart-bites-logo.png')}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
               <Text style={styles.subtitle}>
                 Sign in to continue your culinary journey
               </Text>
