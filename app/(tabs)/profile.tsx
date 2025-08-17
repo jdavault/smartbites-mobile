@@ -350,10 +350,17 @@ export default function ProfileScreen() {
       paddingVertical: 12,
       borderRadius: 12,
       alignItems: 'center',
-      marginHorizontal: 24,
-      marginBottom: 16,
       justifyContent: 'center',
       borderWidth: 1,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      paddingHorizontal: 24,
+      gap: 12,
+      marginBottom: 16,
+    },
+    halfButton: {
+      flex: 1,
     },
     saveButton: {
       backgroundColor: colors.primary,
@@ -569,22 +576,24 @@ export default function ProfileScreen() {
           />
         </View>
 
-        <TouchableOpacity
-          style={[styles.button, styles.saveButton, loading && { opacity: 0.6 }]}
-          onPress={saveProfile}
-          disabled={loading}
-        >
-          <Text style={[styles.buttonText, styles.saveButtonText]}>
-            {loading ? 'Saving...' : 'Save'}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={[styles.button, styles.saveButton, styles.halfButton, loading && { opacity: 0.6 }]}
+            onPress={saveProfile}
+            disabled={loading}
+          >
+            <Text style={[styles.buttonText, styles.saveButtonText]}>
+              {loading ? 'Saving...' : 'Save'}
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, styles.signOutButton]}
-          onPress={handleSignOut}
-        >
-          <Text style={[styles.buttonText, styles.signOutButtonText]}>Log Out</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.signOutButton, styles.halfButton]}
+            onPress={handleSignOut}
+          >
+            <Text style={[styles.buttonText, styles.signOutButtonText]}>Log Out</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
