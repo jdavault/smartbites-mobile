@@ -83,7 +83,7 @@ export default function ForgotPasswordScreen() {
 
   const RESET_REDIRECT =
     process.env.EXPO_PUBLIC_RESET_REDIRECT ??
-    'https://smartbites.food/reset-password';
+    (typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : 'http://localhost:3000/reset-password');
 
   // Detect if we arrived with a Supabase recovery link; if yes, exchange for a session and switch to reset mode
   useEffect(() => {
