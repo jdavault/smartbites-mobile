@@ -15,6 +15,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRecipes } from '@/contexts/RecipesContext';
+import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useAllergens } from '@/contexts/AllergensContext';
 import { useDietary } from '@/contexts/DietaryContext';
 import { generateRecipes } from '@/lib/openai';
@@ -27,6 +28,7 @@ import DietaryFilter from '@/components/DietaryFilter';
 export default function SearchScreen() {
   const { user } = useAuth();
   const { colors } = useTheme();
+  const { profile } = useUserProfile();
   const {
     savedRecipes,
     favoriteRecipes,
@@ -289,7 +291,9 @@ export default function SearchScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.title}>Hi, Joe!</Text>
+          <Text style={styles.title}>
+            Hi, {profile?.firstName || 'there'}!
+          </Text>
           <Text style={styles.subtitle}>
             What would you like to cook today?
           </Text>
