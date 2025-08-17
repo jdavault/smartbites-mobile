@@ -288,20 +288,13 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
 
     logoContainer: {
       alignItems: 'center',
-      marginBottom: 20,
-    },
-    logoImage: {
-      width: 120,
-      height: 120,
-    },
-
-    brandTitle: {
-      fontSize: 42,
-      fontFamily: 'Inter-Bold',
-      color: '#FF8866',
-      textAlign: 'center',
       marginBottom: 12,
     },
+    logoImage: {
+      width: 240,
+      height: 240,
+    },
+
     subtitle: {
       fontSize: 16,
       fontFamily: Fonts.heading,
