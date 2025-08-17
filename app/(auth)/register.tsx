@@ -64,6 +64,7 @@ export default function RegisterScreen() {
   const [address1, setAddress1] = useState('');
   const [address2, setAddress2] = useState('');
   const [city, setCity] = useState('');
+  const [state, setState] = useState('');
   const [zip, setZip] = useState('');
   const [phone, setPhone] = useState('');
 
@@ -245,10 +246,10 @@ export default function RegisterScreen() {
           user_id: userId,
           first_name: firstName,
           last_name: lastName,
-          address1: address1 || null,
-          address2: address2 || null,
-          city: city || null,
-          state: '', // Add state field if you have it in the form
+          address1: address1.trim() || null,
+          address2: address2.trim() || null,
+          city: city.trim() || null,
+          state: state.trim() || null,
           zip: zip.trim() || null,
           phone: normalizePhone(phone) || null,
         });
@@ -662,6 +663,17 @@ export default function RegisterScreen() {
                 />
                 <TextInput
                   style={[styles.input, styles.flex1]}
+                  value={state}
+                  onChangeText={setState}
+                  placeholder="State"
+                  placeholderTextColor={colors.textSecondary}
+                  autoCapitalize="characters"
+                  maxLength={2}
+                />
+              </View>
+              <View style={styles.row}>
+                <TextInput
+                  style={[styles.input, styles.flex1]}
                   value={zip}
                   onChangeText={setZip}
                   placeholder="ZIP"
@@ -671,32 +683,29 @@ export default function RegisterScreen() {
                   maxLength={10}
                   textContentType="postalCode"
                 />
+                <TextInput
+                  style={[styles.input, styles.flex2]}
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="Phone"
+                  placeholderTextColor={colors.textSecondary}
+                  keyboardType="phone-pad"
+                  autoCapitalize="none"
+                  textContentType="telephoneNumber"
+                  autoComplete="tel"
+                />
               </View>
-              <TextInput
-                style={styles.input}
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="Phone"
-                placeholderTextColor={colors.textSecondary}
-                keyboardType="phone-pad"
-                autoCapitalize="none"
-                textContentType="telephoneNumber"
-                autoComplete="tel"
-              />
 
               {/* Allergens */}
               <TouchableOpacity
                 onPress={() => setShowAllergens((v) => !v)}
                 style={styles.sectionToggle}
                 disabled={loadingTaxonomies}
-                disabled={loadingTaxonomies}
               >
                 <Text style={styles.sectionToggleText}>
                   {showAllergens ? 'Hide Allergens' : 'Select Allergens'}
                 </Text>
                 {loadingTaxonomies ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
-                ) : showAllergens ? (
                   <ActivityIndicator size="small" color={colors.primary} />
                 ) : showAllergens ? (
                   <ChevronUp size={16} color={colors.primary} />
@@ -740,7 +749,6 @@ export default function RegisterScreen() {
                 onPress={() => setShowPrefs((v) => !v)}
                 style={styles.sectionToggle}
                 disabled={loadingTaxonomies}
-                disabled={loadingTaxonomies}
               >
                 <Text style={styles.sectionToggleText}>
                   {showPrefs
@@ -748,8 +756,6 @@ export default function RegisterScreen() {
                     : 'Select Dietary Preferences'}
                 </Text>
                 {loadingTaxonomies ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
-                ) : showPrefs ? (
                   <ActivityIndicator size="small" color={colors.primary} />
                 ) : showPrefs ? (
                   <ChevronUp size={16} color={colors.primary} />
