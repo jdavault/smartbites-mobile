@@ -121,9 +121,7 @@ export default function ProfileScreen() {
           text: 'Sign Out', 
           style: 'destructive', 
           onPress: async () => {
-            setLoading(true);
             await signOut();
-            setLoading(false);
           }
         },
       ]
