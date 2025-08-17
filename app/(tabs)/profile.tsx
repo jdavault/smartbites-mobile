@@ -519,6 +519,7 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
+        </View>
         <Text style={styles.sectionTitle}>Allergens</Text>
         {allergensLoading ? (
           <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
@@ -617,5 +618,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
         </View>
+      </ScrollView>
     </SafeAreaView>
+  );
 }
