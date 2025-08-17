@@ -12,6 +12,9 @@ import { Link } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ArrowLeft, Mail, MapPin } from 'lucide-react-native';
 
+const CONTACT_EMAIL =
+  process.env.EXPO_PUBLIC_CONTACT_EMAIL ?? 'support@smartbites.cooking';
+
 export default function ContactScreen() {
   const { colors } = useTheme();
 
@@ -78,7 +81,7 @@ export default function ContactScreen() {
     contactLink: {
       fontSize: 14,
       fontFamily: 'Inter-Medium',
-      color: colors.primary,
+      color: colors.accentDark,
     },
     backLink: {
       fontSize: 16,
@@ -90,6 +93,9 @@ export default function ContactScreen() {
     },
   });
 
+  const handleEmailPress = () => {
+    Linking.openURL(`mailto:${CONTACT_EMAIL}`);
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -114,7 +120,9 @@ export default function ContactScreen() {
           </View>
           <View style={styles.contactContent}>
             <Text style={styles.contactTitle}>General Email</Text>
-            <Text style={styles.contactText}>joe@davault.dev</Text>
+            <TouchableOpacity onPress={handleEmailPress}>
+              <Text style={styles.contactLink}>{CONTACT_EMAIL}</Text>
+            </TouchableOpacity>
           </View>
         </View>
 

@@ -6,10 +6,25 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import { Link } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
-import { ArrowLeft, CircleHelp as HelpCircle, Book, Shield, Zap, Phone, Mail } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  CircleHelp as HelpCircle,
+  Book,
+  Shield,
+  Zap,
+  Phone,
+  Mail,
+} from 'lucide-react-native';
+
+const SUPPORT_EMAIL =
+  process.env.EXPO_PUBLIC_SUPPORT_EMAIL ?? 'support@smartbites.cooking';
+const SUPPORT_PHONE = process.env.EXPO_PUBLIC_SUPPORT_PHONE ?? '623-220-9724';
+// Strip spaces/dashes/parentheses for tel: link
+const SUPPORT_PHONE_TEL = SUPPORT_PHONE.replace(/[^\d+]/g, '');
 
 export default function SupportScreen() {
   const { colors } = useTheme();
@@ -76,6 +91,11 @@ export default function SupportScreen() {
       color: colors.textSecondary,
       lineHeight: 20,
     },
+    supportLink: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+      color: colors.accentDark,
+    },
     sectionTitle: {
       fontSize: 20,
       fontFamily: 'Inter-SemiBold',
@@ -89,6 +109,7 @@ export default function SupportScreen() {
       color: colors.primary,
       textAlign: 'center',
       marginTop: 32,
+    },
     brandName: {
       fontFamily: 'Inter-Bold',
       color: colors.primary,
@@ -96,9 +117,10 @@ export default function SupportScreen() {
     trademark: {
       fontFamily: 'Inter-Regular',
     },
-      marginBottom: 40,
-    },
   });
+
+  const handlePhonePress = () => Linking.openURL(`tel:${SUPPORT_PHONE_TEL}`);
+  const handleEmailPress = () => Linking.openURL(`mailto:${SUPPORT_EMAIL}`);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -115,7 +137,8 @@ export default function SupportScreen() {
 
         <Text style={styles.paragraph}>
           Need help using the <Text style={styles.brandName}>SmartBites</Text>
-          <Text style={styles.trademark}>™</Text> app? Encountering a bug? We're here to assist.
+          <Text style={styles.trademark}>™</Text> app? Encountering a bug? We're
+          here to assist.
         </Text>
 
         <View style={styles.supportItem}>
@@ -124,7 +147,9 @@ export default function SupportScreen() {
           </View>
           <View style={styles.supportContent}>
             <Text style={styles.supportTitle}>Support Phone</Text>
-            <Text style={styles.supportText}>623-220-9724</Text>
+            <TouchableOpacity onPress={handlePhonePress}>
+              <Text style={styles.supportLink}>{SUPPORT_PHONE}</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -134,7 +159,9 @@ export default function SupportScreen() {
           </View>
           <View style={styles.supportContent}>
             <Text style={styles.supportTitle}>Support Email</Text>
-            <Text style={styles.supportText}>joe@davault.dev</Text>
+            <TouchableOpacity onPress={handleEmailPress}>
+              <Text style={styles.supportLink}>{SUPPORT_EMAIL}</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -152,8 +179,9 @@ export default function SupportScreen() {
           <View style={styles.supportContent}>
             <Text style={styles.supportTitle}>Quick Start Guide</Text>
             <Text style={styles.supportText}>
-              Set up your allergen profile, search for recipes, and save your favorites. 
-              The app learns your preferences to provide better recommendations.
+              Set up your allergen profile, search for recipes, and save your
+              favorites. The app learns your preferences to provide better
+              recommendations.
             </Text>
           </View>
         </View>
@@ -165,8 +193,9 @@ export default function SupportScreen() {
           <View style={styles.supportContent}>
             <Text style={styles.supportTitle}>Allergen Safety</Text>
             <Text style={styles.supportText}>
-              Always double-check ingredients and consult with healthcare providers. 
-              SmartBites provides suggestions but cannot guarantee allergen-free recipes.
+              Always double-check ingredients and consult with healthcare
+              providers. SmartBites provides suggestions but cannot guarantee
+              allergen-free recipes.
             </Text>
           </View>
         </View>
@@ -178,10 +207,13 @@ export default function SupportScreen() {
             <HelpCircle size={24} color={colors.accent} />
           </View>
           <View style={styles.supportContent}>
-            <Text style={styles.supportTitle}>How accurate are the allergen filters?</Text>
+            <Text style={styles.supportTitle}>
+              How accurate are the allergen filters?
+            </Text>
             <Text style={styles.supportText}>
-              Our AI generates recipes based on your allergen profile, but always verify 
-              ingredients yourself. Cross-contamination and manufacturing processes can vary.
+              Our AI generates recipes based on your allergen profile, but
+              always verify ingredients yourself. Cross-contamination and
+              manufacturing processes can vary.
             </Text>
           </View>
         </View>
@@ -191,10 +223,13 @@ export default function SupportScreen() {
             <Book size={24} color={colors.primary} />
           </View>
           <View style={styles.supportContent}>
-            <Text style={styles.supportTitle}>Can I modify generated recipes?</Text>
+            <Text style={styles.supportTitle}>
+              Can I modify generated recipes?
+            </Text>
             <Text style={styles.supportText}>
-              Yes! Save recipes to your collection and edit ingredients, instructions, 
-              or notes to match your preferences and cooking style.
+              Yes! Save recipes to your collection and edit ingredients,
+              instructions, or notes to match your preferences and cooking
+              style.
             </Text>
           </View>
         </View>

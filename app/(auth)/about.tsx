@@ -9,7 +9,13 @@ import {
 } from 'react-native';
 import { Link } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
-import { ArrowLeft, Utensils, Shield, Users, ChefHat } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  Utensils,
+  Shield,
+  Users,
+  ChefHat,
+} from 'lucide-react-native';
 
 export default function AboutScreen() {
   const { colors } = useTheme();
@@ -108,8 +114,8 @@ export default function AboutScreen() {
 
         <Text style={styles.paragraph}>
           Welcome to <Text style={styles.brandName}>SmartBites</Text>
-          <Text style={styles.trademark}>™</Text> — a mobile app built for people and families 
-          managing food allergies and dietary restrictions.
+          <Text style={styles.trademark}>™</Text> — a mobile app built for
+          people and families managing food allergies and dietary restrictions.
         </Text>
 
         <View style={styles.featureCard}>
@@ -119,9 +125,9 @@ export default function AboutScreen() {
           <View style={styles.featureContent}>
             <Text style={styles.featureTitle}>Smart Recipe Search</Text>
             <Text style={styles.featureText}>
-              Search for and customize recipes that avoid common allergens like wheat (gluten), 
-              milk, eggs, and more. Refine, edit, and save your favorite recipes to your 
-              personal list for easy access at home.
+              Search for and customize recipes that avoid common allergens like
+              wheat (gluten), milk, eggs, and more. Refine, edit, and save your
+              favorite recipes to your personal list for easy access at home.
             </Text>
           </View>
         </View>
@@ -133,9 +139,24 @@ export default function AboutScreen() {
           <View style={styles.featureContent}>
             <Text style={styles.featureTitle}>Allergy-Safe Cooking</Text>
             <Text style={styles.featureText}>
-              We currently focus on helping you cook safely at home. Future versions of 
-              SmartBites will go further — helping you find allergy-friendly restaurants 
-              and safe menu items while dining out.
+              We currently focus on helping you cook safely at home. Future
+              versions of SmartBites will go further — helping you find
+              allergy-friendly restaurants and safe menu items while dining out.
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.featureCard}>
+          <View style={styles.featureIcon}>
+            <ChefHat size={24} color={colors.accent} />
+          </View>
+          <View style={styles.featureContent}>
+            <Text style={styles.featureTitle}>Coming Soon: Menu Search</Text>
+            <Text style={styles.featureText}>
+              Search restaurant menus for allergy-aware and diet-friendly items.
+              Filter by specific allergens and dietary preferences to quickly
+              spot safer dishes when dining out. Pilot locations first, then
+              broader rollout.
             </Text>
           </View>
         </View>
@@ -147,9 +168,9 @@ export default function AboutScreen() {
           <View style={styles.featureContent}>
             <Text style={styles.featureTitle}>For Everyone</Text>
             <Text style={styles.featureText}>
-              Whether you're newly diagnosed or have been navigating allergies for years, 
-              SmartBites is here to simplify your food choices and bring confidence back 
-              to your kitchen.
+              Whether you're newly diagnosed or have been navigating allergies
+              for years, SmartBites is here to simplify your food choices and
+              bring confidence back to your kitchen.
             </Text>
           </View>
         </View>

@@ -7,15 +7,16 @@ import {
   StyleSheet,
   SafeAreaView,
   Alert,
+  Platform,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import { Spacing } from '@/constants/Spacing';
 import { Fonts, FontSizes } from '@/constants/Typography';
 import ThemedText from '@/components/ThemedText';
-import { ColorScheme } from '@/constants/Colors';
+import { Redirect } from 'expo-router';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -26,6 +27,9 @@ export default function LoginScreen() {
   const { colors } = useTheme();
   const styles = getStyles(colors);
 
+  // if (Platform.OS === 'web') {
+  //   return <Redirect href="/(auth)" />; // or a dedicated /download page
+  // }
   const handleLogin = async () => {
     if (!email || !password)
       return Alert.alert('Error', 'Please fill in all fields');
@@ -166,7 +170,7 @@ export default function LoginScreen() {
   );
 }
 
-const getStyles = (colors: typeof ColorScheme.light) =>
+const getStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     container: {
       flex: 1,
