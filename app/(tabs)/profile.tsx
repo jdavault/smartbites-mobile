@@ -11,7 +11,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAllergens, ALLERGENS } from '@/contexts/AllergensContext';
@@ -21,6 +21,7 @@ import { LogOut, Moon, Sun, Save } from 'lucide-react-native';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
+  const router = useRouter();
   const { colors, toggleTheme, isDark } = useTheme();
   const { userAllergens, toggleAllergen } = useAllergens();
   const { userDietaryPrefs, toggleDietaryPref } = useDietary();
@@ -123,11 +124,11 @@ export default function ProfileScreen() {
             try {
               setLoading(true);
               await signOut();
-              // For web context, explicitly redirect to auth
-              if (Platform.OS === 'web') {
+              
+              // Force redirect for web context (Bolt)
+              setTimeout(() => {
                 router.replace('/(auth)');
-              }
-              // Navigation will be handled automatically by the auth context for mobile
+              }, 100);
             } catch (error) {
               console.error('Sign out error:', error);
               Alert.alert('Error', 'Failed to sign out. Please try again.');
