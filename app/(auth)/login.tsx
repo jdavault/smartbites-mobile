@@ -8,6 +8,7 @@ import {
   Alert,
   Platform,
   StyleSheet as RNStyleSheet,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -34,24 +35,60 @@ export default function LoginScreen() {
   const styles = getStyles(colors, insets);
 
   const handleLogin = async () => {
-    if (!email || !password)
-      return Alert.alert('Error', 'Please fill in all fields');
+    if (!email.trim() || !password.trim()) {
+      if (Platform.OS === 'web') {
+        console.error('Login validation failed: Missing email or password');
+        alert('Please fill in all fields');
+      } else {
+        Alert.alert('Error', 'Please fill in all fields');
+      }
+      return;
+    }
+
     setLoading(true);
-    const { error } = await signIn(email, password);
+    
+    try {
+      console.log('Attempting login for:', email.trim());
+      const { error } = await signIn(email.trim(), password);
+      
+      if (error) {
+        console.error('Login error:', error);
+        if (Platform.OS === 'web') {
+          alert(`Login Error: ${error.message}`);
+        } else {
+          Alert.alert('Login Error', error.message);
+        }
+      } else {
+        console.log('Login successful, redirecting...');
+        router.replace('/(tabs)');
+      }
+    } catch (err) {
+      console.error('Unexpected login error:', err);
+      if (Platform.OS === 'web') {
+        alert('An unexpected error occurred. Please try again.');
+      } else {
+        Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      }
+    }
+    
     setLoading(false);
-    if (error) Alert.alert('Login Error', error.message);
-    else router.replace('/(tabs)');
   };
 
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
+      console.log('Attempting Google login...');
       await signInWithGoogle();
     } catch (error: any) {
-      Alert.alert(
-        'Google Login Error',
-        error.message || 'Failed to sign in with Google'
-      );
+      console.error('Google login error:', error);
+      if (Platform.OS === 'web') {
+        alert(`Google Login Error: ${error.message || 'Failed to sign in with Google'}`);
+      } else {
+        Alert.alert(
+          'Google Login Error',
+          error.message || 'Failed to sign in with Google'
+        );
+      }
     }
     setLoading(false);
   };
@@ -66,7 +103,12 @@ export default function LoginScreen() {
 
       {/* Protect top safe area only; bottom inset applied in footer */}
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <View style={styles.content}>
+        <KeyboardAvoidingView 
+          style={{ flex: 1 }} 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
             <Link href="/(auth)" asChild>
@@ -180,7 +222,8 @@ export default function LoginScreen() {
               <Text>™ © 2025</Text>
             </ThemedText>
           </View>
-        </View>
+          </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );
