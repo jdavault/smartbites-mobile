@@ -214,7 +214,7 @@ export default function ProfileScreen() {
     },
     header: {
       paddingHorizontal: 24,
-      paddingTop: 8,
+      paddingTop: 4,
       paddingBottom: 12,
       flexDirection: 'row',
       justifyContent: 'space-between',
