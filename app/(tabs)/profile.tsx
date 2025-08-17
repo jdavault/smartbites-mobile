@@ -13,6 +13,7 @@ import {
   Platform,
   ActivityIndicator,
   Linking,
+  Image,
   type ScrollView as RNScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -215,6 +216,17 @@ export default function ProfileScreen() {
       paddingHorizontal: 24,
       paddingTop: 16,
       paddingBottom: 12,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    headerContent: {
+      flex: 1,
+    },
+    headerLogo: {
+      width: 72,
+      height: 72,
+      marginLeft: 16,
     },
     title: {
       fontSize: 28,
@@ -461,8 +473,15 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Profile</Text>
-        <Text style={styles.subtitle}>Manage your account and preferences</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Profile</Text>
+          <Text style={styles.subtitle}>Manage your account and preferences</Text>
+        </View>
+        <Image
+          source={require('@/assets/images/smart-bites-logo.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
       </View>
 
       <ScrollView
