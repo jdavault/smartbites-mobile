@@ -340,7 +340,7 @@ export default function ProfileScreen() {
       flexWrap: 'wrap',
       gap: 6,
       paddingHorizontal: 24,
-      marginBottom: 12,
+      marginBottom: 16,
     },
     chip: {
       paddingVertical: 6,
