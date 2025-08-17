@@ -388,7 +388,7 @@ export default function RegisterScreen() {
         },
 
         // form spacing + input sizing (compact)
-        form: { gap: 10 }, // ↓ was 12–20
+        form: { gap: 8 }, // ↓ reduced further
         row: { flexDirection: 'row', gap: 8 },
         flex1: { flex: 1 },
         flex2: { flex: 2 },
@@ -398,7 +398,7 @@ export default function RegisterScreen() {
           borderColor: colors.border,
           borderRadius: 9,
           paddingHorizontal: 12,
-          paddingVertical: 9, // ↓ was 11–12
+          paddingVertical: 7, // ↓ reduced further
           fontSize: 15, // ↓ was 16
           fontFamily: 'Inter-Regular',
           color: colors.text,
@@ -417,12 +417,12 @@ export default function RegisterScreen() {
         pwInput: {
           flex: 1,
           paddingHorizontal: 12,
-          paddingVertical: 9, // ↓
+          paddingVertical: 7, // ↓ reduced further
           fontSize: 15, // ↓
           fontFamily: 'Inter-Regular',
           color: colors.text,
         },
-        eyeButton: { padding: 8 }, // ↓
+        eyeButton: { padding: 6 }, // ↓ reduced further
 
         // state dropdown
         stateDropdown: {
@@ -437,7 +437,7 @@ export default function RegisterScreen() {
           justifyContent: 'space-between',
           alignItems: 'center',
           paddingHorizontal: 12,
-          paddingVertical: 9,
+          paddingVertical: 7,
         },
         stateButtonText: {
           fontSize: 15,
@@ -458,7 +458,7 @@ export default function RegisterScreen() {
         },
         stateItem: {
           paddingHorizontal: 12,
-          paddingVertical: 10,
+          paddingVertical: 8,
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
         },
@@ -474,8 +474,8 @@ export default function RegisterScreen() {
         // collapsible section toggles (compact)
         sectionToggle: {
           alignItems: 'center',
-          paddingVertical: 4, // ↓
-          marginTop: 6, // small
+          paddingVertical: 2, // ↓ reduced further
+          marginTop: 4, // smaller
         },
         sectionToggleText: {
           fontSize: 16, // ↓
@@ -488,16 +488,16 @@ export default function RegisterScreen() {
           fontSize: 18,
           fontFamily: 'Inter-SemiBold',
           color: colors.primary,
-          marginTop: 2,
-          marginBottom: 8,
+          marginTop: 0,
+          marginBottom: 6,
           paddingHorizontal: 16, // Match form padding
         },
         sectionTitleDietary: {
           fontSize: 18,
           fontFamily: 'Inter-SemiBold',
           color: colors.dietary,
-          marginTop: 2,
-          marginBottom: 8,
+          marginTop: 0,
+          marginBottom: 6,
           paddingHorizontal: 16, // Match form padding
         },
 
@@ -505,14 +505,14 @@ export default function RegisterScreen() {
         chipGrid: {
           flexDirection: 'row',
           flexWrap: 'wrap',
-          gap: 6, // ↓
-          marginTop: 4, // ↓
-          marginBottom: 6, // ↓ keep very small bottom space
+          gap: 4, // ↓ reduced further
+          marginTop: 2, // ↓ reduced further
+          marginBottom: 4, // ↓ reduced further
           paddingHorizontal: 16, // Match form padding
         },
         chip: {
-          paddingVertical: 6, // ↓
-          paddingHorizontal: 10, // ↓
+          paddingVertical: 4, // ↓ reduced further
+          paddingHorizontal: 8, // ↓ reduced further
           borderRadius: 999,
           borderWidth: 1,
           borderColor: colors.border,
@@ -527,7 +527,7 @@ export default function RegisterScreen() {
           borderColor: colors.dietary,
         },
         chipText: {
-          fontSize: 12, // ↓
+          fontSize: 11, // ↓ reduced further
           fontFamily: 'Inter-Medium',
           color: colors.text,
         },
@@ -536,17 +536,17 @@ export default function RegisterScreen() {
         // Loading container
         loadingContainer: {
           paddingHorizontal: 16,
-          paddingVertical: 20,
+          paddingVertical: 12,
           alignItems: 'center',
         },
 
         // terms text (kept small)
         tosText: {
-          fontSize: 11,
+          fontSize: 10,
           textAlign: 'center',
           color: colors.textSecondary,
-          marginTop: 6, // ↓
-          lineHeight: 16, // ↓
+          marginTop: 4, // ↓ reduced further
+          lineHeight: 14, // ↓ reduced further
         },
         tosLink: {
           textDecorationLine: 'underline',
@@ -557,10 +557,10 @@ export default function RegisterScreen() {
         // button (compact height)
         button: {
           backgroundColor: colors.primary,
-          paddingVertical: 12, // ↓
+          paddingVertical: 10, // ↓ reduced further
           borderRadius: 10,
           alignItems: 'center',
-          marginTop: 6, // ↓
+          marginTop: 4, // ↓ reduced further
         },
         buttonDisabled: { opacity: 0.6 },
         buttonText: {
@@ -574,7 +574,7 @@ export default function RegisterScreen() {
           flexDirection: 'row',
           justifyContent: 'center',
           alignItems: 'center',
-          marginTop: 14, // ↓
+          marginTop: 8, // ↓ reduced further
           marginBottom: Math.max(insets.bottom, 8),
         },
         footerText: {
