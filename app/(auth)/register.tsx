@@ -27,40 +27,70 @@ import { ALLERGENS } from '@/contexts/AllergensContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 import SmartBitesLogo from '@/assets/images/smart-bites-logo.png'; // 72x72
 
-const isWeb = Platform.OS === 'web';
-
 // US States list
 const US_STATES = [
-  { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' },
-  { code: 'AZ', name: 'Arizona' }, { code: 'AR', name: 'Arkansas' },
-  { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
-  { code: 'CT', name: 'Connecticut' }, { code: 'DE', name: 'Delaware' },
-  { code: 'FL', name: 'Florida' }, { code: 'GA', name: 'Georgia' },
-  { code: 'HI', name: 'Hawaii' }, { code: 'ID', name: 'Idaho' },
-  { code: 'IL', name: 'Illinois' }, { code: 'IN', name: 'Indiana' },
-  { code: 'IA', name: 'Iowa' }, { code: 'KS', name: 'Kansas' },
-  { code: 'KY', name: 'Kentucky' }, { code: 'LA', name: 'Louisiana' },
-  { code: 'ME', name: 'Maine' }, { code: 'MD', name: 'Maryland' },
-  { code: 'MA', name: 'Massachusetts' }, { code: 'MI', name: 'Michigan' },
-  { code: 'MN', name: 'Minnesota' }, { code: 'MS', name: 'Mississippi' },
-  { code: 'MO', name: 'Missouri' }, { code: 'MT', name: 'Montana' },
-  { code: 'NE', name: 'Nebraska' }, { code: 'NV', name: 'Nevada' },
-  { code: 'NH', name: 'New Hampshire' }, { code: 'NJ', name: 'New Jersey' },
-  { code: 'NM', name: 'New Mexico' }, { code: 'NY', name: 'New York' },
-  { code: 'NC', name: 'North Carolina' }, { code: 'ND', name: 'North Dakota' },
-  { code: 'OH', name: 'Ohio' }, { code: 'OK', name: 'Oklahoma' },
-  { code: 'OR', name: 'Oregon' }, { code: 'PA', name: 'Pennsylvania' },
-  { code: 'RI', name: 'Rhode Island' }, { code: 'SC', name: 'South Carolina' },
-  { code: 'SD', name: 'South Dakota' }, { code: 'TN', name: 'Tennessee' },
-  { code: 'TX', name: 'Texas' }, { code: 'UT', name: 'Utah' },
-  { code: 'VT', name: 'Vermont' }, { code: 'VA', name: 'Virginia' },
-  { code: 'WA', name: 'Washington' }, { code: 'WV', name: 'West Virginia' },
-  { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' },
+  { code: 'AL', name: 'Alabama' },
+  { code: 'AK', name: 'Alaska' },
+  { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' },
+  { code: 'CA', name: 'California' },
+  { code: 'CO', name: 'Colorado' },
+  { code: 'CT', name: 'Connecticut' },
+  { code: 'DE', name: 'Delaware' },
+  { code: 'FL', name: 'Florida' },
+  { code: 'GA', name: 'Georgia' },
+  { code: 'HI', name: 'Hawaii' },
+  { code: 'ID', name: 'Idaho' },
+  { code: 'IL', name: 'Illinois' },
+  { code: 'IN', name: 'Indiana' },
+  { code: 'IA', name: 'Iowa' },
+  { code: 'KS', name: 'Kansas' },
+  { code: 'KY', name: 'Kentucky' },
+  { code: 'LA', name: 'Louisiana' },
+  { code: 'ME', name: 'Maine' },
+  { code: 'MD', name: 'Maryland' },
+  { code: 'MA', name: 'Massachusetts' },
+  { code: 'MI', name: 'Michigan' },
+  { code: 'MN', name: 'Minnesota' },
+  { code: 'MS', name: 'Mississippi' },
+  { code: 'MO', name: 'Missouri' },
+  { code: 'MT', name: 'Montana' },
+  { code: 'NE', name: 'Nebraska' },
+  { code: 'NV', name: 'Nevada' },
+  { code: 'NH', name: 'New Hampshire' },
+  { code: 'NJ', name: 'New Jersey' },
+  { code: 'NM', name: 'New Mexico' },
+  { code: 'NY', name: 'New York' },
+  { code: 'NC', name: 'North Carolina' },
+  { code: 'ND', name: 'North Dakota' },
+  { code: 'OH', name: 'Ohio' },
+  { code: 'OK', name: 'Oklahoma' },
+  { code: 'OR', name: 'Oregon' },
+  { code: 'PA', name: 'Pennsylvania' },
+  { code: 'RI', name: 'Rhode Island' },
+  { code: 'SC', name: 'South Carolina' },
+  { code: 'SD', name: 'South Dakota' },
+  { code: 'TN', name: 'Tennessee' },
+  { code: 'TX', name: 'Texas' },
+  { code: 'UT', name: 'Utah' },
+  { code: 'VT', name: 'Vermont' },
+  { code: 'VA', name: 'Virginia' },
+  { code: 'WA', name: 'Washington' },
+  { code: 'WV', name: 'West Virginia' },
+  { code: 'WI', name: 'Wisconsin' },
+  { code: 'WY', name: 'Wyoming' },
   { code: 'DC', name: 'District of Columbia' },
 ];
 
-interface AllergenRow { id: string; name: string; }
-interface DietaryPrefRow { id: string; name: string; }
+interface AllergenRow {
+  id: string;
+  name: string;
+}
+
+interface DietaryPrefRow {
+  id: string;
+  name: string;
+}
 
 type ModalInfo = {
   visible: boolean;
@@ -96,10 +126,11 @@ export default function RegisterScreen() {
 
   // modal
   const [modal, setModal] = useState<ModalInfo>({ visible: false, title: '' });
-  const openModal = (m: Omit<ModalInfo, 'visible'>) => setModal({ ...m, visible: true });
+  const openModal = (m: Omit<ModalInfo, 'visible'>) =>
+    setModal({ ...m, visible: true });
   const closeModal = () => setModal((prev) => ({ ...prev, visible: false }));
 
-  // fetched taxonomies
+  // Fetch from lookup tables
   const [allergens, setAllergens] = useState<AllergenRow[]>([]);
   const [dietPrefs, setDietPrefs] = useState<DietaryPrefRow[]>([]);
   const [loadingTaxonomies, setLoadingTaxonomies] = useState(true);
@@ -110,7 +141,9 @@ export default function RegisterScreen() {
         setLoadingTaxonomies(true);
 
         const { data: allergensData, error: allergensError } = await supabase
-          .from('allergens').select('id, name').order('name');
+          .from('allergens')
+          .select('id, name')
+          .order('name');
 
         if (allergensError) {
           console.error('Error fetching allergens:', allergensError);
@@ -120,18 +153,24 @@ export default function RegisterScreen() {
         }
 
         const { data: dietPrefsData, error: dietPrefsError } = await supabase
-          .from('dietary_prefs').select('id, name').order('name');
+          .from('dietary_prefs')
+          .select('id, name')
+          .order('name');
 
         if (dietPrefsError) {
           console.error('Error fetching dietary preferences:', dietPrefsError);
-          setDietPrefs(DIETARY_PREFERENCES.map((d) => ({ id: d.$id, name: d.name })));
+          setDietPrefs(
+            DIETARY_PREFERENCES.map((d) => ({ id: d.$id, name: d.name }))
+          );
         } else {
           setDietPrefs(dietPrefsData || []);
         }
       } catch (error) {
         console.error('Error in fetchTaxonomies:', error);
         setAllergens(ALLERGENS.map((a) => ({ id: a.$id, name: a.name })));
-        setDietPrefs(DIETARY_PREFERENCES.map((d) => ({ id: d.$id, name: d.name })));
+        setDietPrefs(
+          DIETARY_PREFERENCES.map((d) => ({ id: d.$id, name: d.name }))
+        );
       } finally {
         setLoadingTaxonomies(false);
       }
@@ -144,14 +183,22 @@ export default function RegisterScreen() {
   const [showAllergens, setShowAllergens] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
   const [showStates, setShowStates] = useState(false);
-  const [selectedAllergenIds, setSelectedAllergenIds] = useState<Set<string>>(new Set());
-  const [selectedPrefIds, setSelectedPrefIds] = useState<Set<string>>(new Set());
+  const [selectedAllergenIds, setSelectedAllergenIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectedPrefIds, setSelectedPrefIds] = useState<Set<string>>(
+    new Set()
+  );
 
-  // consent
+  // consent toggle
   const [showConsent, setShowConsent] = useState(false);
 
-  const toggle = (setVal: Set<string>, id: string, setter: (s: Set<string>) => void) => {
-    const next = new Set(setVal);
+  const toggle = (
+    set: Set<string>,
+    id: string,
+    setter: (s: Set<string>) => void
+  ) => {
+    const next = new Set(set);
     next.has(id) ? next.delete(id) : next.add(id);
     setter(next);
   };
@@ -164,7 +211,8 @@ export default function RegisterScreen() {
     if (!email || !password || !confirmPassword || !firstName || !lastName) {
       openModal({
         title: 'Missing Information',
-        subtitle: 'Please fill in First name, Last name, Email, and both password fields.',
+        subtitle:
+          'Please fill in First name, Last name, Email, and both password fields.',
         emoji: '⚠️',
         primary: { label: 'OK' },
       });
@@ -217,41 +265,60 @@ export default function RegisterScreen() {
     if (signErr) {
       setLoading(false);
       openModal({
-        title: signErr.message?.includes('already') ? 'Email Already Registered' : 'Registration Error',
+        title: signErr.message?.includes('already')
+          ? 'Email Already Registered'
+          : 'Registration Error',
         subtitle: signErr.message ?? 'Something went wrong.',
         emoji: signErr.message?.includes('already') ? '📧' : '❌',
         primary: signErr.message?.includes('already')
-          ? { label: 'Sign In', onPress: () => { closeModal(); router.replace('/(auth)/login'); } }
+          ? {
+              label: 'Sign In',
+              onPress: () => {
+                closeModal();
+                router.replace('/(auth)/login');
+              },
+            }
           : { label: 'OK' },
-        secondary: signErr.message?.includes('already') ? { label: 'Cancel' } : undefined,
+        secondary: signErr.message?.includes('already')
+          ? { label: 'Cancel' }
+          : undefined,
       });
       return;
     }
 
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
-    if (!userId) { setLoading(false); return; }
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      await supabase.from('user_profiles').upsert(
-        {
-          user_id: userId,
-          first_name: firstName,
-          last_name: lastName,
-          address1: address1.trim() || null,
-          address2: address2.trim() || null,
-          city: city.trim() || null,
-          state: state.trim() || null,
-          zip: zip.trim() || null,
-          phone: normalizePhone(phone) || null,
-        },
-        { onConflict: 'user_id' }
-      );
+      await supabase
+        .from('user_profiles')
+        .upsert(
+          {
+            user_id: userId,
+            first_name: firstName,
+            last_name: lastName,
+            address1: address1.trim() || null,
+            address2: address2.trim() || null,
+            city: city.trim() || null,
+            state: state.trim() || null,
+            zip: zip.trim() || null,
+            phone: normalizePhone(phone) || null,
+          },
+          { onConflict: 'user_id' }
+        );
 
       if (selectedAllergenIds.size) {
         const ua = Array.from(selectedAllergenIds).map((allergenId) => {
           const allergen = allergens.find((a) => a.id === allergenId);
-          return { user_id: userId, allergen_id: allergenId, allergen: allergen?.name || '' };
+          return {
+            user_id: userId,
+            allergen_id: allergenId,
+            allergen: allergen?.name || '',
+          };
         });
         await supabase.from('user_allergens').insert(ua);
       }
@@ -259,7 +326,11 @@ export default function RegisterScreen() {
       if (selectedPrefIds.size) {
         const udp = Array.from(selectedPrefIds).map((prefId) => {
           const dietPref = dietPrefs.find((d) => d.id === prefId);
-          return { user_id: userId, dietary_pref_id: prefId, dietary_pref: dietPref?.name || '' };
+          return {
+            user_id: userId,
+            dietary_pref_id: prefId,
+            dietary_pref: dietPref?.name || '',
+          };
         });
         await supabase.from('user_dietary_prefs').insert(udp);
       }
@@ -274,7 +345,10 @@ export default function RegisterScreen() {
       emoji: '🎉',
       primary: {
         label: 'Go to Sign In',
-        onPress: () => { closeModal(); router.replace('/(auth)/login'); },
+        onPress: () => {
+          closeModal();
+          router.replace('/(auth)/login');
+        },
       },
     });
   };
@@ -291,18 +365,33 @@ export default function RegisterScreen() {
           paddingTop: 8,
           paddingBottom: 8,
         },
-        headerContent: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+        headerContent: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          flex: 1,
+        },
         backButton: { padding: 6 },
-        headerTitle: { fontSize: 28, fontFamily: 'Inter-Bold', color: '#FF8866', marginLeft: 12 },
-        headerLogo: { width: 72, height: 72 },
+        headerTitle: {
+          fontSize: 28,
+          fontFamily: 'Inter-Bold',
+          color: '#FF8866',
+          marginLeft: 12,
+        },
+        headerLogo: {
+          width: 72,
+          height: 72,
+        },
+
 
         form: { gap: 8 },
         row: { flexDirection: 'row', gap: 8 },
         flex1: { flex: 1 },
         flex2: { flex: 2 },
-        zipContainer: { width: 96 },
-        phoneContainer: { flex: 1 },
 
+       zipContainer: { width: 80 },
+       phoneContainer: { width: 140 },
+
+        // Platform-specific vertical padding (web-safe)
         input: {
           borderWidth: 1,
           borderColor: colors.border,
@@ -315,6 +404,7 @@ export default function RegisterScreen() {
           backgroundColor: colors.surface,
         },
 
+        // password with eye
         pwWrap: {
           flexDirection: 'row',
           alignItems: 'center',
@@ -364,34 +454,54 @@ export default function RegisterScreen() {
           maxHeight: 200,
           zIndex: 1000,
         },
-        stateItem: { paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border },
+        stateItem: {
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
         stateItemLast: { borderBottomWidth: 0 },
-        stateItemText: { fontSize: 15, fontFamily: 'Inter-Regular', color: colors.text },
+        stateItemText: {
+          fontSize: 15,
+          fontFamily: 'Inter-Regular',
+          color: colors.text,
+        },
 
         sectionToggle: { alignItems: 'center', paddingVertical: 2, marginTop: 4 },
-        sectionToggleText: { fontSize: 16, fontFamily: 'Inter-SemiBold', color: colors.primary },
+        sectionToggleText: {
+          fontSize: 16,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.primary,
+        },
 
         sectionTitle: {
-          fontSize: 18, fontFamily: 'Inter-SemiBold', color: colors.primary,
-          marginTop: 0, marginBottom: 2, paddingHorizontal: 16,
+          fontSize: 18,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.primary,
+          marginTop: 0,
+          marginBottom: 2,
+          paddingHorizontal: 16,
         },
         sectionTitleDietary: {
-          fontSize: 18, fontFamily: 'Inter-SemiBold', color: colors.dietary,
-          marginTop: 0, marginBottom: 2, paddingHorizontal: 16,
+          fontSize: 18,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.dietary,
+          marginTop: 0,
+          marginBottom: 2,
+          paddingHorizontal: 16,
         },
 
         chipGrid: {
           flexDirection: 'row',
           flexWrap: 'wrap',
-          gap: Platform.select({ ios: 6, android: 6, default: 4 }),
+          gap: 4,
           marginTop: 2,
           marginBottom: 4,
           paddingHorizontal: 16,
         },
         chip: {
-          paddingVertical: Platform.select({ ios: 8, android: 8, default: 6 }),
-          paddingHorizontal: Platform.select({ ios: 12, android: 12, default: 10 }),
-          minHeight: Platform.select({ ios: 36, android: 36, default: 0 }),
+          paddingVertical: 6,
+          paddingHorizontal: 10,
           borderRadius: 999,
           borderWidth: 1,
           borderColor: colors.border,
@@ -399,24 +509,52 @@ export default function RegisterScreen() {
         },
         chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
         chipSelectedDietary: { backgroundColor: colors.dietary, borderColor: colors.dietary },
-        chipText: {
-          fontSize: Platform.select({ ios: 14, android: 14, default: 12 }),
-          fontFamily: 'Inter-Medium',
-          color: colors.text,
-        },
+        chipText: { fontSize: 12, fontFamily: 'Inter-Medium', color: colors.text },
         chipTextSelected: { color: '#fff' },
 
-        loadingContainer: { paddingHorizontal: 16, paddingVertical: 12, alignItems: 'center' },
+        loadingContainer: {
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          alignItems: 'center',
+        },
 
-        consentToggle: { alignItems: 'center', paddingVertical: 3, marginTop: 2 },
-        consentToggleText: { fontSize: 14, fontFamily: 'Inter-SemiBold', color: colors.primary },
+        consentToggle: {
+          alignItems: 'center',
+          paddingVertical: 3,
+          marginTop: 2,
+        },
+        consentToggleText: {
+          fontSize: 14,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.primary,
+        },
 
-        tosText: { fontSize: 10, textAlign: 'center', color: colors.textSecondary, marginTop: 4, lineHeight: 14 },
-        tosLink: { textDecorationLine: 'underline', color: colors.accentDark, fontFamily: 'Inter-SemiBold' },
+        tosText: {
+          fontSize: 10,
+          textAlign: 'center',
+          color: colors.textSecondary,
+          marginTop: 4,
+          lineHeight: 14,
+        },
+        tosLink: {
+          textDecorationLine: 'underline',
+          color: colors.accentDark,
+          fontFamily: 'Inter-SemiBold',
+        },
 
-        button: { backgroundColor: colors.primary, paddingVertical: 10, borderRadius: 10, alignItems: 'center', marginTop: 2 },
+        button: {
+          backgroundColor: colors.primary,
+          paddingVertical: 10,
+          borderRadius: 10,
+          alignItems: 'center',
+          marginTop: 2,
+        },
         buttonDisabled: { opacity: 0.6 },
-        buttonText: { fontSize: 15, fontFamily: 'Inter-SemiBold', color: '#FFFFFF' },
+        buttonText: {
+          fontSize: 15,
+          fontFamily: 'Inter-SemiBold',
+          color: '#FFFFFF',
+        },
 
         footer: {
           flexDirection: 'row',
@@ -425,47 +563,90 @@ export default function RegisterScreen() {
           marginTop: 8,
           marginBottom: Math.max(insets.bottom, 8),
         },
-        footerText: { fontSize: 13, fontFamily: 'Inter-Regular', color: colors.textSecondary },
-        footerLink: { fontSize: 13, fontFamily: 'Inter-SemiBold', color: colors.primary },
+        footerText: {
+          fontSize: 13,
+          fontFamily: 'Inter-Regular',
+          color: colors.textSecondary,
+        },
+        footerLink: {
+          fontSize: 13,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.primary,
+        },
 
         modalOverlay: {
-          flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
-          justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20,
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.45)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 20,
         },
         modalCard: {
-          width: '100%', maxWidth: 420, backgroundColor: colors.surface,
-          borderRadius: 14, padding: 18, borderWidth: 1, borderColor: colors.border, alignItems: 'center',
+          width: '100%',
+          maxWidth: 420,
+          backgroundColor: colors.surface,
+          borderRadius: 14,
+          padding: 18,
+          borderWidth: 1,
+          borderColor: colors.border,
+          alignItems: 'center',
         },
         modalEmoji: { fontSize: 40, marginBottom: 6 },
-        modalTitle: { fontSize: 17, fontFamily: 'Inter-SemiBold', color: colors.text, textAlign: 'center', marginBottom: 4 },
-        modalSubtitle: { fontSize: 13, fontFamily: 'Inter-Regular', color: colors.textSecondary, textAlign: 'center', marginBottom: 14 },
-        modalButtons: { flexDirection: 'row', gap: 10, alignSelf: 'stretch', justifyContent: 'center' },
+        modalTitle: {
+          fontSize: 17,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.text,
+          textAlign: 'center',
+          marginBottom: 4,
+        },
+        modalSubtitle: {
+          fontSize: 13,
+          fontFamily: 'Inter-Regular',
+          color: colors.textSecondary,
+          textAlign: 'center',
+          marginBottom: 14,
+        },
+        modalButtons: {
+          flexDirection: 'row',
+          gap: 10,
+          alignSelf: 'stretch',
+          justifyContent: 'center',
+        },
         modalBtn: {
-          paddingVertical: 10, paddingHorizontal: 14, borderRadius: 9, borderWidth: 1,
-          borderColor: colors.border, backgroundColor: colors.backgroundLight, minWidth: 112, alignItems: 'center',
+          paddingVertical: 10,
+          paddingHorizontal: 14,
+          borderRadius: 9,
+          borderWidth: 1,
+          borderColor: colors.border,
+          backgroundColor: colors.backgroundLight,
+          minWidth: 112,
+          alignItems: 'center',
         },
         modalBtnPrimary: { backgroundColor: colors.primary, borderColor: colors.primary },
         modalBtnText: { fontSize: 13, fontFamily: 'Inter-SemiBold', color: colors.text },
         modalBtnTextPrimary: { color: '#fff' },
 
-        bottom: { paddingHorizontal: 24, paddingTop: 6, paddingBottom: insets.bottom + 12 },
-        copyright: { fontSize: 14, textAlign: 'center', color: colors.textSecondary },
+        bottom: {
+          paddingHorizontal: 24,
+          paddingTop: 6,
+          paddingBottom: insets.bottom + 12,
+        },
+        copyright: {
+          fontSize: 14,
+          textAlign: 'center',
+          color: colors.textSecondary,
+        },
       }),
     [colors, insets.bottom, state]
   );
 
-  // Helper to avoid focus issues on web: only dismiss keyboard on native
-  const DismissWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =>
-    isWeb ? <>{children}</> : (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        {children}
-      </TouchableWithoutFeedback>
-    );
-
   return (
     <View style={{ flex: 1 }}>
-      {/* Background */}
-      <LinearGradient colors={[colors.background, colors.textRice]} style={StyleSheet.absoluteFillObject} />
+      {/* Gradient fills the screen */}
+      <LinearGradient
+        colors={[colors.background, colors.textRice]}
+        style={StyleSheet.absoluteFillObject}
+      />
 
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={styles.content}>
@@ -489,13 +670,14 @@ export default function RegisterScreen() {
           </View>
 
           {/* Body */}
-          <DismissWrapper>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <ScrollView
               showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="always" // friendlier on web
+              keyboardShouldPersistTaps="handled"
             >
+
               <View style={styles.form}>
-                {/* Email */}
+                {/* Email + Passwords first (compact, no labels) */}
                 <TextInput
                   style={styles.input}
                   value={email}
@@ -505,14 +687,10 @@ export default function RegisterScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
-                  spellCheck={false}
-                  // Web-friendly hints:
-                  autoComplete="email"
-                  {...(isWeb ? { inputMode: 'email' as const, enterKeyHint: 'next' } : {})}
                   textContentType="emailAddress"
+                  autoComplete="email"
                 />
 
-                {/* Password */}
                 <View style={styles.pwWrap}>
                   <TextInput
                     style={styles.pwInput}
@@ -523,17 +701,21 @@ export default function RegisterScreen() {
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    spellCheck={false}
-                    autoComplete={isWeb ? 'new-password' : 'password'}
                     textContentType="newPassword"
-                    {...(isWeb ? { enterKeyHint: 'next' } : {})}
+                    autoComplete="new-password"
                   />
-                  <TouchableOpacity style={styles.eyeButton} onPress={() => setShowPassword((v) => !v)}>
-                    {showPassword ? <EyeOff size={18} color={colors.textSecondary} /> : <Eye size={18} color={colors.textSecondary} />}
+                  <TouchableOpacity
+                    style={styles.eyeButton}
+                    onPress={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? (
+                      <EyeOff size={18} color={colors.textSecondary} />
+                    ) : (
+                      <Eye size={18} color={colors.textSecondary} />
+                    )}
                   </TouchableOpacity>
                 </View>
 
-                {/* Confirm Password */}
                 <View style={styles.pwWrap}>
                   <TextInput
                     style={styles.pwInput}
@@ -544,13 +726,18 @@ export default function RegisterScreen() {
                     secureTextEntry={!showConfirmPassword}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    spellCheck={false}
-                    autoComplete={isWeb ? 'new-password' : 'password'}
                     textContentType="password"
-                    {...(isWeb ? { enterKeyHint: 'next' } : {})}
+                    autoComplete="off"
                   />
-                  <TouchableOpacity style={styles.eyeButton} onPress={() => setShowConfirmPassword((v) => !v)}>
-                    {showConfirmPassword ? <EyeOff size={18} color={colors.textSecondary} /> : <Eye size={18} color={colors.textSecondary} />}
+                  <TouchableOpacity
+                    style={styles.eyeButton}
+                    onPress={() => setShowConfirmPassword((v) => !v)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={18} color={colors.textSecondary} />
+                    ) : (
+                      <Eye size={18} color={colors.textSecondary} />
+                    )}
                   </TouchableOpacity>
                 </View>
 
@@ -564,9 +751,7 @@ export default function RegisterScreen() {
                     placeholderTextColor={colors.textSecondary}
                     autoCapitalize="words"
                     autoCorrect={false}
-                    spellCheck={false}
                     textContentType="givenName"
-                    {...(isWeb ? { autoComplete: 'given-name', enterKeyHint: 'next' } : {})}
                   />
                   <TextInput
                     style={[styles.input, styles.flex1]}
@@ -576,9 +761,7 @@ export default function RegisterScreen() {
                     placeholderTextColor={colors.textSecondary}
                     autoCapitalize="words"
                     autoCorrect={false}
-                    spellCheck={false}
                     textContentType="familyName"
-                    {...(isWeb ? { autoComplete: 'family-name', enterKeyHint: 'next' } : {})}
                   />
                 </View>
 
@@ -591,9 +774,8 @@ export default function RegisterScreen() {
                   placeholderTextColor={colors.textSecondary}
                   autoCapitalize="words"
                   autoCorrect={false}
-                  spellCheck={false}
                   textContentType="fullStreetAddress"
-                  {...(isWeb ? { autoComplete: 'address-line1', enterKeyHint: 'next' } : {})}
+                  autoComplete="street-address"
                 />
                 <TextInput
                   style={styles.input}
@@ -603,8 +785,6 @@ export default function RegisterScreen() {
                   placeholderTextColor={colors.textSecondary}
                   autoCapitalize="words"
                   autoCorrect={false}
-                  spellCheck={false}
-                  {...(isWeb ? { autoComplete: 'address-line2', enterKeyHint: 'next' } : {})}
                 />
                 <View style={styles.row}>
                   <TextInput
@@ -615,15 +795,18 @@ export default function RegisterScreen() {
                     placeholderTextColor={colors.textSecondary}
                     autoCapitalize="words"
                     autoCorrect={false}
-                    spellCheck={false}
                     textContentType="addressCity"
-                    {...(isWeb ? { autoComplete: 'address-level2', enterKeyHint: 'next' } : {})}
-                    returnKeyType="next"
-                    onSubmitEditing={() => setShowStates(true)}
+                   returnKeyType="next"
+                   onSubmitEditing={() => setShowStates(true)}
                   />
                   <View style={[styles.stateDropdown, styles.flex1]}>
-                    <TouchableOpacity style={styles.stateButton} onPress={() => setShowStates(!showStates)}>
-                      <Text style={styles.stateButtonText}>{state || 'State'}</Text>
+                    <TouchableOpacity
+                      style={styles.stateButton}
+                      onPress={() => setShowStates(!showStates)}
+                    >
+                      <Text style={styles.stateButtonText}>
+                        {state || 'State'}
+                      </Text>
                       <ChevronDown size={16} color={colors.textSecondary} />
                     </TouchableOpacity>
 
@@ -632,11 +815,17 @@ export default function RegisterScreen() {
                         {US_STATES.map((stateItem, index) => (
                           <TouchableOpacity
                             key={stateItem.code}
-                            style={[styles.stateItem, index === US_STATES.length - 1 && styles.stateItemLast]}
-                            onPress={() => { setState(stateItem.code); setShowStates(false); }}
+                            style={[
+                              styles.stateItem,
+                              index === US_STATES.length - 1 && styles.stateItemLast,
+                            ]}
+                            onPress={() => {
+                              setState(stateItem.code);
+                              setShowStates(false);
+                            }}
                           >
                             <Text style={styles.stateItemText}>
-                              {stateItem.code} - {stateItem.name}
+                             {stateItem.name}
                             </Text>
                           </TouchableOpacity>
                         ))}
@@ -646,37 +835,36 @@ export default function RegisterScreen() {
                 </View>
 
                 <View style={styles.row}>
-                  <View style={styles.zipContainer}>
-                    <TextInput
-                      style={styles.input}
-                      value={zip}
-                      onChangeText={setZip}
-                      placeholder="ZIP"
-                      placeholderTextColor={colors.textSecondary}
-                      keyboardType="number-pad"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      spellCheck={false}
-                      maxLength={10}
-                      textContentType="postalCode"
-                      {...(isWeb ? { autoComplete: 'postal-code', inputMode: 'numeric' as const, enterKeyHint: 'next' } : {})}
-                    />
-                  </View>
-                  <View style={styles.phoneContainer}>
-                    <TextInput
-                      style={styles.input}
-                      value={phone}
-                      onChangeText={setPhone}
-                      placeholder="Phone"
-                      placeholderTextColor={colors.textSecondary}
-                      keyboardType="phone-pad"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      spellCheck={false}
-                      textContentType="telephoneNumber"
-                      {...(isWeb ? { autoComplete: 'tel', inputMode: 'tel' as const, enterKeyHint: 'done' } : {})}
-                    />
-                  </View>
+                 <View style={styles.zipContainer}>
+                   <TextInput
+                     style={styles.input}
+                     value={zip}
+                     onChangeText={setZip}
+                     placeholder="ZIP"
+                     placeholderTextColor={colors.textSecondary}
+                     keyboardType="number-pad"
+                     autoCapitalize="none"
+                     autoCorrect={false}
+                     maxLength={10}
+                     textContentType="postalCode"
+                     returnKeyType="next"
+                   />
+                 </View>
+                 <View style={styles.phoneContainer}>
+                   <TextInput
+                     style={styles.input}
+                     value={phone}
+                     onChangeText={setPhone}
+                     placeholder="Phone"
+                     placeholderTextColor={colors.textSecondary}
+                     keyboardType="phone-pad"
+                     autoCapitalize="none"
+                     autoCorrect={false}
+                     textContentType="telephoneNumber"
+                     autoComplete="tel"
+                     returnKeyType="done"
+                   />
+                 </View>
                 </View>
 
                 {/* Allergens */}
@@ -692,11 +880,23 @@ export default function RegisterScreen() {
                       return (
                         <TouchableOpacity
                           key={a.id}
-                          hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
                           style={[styles.chip, selected && styles.chipSelected]}
-                          onPress={() => toggle(selectedAllergenIds, a.id, setSelectedAllergenIds)}
+                          onPress={() =>
+                            toggle(
+                              selectedAllergenIds,
+                              a.id,
+                              setSelectedAllergenIds
+                            )
+                          }
                         >
-                          <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{a.name}</Text>
+                          <Text
+                            style={[
+                              styles.chipText,
+                              selected && styles.chipTextSelected,
+                            ]}
+                          >
+                            {a.name}
+                          </Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -704,7 +904,9 @@ export default function RegisterScreen() {
                 )}
 
                 {/* Dietary Preferences */}
-                <Text style={styles.sectionTitleDietary}>Dietary Preferences</Text>
+                <Text style={styles.sectionTitleDietary}>
+                  Dietary Preferences
+                </Text>
                 {loadingTaxonomies ? (
                   <View style={styles.loadingContainer}>
                     <ActivityIndicator size="small" color={colors.dietary} />
@@ -716,11 +918,22 @@ export default function RegisterScreen() {
                       return (
                         <TouchableOpacity
                           key={d.id}
-                          hitSlop={{ top: 6, right: 6, bottom: 6, left: 6 }}
-                          style={[styles.chip, selected && styles.chipSelectedDietary]}
-                          onPress={() => toggle(selectedPrefIds, d.id, setSelectedPrefIds)}
+                          style={[
+                            styles.chip,
+                            selected && styles.chipSelectedDietary,
+                          ]}
+                          onPress={() =>
+                            toggle(selectedPrefIds, d.id, setSelectedPrefIds)
+                          }
                         >
-                          <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{d.name}</Text>
+                          <Text
+                            style={[
+                              styles.chipText,
+                              selected && styles.chipTextSelected,
+                            ]}
+                          >
+                            {d.name}
+                          </Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -728,7 +941,10 @@ export default function RegisterScreen() {
                 )}
 
                 {/* Collapsible Consent Section */}
-                <TouchableOpacity style={styles.consentToggle} onPress={() => setShowConsent(!showConsent)}>
+                <TouchableOpacity
+                  style={styles.consentToggle}
+                  onPress={() => setShowConsent(!showConsent)}
+                >
                   <Text style={styles.consentToggleText}>
                     Consent {showConsent ? '▲' : '▼'}
                   </Text>
@@ -736,11 +952,14 @@ export default function RegisterScreen() {
 
                 {showConsent && (
                   <Text style={styles.tosText}>
-                    By tapping "Create Account", I acknowledge that I have read and agree to the{' '}
+                    By tapping "Create Account", I acknowledge that I have read
+                    and agree to the{' '}
                     <Text
                       style={styles.tosLink}
                       onPress={() =>
-                        Linking.openURL('https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4')
+                        Linking.openURL(
+                          'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                        )
                       }
                     >
                       Privacy Policy
@@ -749,13 +968,16 @@ export default function RegisterScreen() {
                     <Text
                       style={styles.tosLink}
                       onPress={() =>
-                        Linking.openURL('https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4')
+                        Linking.openURL(
+                          'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                        )
                       }
                     >
                       Terms of Service
                     </Text>
-                    . I also consent to being contacted by SmartBites™ for account-related communications using the
-                    information I provide.
+                    . I also consent to being contacted by SmartBites™ for
+                    account-related communications using the information I
+                    provide.
                   </Text>
                 )}
 
@@ -770,7 +992,9 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.footer}>
-                  <Text style={styles.footerText}>Already have an account? </Text>
+                  <Text style={styles.footerText}>
+                    Already have an account?{' '}
+                  </Text>
                   <Link href="/(auth)/login" asChild>
                     <TouchableOpacity>
                       <Text style={styles.footerLink}>Sign In</Text>
@@ -779,7 +1003,7 @@ export default function RegisterScreen() {
                 </View>
               </View>
             </ScrollView>
-          </DismissWrapper>
+          </TouchableWithoutFeedback>
 
           {/* pinned bottom */}
           <View style={styles.bottom}>
@@ -792,16 +1016,28 @@ export default function RegisterScreen() {
       </SafeAreaView>
 
       {/* Feedback Modal */}
-      <Modal transparent animationType="fade" visible={modal.visible} onRequestClose={closeModal}>
+      <Modal
+        transparent
+        animationType="fade"
+        visible={modal.visible}
+        onRequestClose={closeModal}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            {!!modal.emoji && <Text style={styles.modalEmoji}>{modal.emoji}</Text>}
+            {!!modal.emoji && (
+              <Text style={styles.modalEmoji}>{modal.emoji}</Text>
+            )}
             <Text style={styles.modalTitle}>{modal.title}</Text>
-            {!!modal.subtitle && <Text style={styles.modalSubtitle}>{modal.subtitle}</Text>}
+            {!!modal.subtitle && (
+              <Text style={styles.modalSubtitle}>{modal.subtitle}</Text>
+            )}
+
             <View style={styles.modalButtons}>
               {modal.secondary && (
                 <TouchableOpacity style={styles.modalBtn} onPress={closeModal}>
-                  <Text style={styles.modalBtnText}>{modal.secondary.label}</Text>
+                  <Text style={styles.modalBtnText}>
+                    {modal.secondary.label}
+                  </Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
@@ -811,7 +1047,9 @@ export default function RegisterScreen() {
                   else closeModal();
                 }}
               >
-                <Text style={[styles.modalBtnText, styles.modalBtnTextPrimary]}>
+                <Text
+                  style={[styles.modalBtnText, styles.modalBtnTextPrimary]}
+                >
                   {modal.primary?.label ?? 'OK'}
                 </Text>
               </TouchableOpacity>
