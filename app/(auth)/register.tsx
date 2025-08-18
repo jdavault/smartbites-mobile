@@ -1,4 +1,4 @@
-// app/(auth)/register.tsx
+// app/(auth)/register.tsx  
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
@@ -26,6 +26,8 @@ import ThemedText from '@/components/ThemedText';
 import { ALLERGENS } from '@/contexts/AllergensContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 import SmartBitesLogo from '@/assets/images/smart-bites-logo.png'; // 72x72
+
+const DismissWrapper = Platform.OS === 'web' ? React.Fragment : TouchableWithoutFeedback;
 
 // US States list
 const US_STATES = [
@@ -670,7 +672,11 @@ export default function RegisterScreen() {
           </View>
 
           {/* Body */}
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <DismissWrapper
+            {...(Platform.OS !== 'web'
+              ? { onPress: Keyboard.dismiss, accessible: false }
+              : {})}
+          >
             <ScrollView
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
@@ -1003,7 +1009,7 @@ export default function RegisterScreen() {
                 </View>
               </View>
             </ScrollView>
-          </TouchableWithoutFeedback>
+          </DismissWrapper>
 
           {/* pinned bottom */}
           <View style={styles.bottom}>
