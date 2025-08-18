@@ -51,60 +51,6 @@ export default function RestaurantsScreen() {
       flex: 1,
       paddingHorizontal: 24,
     },
-    heroSection: {
-      alignItems: 'center',
-      marginBottom: 32,
-    },
-    heroIcon: {
-      marginBottom: 20,
-    },
-    heroTitle: {
-      fontSize: 24,
-      fontFamily: 'Inter-Bold',
-      color: '#FF8866',
-      textAlign: 'center',
-      marginBottom: 12,
-    },
-    heroSubtitle: {
-      fontSize: 16,
-      fontFamily: 'Lato-Regular',
-      color: colors.textSecondary,
-      textAlign: 'center',
-      lineHeight: 24,
-      marginBottom: 32,
-    },
-    featuresGrid: {
-      gap: 16,
-      marginBottom: 32,
-    },
-    featureCard: {
-      backgroundColor: colors.surface,
-      padding: 20,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-    },
-    featureIcon: {
-      marginRight: 16,
-      marginTop: 2,
-    },
-    featureContent: {
-      flex: 1,
-    },
-    featureTitle: {
-      fontSize: 16,
-      fontFamily: 'Inter-SemiBold',
-      color: '#FF8866',
-      marginBottom: 8,
-    },
-    featureDescription: {
-      fontSize: 14,
-      fontFamily: 'Inter-Regular',
-      color: colors.textSecondary,
-      lineHeight: 20,
-    },
     comingSoonSection: {
       backgroundColor: colors.surface,
       padding: 24,
@@ -112,7 +58,7 @@ export default function RestaurantsScreen() {
       borderWidth: 1,
       borderColor: colors.border,
       alignItems: 'center',
-      marginBottom: 24,
+      marginBottom: 16,
     },
     comingSoonBadge: {
       backgroundColor: colors.primary,
@@ -142,6 +88,60 @@ export default function RestaurantsScreen() {
       textAlign: 'center',
       lineHeight: 20,
     },
+    heroSection: {
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    heroIcon: {
+      marginBottom: 12,
+    },
+    heroTitle: {
+      fontSize: 24,
+      fontFamily: 'Inter-Bold',
+      color: '#FF8866',
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    heroSubtitle: {
+      fontSize: 16,
+      fontFamily: 'Lato-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 24,
+      marginBottom: 16,
+    },
+    featuresGrid: {
+      gap: 16,
+      marginBottom: 16,
+    },
+    featureCard: {
+      backgroundColor: colors.surface,
+      padding: 20,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+    },
+    featureIcon: {
+      marginRight: 16,
+      marginTop: 2,
+    },
+    featureContent: {
+      flex: 1,
+    },
+    featureTitle: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      color: '#FF8866',
+      marginBottom: 8,
+    },
+    featureDescription: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
     websiteSection: {
       backgroundColor: colors.surface,
       padding: 20,
@@ -150,7 +150,7 @@ export default function RestaurantsScreen() {
       borderColor: colors.border,
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 32,
+      marginBottom: 16,
     },
     websiteIcon: {
       marginRight: 16,
@@ -184,7 +184,7 @@ export default function RestaurantsScreen() {
     },
     futureFeatures: {
       gap: 16,
-      marginBottom: 24,
+      marginBottom: 16,
     },
     futureFeature: {
       flexDirection: 'row',
@@ -221,6 +221,17 @@ export default function RestaurantsScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.comingSoonSection}>
+          <View style={styles.comingSoonBadge}>
+            <Text style={styles.comingSoonBadgeText}>Coming Soon</Text>
+          </View>
+          <Text style={styles.comingSoonTitle}>Launching Early 2026</Text>
+          <Text style={styles.comingSoonText}>
+            We're working hard to bring you the most comprehensive allergy-aware restaurant database. 
+            Stay tuned for updates!
+          </Text>
+        </View>
+
         <View style={styles.heroSection}>
           <View style={styles.heroIcon}>
             <ChefHat size={64} color={colors.primary} />
@@ -267,17 +278,6 @@ export default function RestaurantsScreen() {
               </Text>
             </View>
           </View>
-        </View>
-
-        <View style={styles.comingSoonSection}>
-          <View style={styles.comingSoonBadge}>
-            <Text style={styles.comingSoonBadgeText}>Coming Soon</Text>
-          </View>
-          <Text style={styles.comingSoonTitle}>Launching Early 2026</Text>
-          <Text style={styles.comingSoonText}>
-            We're working hard to bring you the most comprehensive allergy-aware restaurant database. 
-            Stay tuned for updates!
-          </Text>
         </View>
 
         <View style={styles.websiteSection}>

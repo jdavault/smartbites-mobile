@@ -325,6 +325,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       fontSize: FontSizes.md,
       color: colors.textPrimary,
       backgroundColor: colors.textWhite,
+      outlineWidth: 0,
     },
 
     passwordInputContainer: {
@@ -343,6 +344,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       fontFamily: Fonts.body,
       fontSize: FontSizes.md,
       color: colors.textPrimary,
+      outlineWidth: 0,
     },
     eyeButton: { padding: 12 },
 

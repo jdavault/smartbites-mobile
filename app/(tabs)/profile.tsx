@@ -14,6 +14,8 @@ import {
   ActivityIndicator,
   Linking,
   Image,
+  Modal,
+  TouchableWithoutFeedback,
   type ScrollView as RNScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -30,9 +32,25 @@ import {
   ExternalLink,
 } from 'lucide-react-native';
 
+// Helper function for email redirect URLs
+const getEmailRedirectTo = () =>
+  Platform.select({
+    web: typeof window !== 'undefined'
+      ? `${window.location.origin}/auth/callback`
+      : undefined,
+    default: process.env.EXPO_PUBLIC_DEEP_LINK ?? 'smartbites://auth-callback',
+  });
+
 // Get version from package.json
 const packageJson = require('../../package.json');
 const APP_VERSION = packageJson.version;
+
+type ModalInfo = {
+  visible: boolean;
+  title: string;
+  subtitle?: string;
+  emoji?: string;
+};
 
 // US States list
 const US_STATES = [
@@ -107,6 +125,7 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
+    email: '',
     address1: '',
     address2: '',
     city: '',
@@ -117,6 +136,15 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [showStates, setShowStates] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+
+  const [modalInfo, setModalInfo] = useState<ModalInfo>({
+    visible: false,
+    title: '',
+  });
+
+  const openModal = (info: Omit<ModalInfo, 'visible'>) =>
+    setModalInfo({ ...info, visible: true });
+  const closeModal = () => setModalInfo((m) => ({ ...m, visible: false }));
 
   // --------- NEW: Scroll to bottom when expanding About ----------
   const scrollRef = useRef<RNScrollView | null>(null);
@@ -135,7 +163,9 @@ export default function ProfileScreen() {
   // --------------------------------------------------------------
 
   useEffect(() => {
-    if (user) loadProfile();
+    if (user) {
+     loadProfile();
+   }
   }, [user]);
 
   const loadProfile = async () => {
@@ -157,16 +187,19 @@ export default function ProfileScreen() {
       }
 
       if (data) {
-        setProfile({
+        setProfile((prev) => ({
+          ...prev,
           firstName: data.first_name || '',
           lastName: data.last_name || '',
+          // IMPORTANT: email comes from auth, not user_profiles
+          email: user?.email ?? '',
           address1: data.address1 || '',
           address2: data.address2 || '',
           city: data.city || '',
           state: data.state || '',
           zip: data.zip || '',
           phone: data.phone || '',
-        });
+        }));
       }
     } catch (err) {
       console.error('Error loading profile:', err);
@@ -176,7 +209,62 @@ export default function ProfileScreen() {
   const saveProfile = async () => {
     if (!user) return;
     setLoading(true);
+
     try {
+      const provider = (user.app_metadata?.provider as string) || 'email';
+
+      // A) Handle email change through Supabase Auth (source of truth)
+      const currentEmail = (user.email ?? '').trim().toLowerCase();
+      const nextEmail = (profile.email ?? '').trim().toLowerCase();
+      const emailChanged = !!nextEmail && nextEmail !== currentEmail;
+
+      if (emailChanged) {
+        // Block OAuth users: email must be changed at the identity provider
+        if (provider !== 'email') {
+          openModal({
+            title: 'Email Managed by Provider',
+            subtitle:
+              'This account is linked with a social provider (e.g., Google/Apple). Update your email in the provider settings, then re-login.',
+            emoji: 'ℹ️',
+          });
+          setLoading(false);
+          return;
+        }
+
+        const emailRedirectTo = getEmailRedirectTo();
+
+        const { data: upd, error: emailError } = await supabase.auth.updateUser(
+          { email: nextEmail },
+          emailRedirectTo ? { emailRedirectTo } : undefined
+        );
+
+        if (emailError) {
+          // Common gotchas we can hint about
+          const hint =
+            emailError.message?.toLowerCase().includes('redirect') ||
+            emailError.message?.toLowerCase().includes('not allowed')
+              ? '\n\nHint: Add your callback URL to Supabase → Auth → URL Configuration → Additional Redirect URLs. For web, use https://yourdomain.com/auth/callback (and localhost while developing). For native, allow your deep link scheme like smartbites://auth-callback.'
+              : '';
+
+          openModal({
+            title: 'Email Update Failed',
+            subtitle: `${emailError.message || 'Failed to update email.'}${hint}`,
+            emoji: '❌',
+          });
+          setLoading(false);
+          return;
+        }
+
+        // If confirmations are on, the email won't change until the link is clicked
+        openModal({
+          title: 'Check Your Inbox',
+          subtitle:
+            'We sent a confirmation link to your new email. Click the link to finalize the change. Your profile details will still be saved below.',
+          emoji: '✉️',
+        });
+      }
+
+      // B) Upsert everything else in your profile table (no email stored here)
       const { error } = await supabase.from('user_profiles').upsert(
         {
           user_id: user.id,
@@ -194,9 +282,22 @@ export default function ProfileScreen() {
       );
 
       if (error) throw error;
-      Alert.alert('Success', 'Profile updated successfully!');
-    } catch (err) {
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+
+      // Final toast (if email changed, we already showed a modal; keep this concise)
+      if (!emailChanged) {
+        openModal({
+          title: 'Profile Updated!',
+          subtitle: 'Your changes have been saved successfully.',
+          emoji: '✅',
+        });
+      }
+    } catch (err: any) {
+      openModal({
+        title: 'Update Failed',
+        subtitle:
+          err?.message || 'Failed to update profile. Please try again later.',
+        emoji: '❌',
+      });
       console.error('Save profile error:', err);
     } finally {
       setLoading(false);
@@ -468,10 +569,75 @@ export default function ProfileScreen() {
       textAlign: 'center',
       marginTop: 10,
     },
+
+    // Modal styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: colors.surface,
+      padding: 24,
+      borderRadius: 12,
+      width: '80%',
+      maxWidth: 420,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 5,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.text,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    modalSubtitle: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+    modalEmoji: {
+      fontSize: 40,
+      marginBottom: 12,
+    },
   });
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Success/Error Modal */}
+      {modalInfo.visible && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={modalInfo.visible}
+          onRequestClose={closeModal}
+        >
+          <TouchableWithoutFeedback onPress={closeModal}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                {modalInfo.emoji && (
+                  <Text style={styles.modalEmoji}>{modalInfo.emoji}</Text>
+                )}
+                <Text style={styles.modalTitle}>{modalInfo.title}</Text>
+                {!!modalInfo.subtitle && (
+                  <Text style={styles.modalSubtitle}>{modalInfo.subtitle}</Text>
+                )}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
+
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>Profile</Text>
@@ -494,28 +660,44 @@ export default function ProfileScreen() {
           <View style={styles.formCard}>
             <View style={styles.form}>
               {/* Names */}
+              <View style={styles.row}>
+                <TextInput
+                  style={[styles.input, { flex: 0.9 }]}
+                  value={profile.firstName}
+                  onChangeText={(text) =>
+                    setProfile((prev) => ({ ...prev, firstName: text }))
+                  }
+                  placeholder="First name"
+                  placeholderTextColor={colors.textSecondary}
+                  autoCapitalize="words"
+                />
+                <TextInput
+                  style={[styles.input, { flex: 1.1 }]}
+                  value={profile.lastName}
+                  onChangeText={(text) =>
+                    setProfile((prev) => ({ ...prev, lastName: text }))
+                  }
+                  placeholder="Last name"
+                  placeholderTextColor={colors.textSecondary}
+                  autoCapitalize="words"
+                />
+              </View>
+
+              {/* Email */}
               <TextInput
                 style={styles.input}
-                value={profile.firstName}
+                value={profile.email}
                 onChangeText={(text) =>
-                  setProfile((prev) => ({ ...prev, firstName: text }))
+                  setProfile((prev) => ({ ...prev, email: text }))
                 }
-                placeholder="First name"
+                placeholder="Email address"
                 placeholderTextColor={colors.textSecondary}
-                autoCapitalize="words"
-              />
-              <TextInput
-                style={styles.input}
-                value={profile.lastName}
-                onChangeText={(text) =>
-                  setProfile((prev) => ({ ...prev, lastName: text }))
-                }
-                placeholder="Last name"
-                placeholderTextColor={colors.textSecondary}
-                autoCapitalize="words"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
               />
 
-              {/* Address */}
+              {/* Address fields remain the same */}
               <TextInput
                 style={styles.input}
                 value={profile.address1}

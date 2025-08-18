@@ -1,4 +1,4 @@
-// app/(auth)/register.tsx
+// app/(auth)/register.tsx  
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
@@ -26,6 +26,8 @@ import ThemedText from '@/components/ThemedText';
 import { ALLERGENS } from '@/contexts/AllergensContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 import SmartBitesLogo from '@/assets/images/smart-bites-logo.png'; // 72x72
+
+const DismissWrapper = Platform.OS === 'web' ? React.Fragment : TouchableWithoutFeedback;
 
 // US States list
 const US_STATES = [
@@ -388,6 +390,9 @@ export default function RegisterScreen() {
         flex1: { flex: 1 },
         flex2: { flex: 2 },
 
+       zipContainer: { width: 80 },
+       phoneContainer: { width: 140 },
+
         // Platform-specific vertical padding (web-safe)
         input: {
           borderWidth: 1,
@@ -667,7 +672,11 @@ export default function RegisterScreen() {
           </View>
 
           {/* Body */}
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <DismissWrapper
+            {...(Platform.OS !== 'web'
+              ? { onPress: Keyboard.dismiss, accessible: false }
+              : {})}
+          >
             <ScrollView
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
@@ -793,6 +802,8 @@ export default function RegisterScreen() {
                     autoCapitalize="words"
                     autoCorrect={false}
                     textContentType="addressCity"
+                   returnKeyType="next"
+                   onSubmitEditing={() => setShowStates(true)}
                   />
                   <View style={[styles.stateDropdown, styles.flex1]}>
                     <TouchableOpacity
@@ -820,7 +831,7 @@ export default function RegisterScreen() {
                             }}
                           >
                             <Text style={styles.stateItemText}>
-                              {stateItem.code} - {stateItem.name}
+                             {stateItem.name}
                             </Text>
                           </TouchableOpacity>
                         ))}
@@ -830,30 +841,36 @@ export default function RegisterScreen() {
                 </View>
 
                 <View style={styles.row}>
-                  <TextInput
-                    style={[styles.input, styles.flex1]}
-                    value={zip}
-                    onChangeText={setZip}
-                    placeholder="ZIP"
-                    placeholderTextColor={colors.textSecondary}
-                    keyboardType="number-pad"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    maxLength={10}
-                    textContentType="postalCode"
-                  />
-                  <TextInput
-                    style={[styles.input, styles.flex2]}
-                    value={phone}
-                    onChangeText={setPhone}
-                    placeholder="Phone"
-                    placeholderTextColor={colors.textSecondary}
-                    keyboardType="phone-pad"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    textContentType="telephoneNumber"
-                    autoComplete="tel"
-                  />
+                 <View style={styles.zipContainer}>
+                   <TextInput
+                     style={styles.input}
+                     value={zip}
+                     onChangeText={setZip}
+                     placeholder="ZIP"
+                     placeholderTextColor={colors.textSecondary}
+                     keyboardType="number-pad"
+                     autoCapitalize="none"
+                     autoCorrect={false}
+                     maxLength={10}
+                     textContentType="postalCode"
+                     returnKeyType="next"
+                   />
+                 </View>
+                 <View style={styles.phoneContainer}>
+                   <TextInput
+                     style={styles.input}
+                     value={phone}
+                     onChangeText={setPhone}
+                     placeholder="Phone"
+                     placeholderTextColor={colors.textSecondary}
+                     keyboardType="phone-pad"
+                     autoCapitalize="none"
+                     autoCorrect={false}
+                     textContentType="telephoneNumber"
+                     autoComplete="tel"
+                     returnKeyType="done"
+                   />
+                 </View>
                 </View>
 
                 {/* Allergens */}
@@ -992,7 +1009,7 @@ export default function RegisterScreen() {
                 </View>
               </View>
             </ScrollView>
-          </TouchableWithoutFeedback>
+          </DismissWrapper>
 
           {/* pinned bottom */}
           <View style={styles.bottom}>
