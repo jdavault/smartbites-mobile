@@ -239,6 +239,8 @@ export default function ProfileScreen() {
           : 'Your changes have been saved successfully.',
         emoji: '✅',
       });
+     
+     // Don't reload profile after save to avoid overwriting the email change
     } catch (err) {
       openModal({
         title: 'Update Failed',
