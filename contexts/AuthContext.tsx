@@ -1,24 +1,33 @@
+// contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Platform } from 'react-native';
-import { router } from 'expo-router';
-import { supabase } from '@/lib/supabase';
-import { User, Session } from '@supabase/supabase-js';
+import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
+import { supabase } from '@/lib/supabase';
+import type { User, Session } from '@supabase/supabase-js';
+
 import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
 import { ResponseType } from 'expo-auth-session';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const iosClientId = '1010197305867-f3kuf70gl65tapvmj3kouiaff9bt36tb.apps.googleusercontent.com';
-const androidClientId = '1010197305867-skot0d309k02prooif9o3vci80fhlb0r.apps.googleusercontent.com';
-const webClientId = '1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com';
+const iosClientId =
+  '1010197305867-f3kuf70gl65tapvmj3kouiaff9bt36tb.apps.googleusercontent.com';
+const androidClientId =
+  '1010197305867-skot0d309k02prooif9o3vci80fhlb0r.apps.googleusercontent.com';
+const webClientId =
+  '1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, additionalData?: any) => Promise<{ error: any }>;
+  signUp: (
+    email: string,
+    password: string,
+    additionalData?: Record<string, any>
+  ) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<{ error: any }>;
@@ -32,13 +41,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Restore session on app start
+  // Redirect URI used for Google & email links
   const redirectUri = makeRedirectUri({
-    scheme: 'smartbites',
+    scheme: 'smartbites', // must match your app.json/app.config
     path: 'auth',
-    preferLocalhost: true,
+    preferLocalhost: true, // nicer for web dev
   });
 
+  // ---- Google sign-in (Expo AuthSession)
   const [request, response, promptAsync] = useAuthRequest({
     responseType: ResponseType.IdToken,
     iosClientId,
@@ -50,127 +60,150 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (response?.type === 'success') {
-      let idToken = null;
-      
-      // Try to get ID token from authentication object
-      if (response.authentication && response.authentication.idToken) {
+      let idToken: string | null = null;
+      if (response.authentication?.idToken)
         idToken = response.authentication.idToken;
-      }
-      // Fallback to params
-      else if (response.params && response.params.id_token) {
-        idToken = response.params.id_token;
-      }
-      
-      if (idToken) {
-        handleGoogleSignIn(idToken);
-      } else {
-        console.error('No ID token found in Google authentication response');
-      }
+      else if (response.params?.id_token) idToken = response.params.id_token;
+
+      if (idToken) handleGoogleSignIn(idToken);
+      else console.error('No ID token found in Google response');
     }
   }, [response]);
 
-  const handleGoogleSignIn = async (idToken: string | undefined) => {
-    if (!idToken) {
-      console.error('No ID token received from Google authentication');
-      return;
-    }
-
+  const handleGoogleSignIn = async (idToken?: string) => {
+    if (!idToken) return;
     try {
-      // Use Supabase Google sign-in with ID token
-      const { data, error } = await supabase.auth.signInWithIdToken({
+      const { error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: idToken,
       });
-
       if (error) throw error;
     } catch (error) {
       console.error('Google sign-in error:', error);
     }
   };
 
+  // ---- Restore session & subscribe to auth changes
   useEffect(() => {
     let mounted = true;
 
-    const initializeAuth = async () => {
+    (async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
         if (!mounted) return;
-        
+
         if (error) {
-          console.error('Error getting session:', error);
-          setSession(null);
+          console.error('getSession error:', error);
           setUser(null);
+          setSession(null);
         } else {
-          setSession(session);
           setUser(session?.user ?? null);
+          setSession(session ?? null);
         }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        setSession(null);
+      } catch (e) {
+        console.error('initialize auth error:', e);
         setUser(null);
+        setSession(null);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
-    };
+    })();
 
-    initializeAuth();
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (!mounted) return;
+      setUser(s?.user ?? null);
+      setSession(s ?? null);
+      setLoading(false);
     });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      sub.subscription.unsubscribe();
     };
   }, []);
 
-  // Handle deep links for mobile (email confirmation, password reset, etc.)
+  // ---- Handle auth links on WEB (OAuth / email confirmations)
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    // Only try to exchange if we see auth params present
+    const url = window.location.href;
+    const hasAuthParams =
+      url.includes('code=') ||
+      url.includes('access_token=') ||
+      url.includes('refresh_token=');
+
+    if (!hasAuthParams) return;
+
+    (async () => {
+      try {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(url);
+        if (error) {
+          console.warn('exchangeCodeForSession (web) error:', error);
+        } else if (data?.session) {
+          setUser(data.session.user);
+          setSession(data.session);
+        }
+      } catch (e) {
+        console.warn('Web exchange failed:', e);
+      } finally {
+        // Clean the URL so we don't re-process on refresh
+        try {
+          const clean = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, document.title, clean);
+        } catch {}
+      }
+    })();
+  }, []);
+
+  // ---- Handle auth links on NATIVE (Expo deep links)
   useEffect(() => {
     if (Platform.OS === 'web') return;
 
-    const handleDeepLink = async (event: { url: string }) => {
+    const handleDeepLink = async ({ url }: { url: string }) => {
       try {
-        const { error } = await supabase.auth.exchangeCodeForSession(event.url);
+        const { data, error } = await supabase.auth.exchangeCodeForSession(url);
         if (error) {
-          console.error('Error exchanging code for session:', error);
+          console.warn('exchangeCodeForSession (native) error:', error);
+        } else if (data?.session) {
+          setUser(data.session.user);
+          setSession(data.session);
         }
-      } catch (error) {
-        console.warn('Deep link handling failed:', error);
+      } catch (e) {
+        console.warn('Deep link handling failed:', e);
       }
     };
 
-    // Handle initial URL (cold start)
+    // cold start
     Linking.getInitialURL().then((url) => {
       if (url) handleDeepLink({ url });
     });
 
-    // Handle subsequent URLs (app in foreground)
-    const subscription = Linking.addEventListener('url', handleDeepLink);
-    return () => subscription?.remove();
+    // foreground links
+    const sub = Linking.addEventListener('url', handleDeepLink);
+    return () => sub.remove();
   }, []);
 
-  const signUp = async (email: string, password: string, additionalData?: any) => {
+  // ---- Public API
+  const signUp = async (
+    email: string,
+    password: string,
+    additionalData?: any
+  ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: additionalData,
-        emailRedirectTo: undefined, // Disable email confirmation for now
+        // Set this if you want confirmation emails to open your app:
+        // emailRedirectTo: redirectUri,
       },
     });
-    
-    // If signup successful and user is immediately available, create profile
+
+    // Create profile row immediately (if user object is present)
     if (!error && data.user) {
       try {
         await supabase.from('user_profiles').insert({
@@ -182,86 +215,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error creating user profile:', profileError);
       }
     }
-    
+
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('AuthContext signIn called with email:', email);
-    
     try {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (error) {
-      console.error('Supabase signIn error:', error);
-    } else {
-      console.log('Supabase signIn successful');
-    }
-    
-    return { error };
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) console.error('signIn error:', error);
+      return { error };
     } catch (err) {
-      console.error('Unexpected error in signIn:', err);
+      console.error('Unexpected signIn error:', err);
       return { error: err };
     }
   };
 
   const signOut = async () => {
     try {
-      // Clear local state immediately for better UX
+      // Optimistically clear local state
       setUser(null);
       setSession(null);
-      
-      // Only sign out from Supabase if we have an active session
-      if (session) {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          console.error('Supabase signOut error:', error);
-        }
-      }
-      
-      // For web, force complete cleanup
-      if (Platform.OS === 'web') {
-        try {
-          // Clear all browser storage
-          localStorage.clear();
-          sessionStorage.clear();
-          
-          // Clear any cookies by setting them to expire
-          document.cookie.split(";").forEach(function(c) { 
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-          });
-        } catch (e) {
-          console.log('Storage clear failed:', e);
-        }
-      }
-      
-    } catch (error) {
-      console.error('Sign out error:', error);
-      
-      // Force clear state even if Supabase signOut fails
-      setUser(null);
-      setSession(null);
-      
-      // On web, still try to clear storage even if signOut failed
+
+      // Sign out from Supabase (if there was a session)
+      const { error } = await supabase.auth.signOut();
+      if (error) console.error('signOut error:', error);
+
+      // Web-only: clear browser storage/cookies (optional but thorough)
       if (Platform.OS === 'web') {
         try {
           localStorage.clear();
           sessionStorage.clear();
-          document.cookie.split(";").forEach(function(c) { 
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+          document.cookie.split(';').forEach((c) => {
+            document.cookie = c
+              .replace(/^ +/, '')
+              .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
           });
-        } catch (e) {
-          console.log('Storage clear failed:', e);
-        }
+        } catch {}
       }
+    } catch (e) {
+      console.error('Sign out exception:', e);
+      // Force clear local state even on error
+      setUser(null);
+      setSession(null);
     }
   };
 
   const signInWithGoogle = async () => {
-    // Use the Google auth flow
     if (request) {
       await promptAsync();
       return { error: null };
@@ -270,9 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const promptGoogleAsync = async () => {
-    if (request) {
-      await promptAsync();
-    }
+    if (request) await promptAsync();
   };
 
   return (
@@ -294,9 +294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  return ctx;
 }
