@@ -1,48 +1,71 @@
+// lib/supabase.ts
 import 'react-native-url-polyfill/auto';
-import { createClient } from '@supabase/supabase-js';
+import 'react-native-get-random-values';
+
+import {
+  createClient,
+  processLock,
+  type SupabaseClient,
+} from '@supabase/supabase-js';
 import { Platform } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Storage adapter for mobile (SecureStore) vs web (localStorage)
-const SecureStoreAdapter = {
-  getItem: (key: string) => SecureStore.getItemAsync(key),
-  setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
-  removeItem: (key: string) => SecureStore.deleteItemAsync(key),
-};
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_KEY!; // publishable/anon public key
 
-const storage = Platform.OS === 'web' ? undefined : SecureStoreAdapter;
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!supabaseUrl || !supabaseKey) {
   throw new Error(
-    'Missing Supabase environment variables. Please check your .env file and ensure EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY are set with your actual Supabase project credentials.'
+    'Missing Supabase env. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_KEY.'
   );
 }
 
-console.log('Supabase config:', {
-  url: supabaseUrl,
-  hasAnonKey: !!supabaseAnonKey,
-  anonKeyLength: supabaseAnonKey?.length || 0
-});
+// Singleton to avoid initializing native storage at module import time
+let _client: SupabaseClient | null = null;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage,
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: Platform.OS === 'web',
-    flowType: 'pkce',
-  },
-});
+export function getSupabase(): SupabaseClient {
+  if (_client) return _client;
 
-export const supabaseEmail = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: typeof window !== 'undefined',
-    flowType: 'implicit',
-  },
-});
+  _client = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      // Use AsyncStorage on native, default browser storage on web
+      storage: Platform.OS === 'web' ? undefined : AsyncStorage,
+      storageKey: 'sb-smartbites-auth', // customize/version if you ever need to migrate
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: Platform.OS === 'web',
+      lock: processLock,
+      // For mobile OAuth add this (optional):
+      // flowType: Platform.OS === 'web' ? 'implicit' : 'pkce',
+    },
+    // optional: a tiny bit of app metadata on requests
+    global: {
+      headers: { 'x-application-name': 'smartbites' },
+    },
+  });
+
+  return _client;
+}
+
+// ---- Email/Deep-link client (explicit flowType) ----
+let _clientEmail: SupabaseClient | null = null;
+export function getSupabaseEmail(): SupabaseClient {
+  if (_clientEmail) return _clientEmail;
+
+  _clientEmail = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      storage: Platform.OS === 'web' ? undefined : AsyncStorage,
+      storageKey: 'sb-smartbites-auth', // share session with the base client
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: Platform.OS === 'web',
+      lock: processLock,
+      flowType: Platform.OS === 'web' ? 'implicit' : 'pkce',
+    },
+    global: { headers: { 'x-application-name': 'smartbites' } },
+  });
+
+  return _clientEmail;
+}
+
+export const supabaseEmail = getSupabaseEmail();
+export const supabase = getSupabase();
