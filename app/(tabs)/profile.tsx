@@ -154,7 +154,9 @@ export default function ProfileScreen() {
   // --------------------------------------------------------------
 
   useEffect(() => {
-    if (user) loadProfile();
+   if (user && !profile.email) {
+     loadProfile();
+   }
   }, [user]);
 
   const loadProfile = async () => {
@@ -179,7 +181,7 @@ export default function ProfileScreen() {
         setProfile({
           firstName: data.first_name || '',
           lastName: data.last_name || '',
-          email: user?.email || '',
+         email: profile.email || user?.email || '',
           address1: data.address1 || '',
           address2: data.address2 || '',
           city: data.city || '',
@@ -187,9 +189,6 @@ export default function ProfileScreen() {
           zip: data.zip || '',
           phone: data.phone || '',
         });
-      } else if (user) {
-        setProfile(prev => ({ ...prev, email: user.email || '' }));
-      }
     } catch (err) {
       console.error('Error loading profile:', err);
     }
@@ -239,6 +238,8 @@ export default function ProfileScreen() {
           : 'Your changes have been saved successfully.',
         emoji: '✅',
       });
+     
+     // Don't reload profile after save to avoid overwriting the email change
     } catch (err) {
       openModal({
         title: 'Update Failed',
