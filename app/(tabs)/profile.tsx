@@ -45,6 +45,27 @@ const getEmailRedirectTo = () =>
 const packageJson = require('../../package.json');
 const APP_VERSION = packageJson.version;
 
+// Phone number formatting helper
+const formatPhoneNumber = (value: string): string => {
+  // Remove all non-digits
+  const digits = value.replace(/\D/g, '');
+  
+  // Don't format if less than 4 digits
+  if (digits.length < 4) return digits;
+  
+  // Format as (XXX) XXX-XXXX
+  if (digits.length <= 6) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  } else {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  }
+};
+
+// Phone number validation helper
+const isValidPhoneNumber = (phone: string): boolean => {
+  const digits = phone.replace(/\D/g, '');
+  return digits.length === 10;
+};
 type ModalInfo = {
   visible: boolean;
   title: string;
@@ -196,7 +217,7 @@ export default function ProfileScreen() {
           city: data.city || '',
           state: data.state || '',
           zip: data.zip || '',
-          phone: data.phone || '',
+          phone: data.phone ? formatPhoneNumber(data.phone) : '',
         }));
       }
     } catch (err) {
@@ -206,6 +227,17 @@ export default function ProfileScreen() {
 
   const saveProfile = async () => {
     if (!user) return;
+    
+    // Validate phone number if provided
+    if (profile.phone && !isValidPhoneNumber(profile.phone)) {
+      openModal({
+        title: 'Invalid Phone Number',
+        subtitle: 'Please enter a valid 10-digit phone number.',
+        emoji: '📞',
+      });
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -222,7 +254,7 @@ export default function ProfileScreen() {
           city: profile.city,
           state: profile.state,
           zip: profile.zip,
-          phone: profile.phone,
+          phone: profile.phone.replace(/\D/g, ''), // Store only digits
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'user_id' }
@@ -335,7 +367,7 @@ export default function ProfileScreen() {
       borderColor: colors.border,
       borderRadius: 9,
       maxHeight: 200,
-      zIndex: 1000,
+      zIndex: 9999,
     },
     stateItem: {
       paddingHorizontal: 12,
@@ -688,7 +720,7 @@ export default function ProfileScreen() {
                           }}
                         >
                           <Text style={styles.stateItemText}>
-                            {stateItem.code} - {stateItem.name}
+                            {stateItem.name}
                           </Text>
                         </TouchableOpacity>
                       ))}
@@ -715,12 +747,14 @@ export default function ProfileScreen() {
                   <TextInput
                     style={styles.input}
                     value={profile.phone}
-                    onChangeText={(text) =>
+                        ...prev,
+                        phone: formatted
                       setProfile((prev) => ({ ...prev, phone: text }))
                     }
                     placeholder="Phone"
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="phone-pad"
+                    maxLength={14} // (XXX) XXX-XXXX
                   />
                 </View>
               </View>
