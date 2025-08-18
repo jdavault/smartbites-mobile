@@ -189,6 +189,7 @@ export default function ProfileScreen() {
           zip: data.zip || '',
           phone: data.phone || '',
         });
+      }
     } catch (err) {
       console.error('Error loading profile:', err);
     }
@@ -238,8 +239,6 @@ export default function ProfileScreen() {
           : 'Your changes have been saved successfully.',
         emoji: '✅',
       });
-     
-     // Don't reload profile after save to avoid overwriting the email change
     } catch (err) {
       openModal({
         title: 'Update Failed',
