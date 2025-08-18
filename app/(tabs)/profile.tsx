@@ -609,7 +609,7 @@ export default function ProfileScreen() {
               {/* Names */}
               <View style={styles.row}>
                 <TextInput
-                  style={[styles.input, { flex: 0.8 }]}
+                  style={[styles.input, { flex: 0.9 }]}
                   value={profile.firstName}
                   onChangeText={(text) =>
                     setProfile((prev) => ({ ...prev, firstName: text }))
@@ -619,7 +619,7 @@ export default function ProfileScreen() {
                   autoCapitalize="words"
                 />
                 <TextInput
-                  style={[styles.input, { flex: 1.2 }]}
+                  style={[styles.input, { flex: 1.1 }]}
                   value={profile.lastName}
                   onChangeText={(text) =>
                     setProfile((prev) => ({ ...prev, lastName: text }))
@@ -645,18 +645,6 @@ export default function ProfileScreen() {
               />
 
               {/* Address fields remain the same */}
-              <TextInput
-                style={styles.input}
-                value={profile.lastName}
-                onChangeText={(text) =>
-                  setProfile((prev) => ({ ...prev, lastName: text }))
-                }
-                placeholder="Last name"
-                placeholderTextColor={colors.textSecondary}
-                autoCapitalize="words"
-              />
-
-              {/* Address */}
               <TextInput
                 style={styles.input}
                 value={profile.address1}
