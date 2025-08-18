@@ -116,6 +116,7 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
+    email: '',
     address1: '',
     address2: '',
     city: '',
@@ -178,6 +179,7 @@ export default function ProfileScreen() {
         setProfile({
           firstName: data.first_name || '',
           lastName: data.last_name || '',
+          email: user?.email || '',
           address1: data.address1 || '',
           address2: data.address2 || '',
           city: data.city || '',
@@ -186,6 +188,8 @@ export default function ProfileScreen() {
           phone: data.phone || '',
         });
       }
+    } else if (user) {
+      setProfile(prev => ({ ...prev, email: user.email || '' }));
     } catch (err) {
       console.error('Error loading profile:', err);
     }
@@ -195,6 +199,22 @@ export default function ProfileScreen() {
     if (!user) return;
     setLoading(true);
     try {
+      // Update email if it changed
+      if (profile.email !== user.email) {
+        const { error: emailError } = await supabase.auth.updateUser({
+          email: profile.email
+        });
+        if (emailError) {
+          openModal({
+            title: 'Email Update Failed',
+            subtitle: emailError.message || 'Failed to update email. Please try again.',
+            emoji: '❌',
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       const { error } = await supabase.from('user_profiles').upsert(
         {
           user_id: user.id,
@@ -214,7 +234,9 @@ export default function ProfileScreen() {
       if (error) throw error;
       openModal({
         title: 'Profile Updated!',
-        subtitle: 'Your changes have been saved successfully.',
+        subtitle: profile.email !== user.email 
+          ? 'Your changes have been saved. Please check your email to confirm the new email address.'
+          : 'Your changes have been saved successfully.',
         emoji: '✅',
       });
     } catch (err) {
@@ -585,16 +607,44 @@ export default function ProfileScreen() {
           <View style={styles.formCard}>
             <View style={styles.form}>
               {/* Names */}
+              <View style={styles.row}>
+                <TextInput
+                  style={[styles.input, { flex: 0.8 }]}
+                  value={profile.firstName}
+                  onChangeText={(text) =>
+                    setProfile((prev) => ({ ...prev, firstName: text }))
+                  }
+                  placeholder="First name"
+                  placeholderTextColor={colors.textSecondary}
+                  autoCapitalize="words"
+                />
+                <TextInput
+                  style={[styles.input, { flex: 1.2 }]}
+                  value={profile.lastName}
+                  onChangeText={(text) =>
+                    setProfile((prev) => ({ ...prev, lastName: text }))
+                  }
+                  placeholder="Last name"
+                  placeholderTextColor={colors.textSecondary}
+                  autoCapitalize="words"
+                />
+              </View>
+
+              {/* Email */}
               <TextInput
                 style={styles.input}
-                value={profile.firstName}
+                value={profile.email}
                 onChangeText={(text) =>
-                  setProfile((prev) => ({ ...prev, firstName: text }))
+                  setProfile((prev) => ({ ...prev, email: text }))
                 }
-                placeholder="First name"
+                placeholder="Email address"
                 placeholderTextColor={colors.textSecondary}
-                autoCapitalize="words"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
               />
+
+              {/* Address fields remain the same */}
               <TextInput
                 style={styles.input}
                 value={profile.lastName}
