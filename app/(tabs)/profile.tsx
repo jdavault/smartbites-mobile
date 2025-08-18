@@ -32,6 +32,15 @@ import {
   ExternalLink,
 } from 'lucide-react-native';
 
+// Helper function for email redirect URLs
+const getEmailRedirectTo = () =>
+  Platform.select({
+    web: typeof window !== 'undefined'
+      ? `${window.location.origin}/auth/callback`
+      : undefined,
+    default: process.env.EXPO_PUBLIC_DEEP_LINK ?? 'smartbites://auth-callback',
+  });
+
 // Get version from package.json
 const packageJson = require('../../package.json');
 const APP_VERSION = packageJson.version;
@@ -200,35 +209,62 @@ export default function ProfileScreen() {
   const saveProfile = async () => {
     if (!user) return;
     setLoading(true);
+
     try {
-      // A) Update email in auth (source of truth)
+      const provider = (user.app_metadata?.provider as string) || 'email';
+
+      // A) Handle email change through Supabase Auth (source of truth)
       const currentEmail = (user.email ?? '').trim().toLowerCase();
       const nextEmail = (profile.email ?? '').trim().toLowerCase();
-      const emailChanged = nextEmail && nextEmail !== currentEmail;
+      const emailChanged = !!nextEmail && nextEmail !== currentEmail;
 
       if (emailChanged) {
-        const redirectUrl = Platform.select({
-          web: `${window.location.origin}/auth/callback`,
-          default: 'smartbites://auth-callback', // make sure your deep link is configured
-        });
+        // Block OAuth users: email must be changed at the identity provider
+        if (provider !== 'email') {
+          openModal({
+            title: 'Email Managed by Provider',
+            subtitle:
+              'This account is linked with a social provider (e.g., Google/Apple). Update your email in the provider settings, then re-login.',
+            emoji: 'ℹ️',
+          });
+          setLoading(false);
+          return;
+        }
 
-        const { error: emailError } = await supabase.auth.updateUser(
-          { email: profile.email.trim() },
-          { emailRedirectTo: redirectUrl }
+        const emailRedirectTo = getEmailRedirectTo();
+
+        const { data: upd, error: emailError } = await supabase.auth.updateUser(
+          { email: nextEmail },
+          emailRedirectTo ? { emailRedirectTo } : undefined
         );
 
         if (emailError) {
+          // Common gotchas we can hint about
+          const hint =
+            emailError.message?.toLowerCase().includes('redirect') ||
+            emailError.message?.toLowerCase().includes('not allowed')
+              ? '\n\nHint: Add your callback URL to Supabase → Auth → URL Configuration → Additional Redirect URLs. For web, use https://yourdomain.com/auth/callback (and localhost while developing). For native, allow your deep link scheme like smartbites://auth-callback.'
+              : '';
+
           openModal({
             title: 'Email Update Failed',
-            subtitle: emailError.message || 'Failed to update email. Please try again.',
+            subtitle: `${emailError.message || 'Failed to update email.'}${hint}`,
             emoji: '❌',
           });
           setLoading(false);
           return;
         }
+
+        // If confirmations are on, the email won't change until the link is clicked
+        openModal({
+          title: 'Check Your Inbox',
+          subtitle:
+            'We sent a confirmation link to your new email. Click the link to finalize the change. Your profile details will still be saved below.',
+          emoji: '✉️',
+        });
       }
 
-      // B) Upsert the rest of the profile in your table (email intentionally not stored here)
+      // B) Upsert everything else in your profile table (no email stored here)
       const { error } = await supabase.from('user_profiles').upsert(
         {
           user_id: user.id,
@@ -247,22 +283,19 @@ export default function ProfileScreen() {
 
       if (error) throw error;
 
-      openModal({
-        title: 'Profile Updated!',
-        subtitle: emailChanged
-          ? 'We sent a confirmation link to your new email. Please confirm to finalize the change.'
-          : 'Your changes have been saved successfully.',
-        emoji: '✅',
-      });
-
-      // Keep the new email in local UI so the user sees what they entered.
-      // After they confirm via the link, your AuthContext can refresh user, or you can manually call:
-      // const { data: refreshed } = await supabase.auth.getUser();
-      // (Only if you manage user state here.)
-    } catch (err) {
+      // Final toast (if email changed, we already showed a modal; keep this concise)
+      if (!emailChanged) {
+        openModal({
+          title: 'Profile Updated!',
+          subtitle: 'Your changes have been saved successfully.',
+          emoji: '✅',
+        });
+      }
+    } catch (err: any) {
       openModal({
         title: 'Update Failed',
-        subtitle: 'Failed to update profile. Please try again.',
+        subtitle:
+          err?.message || 'Failed to update profile. Please try again later.',
         emoji: '❌',
       });
       console.error('Save profile error:', err);
