@@ -747,10 +747,13 @@ export default function ProfileScreen() {
                   <TextInput
                     style={styles.input}
                     value={profile.phone}
+                    onChangeText={(text) => {
+                      const formatted = formatPhoneNumber(text);
+                      setProfile((prev) => ({
                         ...prev,
                         phone: formatted
-                      setProfile((prev) => ({ ...prev, phone: text }))
-                    }
+                      }));
+                    }}
                     placeholder="Phone"
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="phone-pad"
