@@ -191,8 +191,6 @@ export default function ProfileScreen() {
           ...prev,
           firstName: data.first_name || '',
           lastName: data.last_name || '',
-          // IMPORTANT: email comes from auth, not user_profiles
-          email: user?.email ?? '',
           address1: data.address1 || '',
           address2: data.address2 || '',
           city: data.city || '',
@@ -213,58 +211,7 @@ export default function ProfileScreen() {
     try {
       const provider = (user.app_metadata?.provider as string) || 'email';
 
-      // A) Handle email change through Supabase Auth (source of truth)
-      const currentEmail = (user.email ?? '').trim().toLowerCase();
-      const nextEmail = (profile.email ?? '').trim().toLowerCase();
-      const emailChanged = !!nextEmail && nextEmail !== currentEmail;
-
-      if (emailChanged) {
-        // Block OAuth users: email must be changed at the identity provider
-        if (provider !== 'email') {
-          openModal({
-            title: 'Email Managed by Provider',
-            subtitle:
-              'This account is linked with a social provider (e.g., Google/Apple). Update your email in the provider settings, then re-login.',
-            emoji: 'ℹ️',
-          });
-          setLoading(false);
-          return;
-        }
-
-        const emailRedirectTo = getEmailRedirectTo();
-
-        const { data: upd, error: emailError } = await supabase.auth.updateUser(
-          { email: nextEmail },
-          emailRedirectTo ? { emailRedirectTo } : undefined
-        );
-
-        if (emailError) {
-          // Common gotchas we can hint about
-          const hint =
-            emailError.message?.toLowerCase().includes('redirect') ||
-            emailError.message?.toLowerCase().includes('not allowed')
-              ? '\n\nHint: Add your callback URL to Supabase → Auth → URL Configuration → Additional Redirect URLs. For web, use https://yourdomain.com/auth/callback (and localhost while developing). For native, allow your deep link scheme like smartbites://auth-callback.'
-              : '';
-
-          openModal({
-            title: 'Email Update Failed',
-            subtitle: `${emailError.message || 'Failed to update email.'}${hint}`,
-            emoji: '❌',
-          });
-          setLoading(false);
-          return;
-        }
-
-        // If confirmations are on, the email won't change until the link is clicked
-        openModal({
-          title: 'Check Your Inbox',
-          subtitle:
-            'We sent a confirmation link to your new email. Click the link to finalize the change. Your profile details will still be saved below.',
-          emoji: '✉️',
-        });
-      }
-
-      // B) Upsert everything else in your profile table (no email stored here)
+      // Upsert profile data (no email field)
       const { error } = await supabase.from('user_profiles').upsert(
         {
           user_id: user.id,
@@ -283,14 +230,11 @@ export default function ProfileScreen() {
 
       if (error) throw error;
 
-      // Final toast (if email changed, we already showed a modal; keep this concise)
-      if (!emailChanged) {
-        openModal({
-          title: 'Profile Updated!',
-          subtitle: 'Your changes have been saved successfully.',
-          emoji: '✅',
-        });
-      }
+      openModal({
+        title: 'Profile Updated!',
+        subtitle: 'Your changes have been saved successfully.',
+        emoji: '✅',
+      });
     } catch (err: any) {
       openModal({
         title: 'Update Failed',
@@ -662,7 +606,7 @@ export default function ProfileScreen() {
               {/* Names */}
               <View style={styles.row}>
                 <TextInput
-                  style={[styles.input, { flex: 0.9 }]}
+                  style={[styles.input, { flex: 1 }]}
                   value={profile.firstName}
                   onChangeText={(text) =>
                     setProfile((prev) => ({ ...prev, firstName: text }))
@@ -682,20 +626,6 @@ export default function ProfileScreen() {
                   autoCapitalize="words"
                 />
               </View>
-
-              {/* Email */}
-              <TextInput
-                style={styles.input}
-                value={profile.email}
-                onChangeText={(text) =>
-                  setProfile((prev) => ({ ...prev, email: text }))
-                }
-                placeholder="Email address"
-                placeholderTextColor={colors.textSecondary}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
 
               {/* Address fields remain the same */}
               <TextInput
