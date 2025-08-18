@@ -154,7 +154,7 @@ export default function ProfileScreen() {
   // --------------------------------------------------------------
 
   useEffect(() => {
-   if (user && !profile.email) {
+    if (user) {
      loadProfile();
    }
   }, [user]);
@@ -178,17 +178,19 @@ export default function ProfileScreen() {
       }
 
       if (data) {
-        setProfile({
+        setProfile((prev) => ({
+          ...prev,
           firstName: data.first_name || '',
           lastName: data.last_name || '',
-         email: profile.email || user?.email || '',
+          // IMPORTANT: email comes from auth, not user_profiles
+          email: user?.email ?? '',
           address1: data.address1 || '',
           address2: data.address2 || '',
           city: data.city || '',
           state: data.state || '',
           zip: data.zip || '',
           phone: data.phone || '',
-        });
+        }));
       }
     } catch (err) {
       console.error('Error loading profile:', err);
@@ -199,11 +201,22 @@ export default function ProfileScreen() {
     if (!user) return;
     setLoading(true);
     try {
-      // Update email if it changed
-      if (profile.email !== user.email) {
-        const { error: emailError } = await supabase.auth.updateUser({
-          email: profile.email
+      // A) Update email in auth (source of truth)
+      const currentEmail = (user.email ?? '').trim().toLowerCase();
+      const nextEmail = (profile.email ?? '').trim().toLowerCase();
+      const emailChanged = nextEmail && nextEmail !== currentEmail;
+
+      if (emailChanged) {
+        const redirectUrl = Platform.select({
+          web: `${window.location.origin}/auth/callback`,
+          default: 'smartbites://auth-callback', // make sure your deep link is configured
         });
+
+        const { error: emailError } = await supabase.auth.updateUser(
+          { email: profile.email.trim() },
+          { emailRedirectTo: redirectUrl }
+        );
+
         if (emailError) {
           openModal({
             title: 'Email Update Failed',
@@ -215,6 +228,7 @@ export default function ProfileScreen() {
         }
       }
 
+      // B) Upsert the rest of the profile in your table (email intentionally not stored here)
       const { error } = await supabase.from('user_profiles').upsert(
         {
           user_id: user.id,
@@ -232,15 +246,19 @@ export default function ProfileScreen() {
       );
 
       if (error) throw error;
+
       openModal({
         title: 'Profile Updated!',
-        subtitle: profile.email !== user.email 
-          ? 'Your changes have been saved. Please check your email to confirm the new email address.'
+        subtitle: emailChanged
+          ? 'We sent a confirmation link to your new email. Please confirm to finalize the change.'
           : 'Your changes have been saved successfully.',
         emoji: '✅',
       });
-     
-     // Don't reload profile after save to avoid overwriting the email change
+
+      // Keep the new email in local UI so the user sees what they entered.
+      // After they confirm via the link, your AuthContext can refresh user, or you can manually call:
+      // const { data: refreshed } = await supabase.auth.getUser();
+      // (Only if you manage user state here.)
     } catch (err) {
       openModal({
         title: 'Update Failed',
