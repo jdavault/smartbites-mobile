@@ -18,9 +18,10 @@ console.log('Supabase config:', {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: true,
+    storage,
     persistSession: true,
-    detectSessionInUrl: typeof window !== 'undefined',
+    autoRefreshToken: true,
+    detectSessionInUrl: Platform.OS === 'web',
     flowType: 'pkce',
   },
 });

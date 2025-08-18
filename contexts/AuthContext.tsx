@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Restore session on app start
   const redirectUri = makeRedirectUri({
     scheme: 'smartbites',
     path: 'auth',
@@ -88,23 +89,75 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setSession(null);
+          setUser(null);
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        setSession(null);
+        setUser(null);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      if (mounted) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Handle deep links for mobile (email confirmation, password reset, etc.)
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    const handleDeepLink = async (event: { url: string }) => {
+      try {
+        const { error } = await supabase.auth.exchangeCodeForSession(event.url);
+        if (error) {
+          console.error('Error exchanging code for session:', error);
+        }
+      } catch (error) {
+        console.warn('Deep link handling failed:', error);
+      }
+    };
+
+    // Handle initial URL (cold start)
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
+    // Handle subsequent URLs (app in foreground)
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+    return () => subscription?.remove();
   }, []);
 
   const signUp = async (email: string, password: string, additionalData?: any) => {
