@@ -187,13 +187,12 @@ export default function ProfileScreen() {
           zip: data.zip || '',
           phone: data.phone || '',
         });
+      } else if (user) {
+        setProfile(prev => ({ ...prev, email: user.email || '' }));
       }
-    } else if (user) {
-      setProfile(prev => ({ ...prev, email: user.email || '' }));
     } catch (err) {
       console.error('Error loading profile:', err);
     }
-  };
 
   const saveProfile = async () => {
     if (!user) return;
