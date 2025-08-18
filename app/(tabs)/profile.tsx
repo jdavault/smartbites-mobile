@@ -14,6 +14,8 @@ import {
   ActivityIndicator,
   Linking,
   Image,
+  Modal,
+  TouchableWithoutFeedback,
   type ScrollView as RNScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -33,6 +35,13 @@ import {
 // Get version from package.json
 const packageJson = require('../../package.json');
 const APP_VERSION = packageJson.version;
+
+type ModalInfo = {
+  visible: boolean;
+  title: string;
+  subtitle?: string;
+  emoji?: string;
+};
 
 // US States list
 const US_STATES = [
@@ -118,6 +127,15 @@ export default function ProfileScreen() {
   const [showStates, setShowStates] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
 
+  const [modalInfo, setModalInfo] = useState<ModalInfo>({
+    visible: false,
+    title: '',
+  });
+
+  const openModal = (info: Omit<ModalInfo, 'visible'>) =>
+    setModalInfo({ ...info, visible: true });
+  const closeModal = () => setModalInfo((m) => ({ ...m, visible: false }));
+
   // --------- NEW: Scroll to bottom when expanding About ----------
   const scrollRef = useRef<RNScrollView | null>(null);
   useEffect(() => {
@@ -194,9 +212,17 @@ export default function ProfileScreen() {
       );
 
       if (error) throw error;
-      Alert.alert('Success', 'Profile updated successfully!');
+      openModal({
+        title: 'Profile Updated!',
+        subtitle: 'Your changes have been saved successfully.',
+        emoji: '✅',
+      });
     } catch (err) {
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      openModal({
+        title: 'Update Failed',
+        subtitle: 'Failed to update profile. Please try again.',
+        emoji: '❌',
+      });
       console.error('Save profile error:', err);
     } finally {
       setLoading(false);
@@ -468,10 +494,75 @@ export default function ProfileScreen() {
       textAlign: 'center',
       marginTop: 10,
     },
+
+    // Modal styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: colors.surface,
+      padding: 24,
+      borderRadius: 12,
+      width: '80%',
+      maxWidth: 420,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 5,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.text,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    modalSubtitle: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+    modalEmoji: {
+      fontSize: 40,
+      marginBottom: 12,
+    },
   });
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Success/Error Modal */}
+      {modalInfo.visible && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={modalInfo.visible}
+          onRequestClose={closeModal}
+        >
+          <TouchableWithoutFeedback onPress={closeModal}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                {modalInfo.emoji && (
+                  <Text style={styles.modalEmoji}>{modalInfo.emoji}</Text>
+                )}
+                <Text style={styles.modalTitle}>{modalInfo.title}</Text>
+                {!!modalInfo.subtitle && (
+                  <Text style={styles.modalSubtitle}>{modalInfo.subtitle}</Text>
+                )}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
+
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>Profile</Text>
