@@ -367,7 +367,7 @@ export default function ProfileScreen() {
       borderColor: colors.border,
       borderRadius: 9,
       maxHeight: 200,
-      zIndex: 9999,
+      zIndex: 99999,
     },
     stateItem: {
       paddingHorizontal: 12,
