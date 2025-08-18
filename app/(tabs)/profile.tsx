@@ -604,28 +604,26 @@ export default function ProfileScreen() {
           <View style={styles.formCard}>
             <View style={styles.form}>
               {/* Names */}
-              <View style={styles.row}>
-                <TextInput
-                  style={[styles.input, { flex: 1 }]}
-                  value={profile.firstName}
-                  onChangeText={(text) =>
-                    setProfile((prev) => ({ ...prev, firstName: text }))
-                  }
-                  placeholder="First name"
-                  placeholderTextColor={colors.textSecondary}
-                  autoCapitalize="words"
-                />
-                <TextInput
-                  style={[styles.input, { flex: 1.1 }]}
-                  value={profile.lastName}
-                  onChangeText={(text) =>
-                    setProfile((prev) => ({ ...prev, lastName: text }))
-                  }
-                  placeholder="Last name"
-                  placeholderTextColor={colors.textSecondary}
-                  autoCapitalize="words"
-                />
-              </View>
+              <TextInput
+                style={styles.input}
+                value={profile.firstName}
+                onChangeText={(text) =>
+                  setProfile((prev) => ({ ...prev, firstName: text }))
+                }
+                placeholder="First name"
+                placeholderTextColor={colors.textSecondary}
+                autoCapitalize="words"
+              />
+              <TextInput
+                style={styles.input}
+                value={profile.lastName}
+                onChangeText={(text) =>
+                  setProfile((prev) => ({ ...prev, lastName: text }))
+                }
+                placeholder="Last name"
+                placeholderTextColor={colors.textSecondary}
+                autoCapitalize="words"
+              />
 
               {/* Address fields remain the same */}
               <TextInput
