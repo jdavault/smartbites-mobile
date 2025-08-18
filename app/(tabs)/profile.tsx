@@ -344,6 +344,7 @@ export default function ProfileScreen() {
       borderRadius: 9,
       backgroundColor: colors.background,
       position: 'relative',
+      zIndex: 1000,
     },
     stateButton: {
       flexDirection: 'row',
@@ -367,7 +368,8 @@ export default function ProfileScreen() {
       borderColor: colors.border,
       borderRadius: 9,
       maxHeight: 200,
-      zIndex: 99999,
+      zIndex: 10000,
+      elevation: 10000,
     },
     stateItem: {
       paddingHorizontal: 12,
