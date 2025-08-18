@@ -193,6 +193,7 @@ export default function ProfileScreen() {
     } catch (err) {
       console.error('Error loading profile:', err);
     }
+  };
 
   const saveProfile = async () => {
     if (!user) return;
