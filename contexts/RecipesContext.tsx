@@ -311,54 +311,72 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
 
-      // First, insert the recipe
-      const { data: recipeData, error: recipeError } = await supabase
+      // First, check if a recipe with matching criteria already exists
+      const { data: existingRecipes, error: searchError } = await supabase
         .from('recipes')
-        .insert([{
-          title: recipe.title,
-          head_note: recipe.headNote,
-          description: recipe.description,
-          ingredients: recipe.ingredients,
-          instructions: recipe.instructions,
-          prep_time: recipe.prepTime,
-          cook_time: recipe.cookTime,
-          servings: recipe.servings,
-          difficulty: recipe.difficulty,
-          tags: recipe.tags,
-          search_query: recipe.searchQuery,
-          search_key: searchKey,
-          allergens: recipe.allergens,
-          dietary_prefs: recipe.dietaryPrefs,
-          notes: recipe.notes,
-          nutrition_info: recipe.nutritionInfo,
-          image: recipe.image,
-        }])
-        .select()
-        .single();
+        .select('id')
+        .eq('title', recipe.title)
+        .eq('search_key', searchKey)
+        .eq('allergens', JSON.stringify(recipe.allergens))
+        .eq('dietary_prefs', JSON.stringify(recipe.dietaryPrefs));
 
-      if (recipeError) throw recipeError;
-      console.log('Recipe inserted:', recipeData);
+      if (searchError) throw searchError;
 
+      let recipeId: string;
+
+      if (existingRecipes && existingRecipes.length > 0) {
+        // Recipe already exists, use the existing one
+        recipeId = existingRecipes[0].id;
+        console.log('Using existing recipe for favorite:', recipeId);
+      } else {
+        // Recipe doesn't exist, create a new one
+        const { data: recipeData, error: recipeError } = await supabase
+          .from('recipes')
+          .insert([{
+            title: recipe.title,
+            head_note: recipe.headNote,
+            description: recipe.description,
+            ingredients: recipe.ingredients,
+            instructions: recipe.instructions,
+            prep_time: recipe.prepTime,
+            cook_time: recipe.cookTime,
+            servings: recipe.servings,
+            difficulty: recipe.difficulty,
+            tags: recipe.tags,
+            search_query: recipe.searchQuery,
+            search_key: searchKey,
+            allergens: recipe.allergens,
+            dietary_prefs: recipe.dietaryPrefs,
+            notes: recipe.notes,
+            nutrition_info: recipe.nutritionInfo,
+            image: recipe.image,
+          }])
+          .select()
+          .single();
+
+        if (recipeError) throw recipeError;
+        recipeId = recipeData.id;
+        console.log('New recipe created for favorite:', recipeId);
+      }
       // Then, create the user-recipe relationship with favorite action
       const { error: userRecipeError } = await supabase
         .from('user_recipes')
         .insert([{
           user_id: user.id,
-          recipe_id: recipeData.id,
+          recipe_id: recipeId,
           actions: ['favorite'],
         }]);
 
       if (userRecipeError) throw userRecipeError;
-      console.log('User-recipe relationship created with favorite');
+      console.log('User-recipe relationship created with favorite for recipe:', recipeId);
       
       // Add to local state
       const newRecipe = {
         ...recipe,
-        id: recipeData.id,
+        id: recipeId,
         searchKey,
         isFavorite: true,
         actions: ['favorite'],
-        createdAt: recipeData.created_at,
       };
       
       setSavedRecipes(prev => [newRecipe, ...prev]);
