@@ -692,8 +692,8 @@ export default function ProfileScreen() {
                 <View style={styles.phoneContainer}>
                   <TextInput
                     style={styles.input}
-                    value={profile.phone}
-                    onChangeText={(text) => {
+                    value={phone}
+                    onChangeText={handlePhoneChange}
                       const formatted = formatPhoneNumber(text);
                       setProfile((prev) => ({ ...prev, phone: formatted }));
                     }}
