@@ -70,6 +70,27 @@ export function getSupabaseEmail(): SupabaseClient {
 export const supabaseEmail = getSupabaseEmail();
 export const supabase = getSupabase();
 
+// Test function to verify image upload is working
+export async function testImageUpload(): Promise<void> {
+  try {
+    console.log('🧪 Testing image upload functionality...');
+    const testImageUrl = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+    const testRecipeId = 'test-recipe-' + Date.now();
+    const testFilename = 'test-image.jpg';
+    
+    const result = await uploadImageFromUrl(testImageUrl, testRecipeId, testFilename);
+    
+    if (result) {
+      console.log('🧪 ✅ Test upload successful:', result);
+      console.log('🧪 Image URL:', getStorageImageUrl(testRecipeId, result));
+    } else {
+      console.log('🧪 ❌ Test upload failed');
+    }
+  } catch (error) {
+    console.error('🧪 ❌ Test upload error:', error);
+  }
+}
+
 export async function uploadImageFromUrl(
   imageUrl: string,
   recipeId: string,
