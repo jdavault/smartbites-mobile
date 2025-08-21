@@ -53,6 +53,22 @@ export default function RecipeDetailScreen() {
 
   // Get the image URL - either from Supabase storage or fallback
   const getImageUrl = () => {
+    if (recipe?.image) {
+      // Check if it's already a full URL (from OpenAI)
+      if (recipe.image.startsWith('http://') || recipe.image.startsWith('https://')) {
+        return recipe.image;
+      }
+      // Otherwise, try to get from Supabase storage
+      if (recipe.id) {
+        const storageUrl = getStorageImageUrl('recipe-images', `${recipe.id}/${recipe.image}`);
+        return storageUrl;
+      }
+    }
+    // Fallback to default image
+    return DEFAULT_IMAGE_URL;
+  };
+
+  const getImageUrl_old = () => {
     if (recipe?.image && recipe?.id) {
       // Try to get from Supabase storage first
       const storageUrl = getStorageImageUrl('recipe-images', `${recipe.id}/${recipe.image}`);

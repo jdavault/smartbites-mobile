@@ -298,18 +298,12 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         .replace(/^-+|-+$/g, '');
 
       // Generate and upload image
-      let imageFilename = null;
+      let imageUrl = null;
       try {
         console.log('Generating image for recipe:', recipe.title);
-        const imageUrl = await generateRecipeImage(recipe.title);
+        imageUrl = await generateRecipeImage(recipe.title);
         
         if (imageUrl && imageUrl !== 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg') {
-          // Generate a unique filename
-          const timestamp = Date.now();
-          const filename = `recipe-${timestamp}.png`;
-          
-          // We'll update this after we get the recipe ID
-          imageFilename = filename;
           console.log('Generated image URL:', imageUrl);
         }
       } catch (imageError) {
@@ -335,33 +329,13 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           search_key: searchKey,
           notes: recipe.notes,
           nutrition_info: recipe.nutritionInfo,
-          image: imageFilename, // Store just the filename
+          image: imageUrl, // Store the full URL directly
         }])
         .select()
         .single();
 
       if (recipeError) throw recipeError;
       console.log('Recipe inserted:', recipeData);
-
-      // Now upload the image with the recipe ID as folder name
-      if (imageFilename) {
-        try {
-          const imageUrl = await generateRecipeImage(recipe.title);
-          if (imageUrl && imageUrl !== 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg') {
-            const filePath = `${recipeData.id}/${imageFilename}`;
-            const uploadedPath = await uploadImageFromUrl(imageUrl, 'recipe-images', filePath);
-            
-            if (uploadedPath) {
-              console.log('Image uploaded successfully:', uploadedPath);
-            } else {
-              console.warn('Failed to upload image, keeping filename for fallback');
-            }
-          }
-        } catch (uploadError) {
-          console.error('Error uploading image:', uploadError);
-          // Keep the filename even if upload fails
-        }
-      }
 
       // Insert allergen relationships based on user's selected allergens
       const userAllergenNames = userAllergens.map(a => a.name);
@@ -468,15 +442,12 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         console.log('Using existing recipe for favorite:', recipeId);
       } else {
         // Generate and upload image for new recipe
-        let imageFilename = null;
+        let imageUrl = null;
         try {
           console.log('Generating image for favorite recipe:', recipe.title);
-          const imageUrl = await generateRecipeImage(recipe.title);
+          imageUrl = await generateRecipeImage(recipe.title);
           
           if (imageUrl && imageUrl !== 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg') {
-            const timestamp = Date.now();
-            const filename = `recipe-${timestamp}.png`;
-            imageFilename = filename;
             console.log('Generated image URL for favorite:', imageUrl);
           }
         } catch (imageError) {
@@ -501,7 +472,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
             search_key: searchKey,
             notes: recipe.notes,
             nutrition_info: recipe.nutritionInfo,
-            image: imageFilename, // Store just the filename
+            image: imageUrl, // Store the full URL directly
           }])
           .select()
           .single();
@@ -509,25 +480,6 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         if (recipeError) throw recipeError;
         recipeId = recipeData.id;
         console.log('New recipe created for favorite:', recipeId);
-
-        // Upload the image with recipe ID as folder name
-        if (imageFilename) {
-          try {
-            const imageUrl = await generateRecipeImage(recipe.title);
-            if (imageUrl && imageUrl !== 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg') {
-              const filePath = `${recipeId}/${imageFilename}`;
-              const uploadedPath = await uploadImageFromUrl(imageUrl, 'recipe-images', filePath);
-              
-              if (uploadedPath) {
-                console.log('Favorite recipe image uploaded successfully:', uploadedPath);
-              } else {
-                console.warn('Failed to upload favorite recipe image');
-              }
-            }
-          } catch (uploadError) {
-            console.error('Error uploading favorite recipe image:', uploadError);
-          }
-        }
 
         // Insert allergen relationships based on user's selected allergens for new recipe
         const userAllergenNames = userAllergens.map(a => a.name);
