@@ -278,6 +278,7 @@ export default function SearchScreen() {
       fontFamily: 'Inter-Regular',
       color: colors.textSecondary,
       marginTop: 12,
+      flexShrink: 1
     },
     emptyState: {
       flex: 1,
@@ -364,7 +365,7 @@ export default function SearchScreen() {
         {loading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>            🍳 Cooking up something delicious just for you...</Text>
+            <Text style={styles.loadingText}>🍳 Cooking up something delicious just for you...</Text>
           </View>
         )}
 
