@@ -70,6 +70,99 @@ export function getSupabaseEmail(): SupabaseClient {
 export const supabaseEmail = getSupabaseEmail();
 export const supabase = getSupabase();
 
+// Helper function to fetch image as blob (like your AppWrite fetchImageBlob)
+async function fetchImageBlob(imageUrl: string): Promise<Blob | null> {
+  try {
+    console.log('🖼️ Fetching image blob from URL:', imageUrl);
+    
+    const response = await fetch(imageUrl, {
+      mode: 'cors',
+      headers: {
+        'Accept': 'image/*',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
+    
+    const blob = await response.blob();
+    console.log('🖼️ Image blob created, size:', blob.size);
+    return blob;
+  } catch (error) {
+    console.error('🖼️ Error fetching image blob:', error);
+    return null;
+  }
+}
+
+// Helper function to format image name (like your AppWrite formatImageName)
+function formatImageName(searchQuery: string, allergenNames: string[], extension: string): string {
+  const cleanQuery = searchQuery.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const allergenSuffix = allergenNames.length > 0 ? `-${allergenNames.join('-').toLowerCase()}` : '';
+  return `${cleanQuery}${allergenSuffix}-${Date.now()}.${extension}`;
+}
+
+// Main function to persist recipe image (like your AppWrite persistRecipeImage)
+export async function persistRecipeImage({
+  recipeTitle,
+  searchQuery,
+  allergenNames,
+  recipeId,
+  userId,
+}: {
+  recipeTitle: string;
+  searchQuery: string;
+  recipeId: string;
+  allergenNames: string[];
+  userId: string;
+}): Promise<string> {
+  try {
+    console.log(`🖼️ Starting persistRecipeImage for: ${recipeTitle}`);
+    
+    const preSignedImageUrl = await generateRecipeImage(recipeTitle);
+    console.log(`🖼️ Generated pre-signed image URL: ${preSignedImageUrl} for recipeId: ${recipeId}`);
+    
+    const blob = await fetchImageBlob(preSignedImageUrl);
+    if (!blob) {
+      console.log(`🖼️ No blob found for searchQuery: ${searchQuery}`);
+      return preSignedImageUrl; // Return the OpenAI URL as fallback
+    }
+
+    const fileName = formatImageName(searchQuery, allergenNames, 'png');
+    console.log(`🖼️ Generated fileName: ${fileName}`);
+    console.log(`🖼️ Blob details: size=${blob.size}, type=${blob.type}`);
+    
+    // Upload to Supabase storage (similar to your AppWrite uploadImageToAppwriteStorage)
+    const uploadedFileName = await uploadImageFromUrl(preSignedImageUrl, recipeId, fileName);
+    
+    if (!uploadedFileName) {
+      console.log(`🖼️ Upload failed, returning pre-signed URL`);
+      return preSignedImageUrl;
+    }
+    
+    console.log(`🖼️ UPLOAD file successful: ${uploadedFileName}`);
+    
+    // Update the recipe with the uploaded filename
+    const { error } = await supabase
+      .from('recipes')
+      .update({ image: uploadedFileName })
+      .eq('id', recipeId);
+    
+    if (error) {
+      console.error('🖼️ Error updating recipe with image:', error);
+    }
+    
+    // Return the pre-signed URL temporarily (like AppWrite pattern)
+    // The actual Supabase URL will be used when the recipe is loaded later
+    return preSignedImageUrl;
+    
+  } catch (error) {
+    console.error('🖼️ Error in persistRecipeImage:', error);
+    // Fallback to generating a new image URL
+    return await generateRecipeImage(recipeTitle);
+  }
+}
+
 // Test function to verify image upload is working
 export async function testImageUpload(): Promise<void> {
   try {

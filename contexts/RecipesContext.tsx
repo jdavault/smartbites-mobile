@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { uploadImageFromUrl, getStorageImageUrl } from '@/lib/supabase';
-import { generateRecipeImage } from '@/lib/openai';
+import { uploadImageFromUrl, getStorageImageUrl, persistRecipeImage } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
 import { useAllergens } from './AllergensContext';
 import { useDietary } from './DietaryContext';
@@ -298,22 +297,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         .replace(/^-+|-+$/g, '');
 
       // Generate and upload image
-      let imageFilename = null;
-      try {
-        console.log('🖼️ Starting image generation for recipe:', recipe.title);
-        const imageUrl = await generateRecipeImage(recipe.title);
-        console.log('🖼️ Generated image URL:', imageUrl);
-        
-        if (imageUrl && imageUrl !== 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg') {
-          console.log('🖼️ Valid image URL received, will upload after recipe creation');
-          imageFilename = imageUrl; // Store URL for upload after recipe creation
-        } else {
-          console.log('🖼️ No valid image URL generated');
-        }
-      } catch (imageError) {
-        console.error('🖼️ Error generating image:', imageError);
-        // Continue without image
-      }
+      let persistedImageUrl = null;
 
       // First, insert the recipe
       const { data: recipeData, error: recipeError } = await supabase
@@ -333,7 +317,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           search_key: searchKey,
           notes: recipe.notes,
           nutrition_info: recipe.nutritionInfo,
-          image: null, // We'll update this after uploading
+          image: null, // Will be updated by persistRecipeImage
         }])
         .select()
         .single();
@@ -341,37 +325,19 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       if (recipeError) throw recipeError;
       console.log('Recipe inserted:', recipeData);
 
-      // Now upload the image with the recipe ID
-      if (imageFilename && imageFilename.startsWith('http')) {
-        try {
-          console.log('🖼️ Starting image upload for recipe ID:', recipeData.id);
-          console.log('🖼️ Image URL to upload:', imageFilename);
-          const filename = `recipe-${Date.now()}.png`;
-          console.log('🖼️ Generated filename:', filename);
-          const uploadedFilename = await uploadImageFromUrl(imageFilename, recipeData.id, filename);
-          console.log('🖼️ Upload result:', uploadedFilename);
-          
-          if (uploadedFilename) {
-            // Update the recipe with the filename
-            console.log('🖼️ Updating recipe with image filename:', uploadedFilename);
-            const { error: updateError } = await supabase
-              .from('recipes')
-              .update({ image: uploadedFilename })
-              .eq('id', recipeData.id);
-            
-            if (updateError) {
-              console.error('🖼️ Error updating recipe with image:', updateError);
-            } else {
-              console.log('🖼️ ✅ Image uploaded and recipe updated successfully:', uploadedFilename);
-            }
-          } else {
-            console.log('🖼️ ❌ No filename returned from upload');
-          }
-        } catch (uploadError) {
-          console.error('🖼️ ❌ Error uploading image after recipe creation:', uploadError);
-        }
-      } else {
-        console.log('🖼️ No image to upload - imageFilename:', imageFilename);
+      // Now persist the image using the same pattern as AppWrite
+      try {
+        const userAllergenNames = userAllergens.map(a => a.name);
+        persistedImageUrl = await persistRecipeImage({
+          recipeTitle: recipe.title,
+          searchQuery: recipe.searchQuery,
+          allergenNames: userAllergenNames,
+          recipeId: recipeData.id,
+          userId: user.id,
+        });
+        console.log('🖼️ ✅ Image persisted successfully:', persistedImageUrl);
+      } catch (imageError) {
+        console.error('🖼️ Error persisting image:', imageError);
       }
 
       // Insert allergen relationships based on user's selected allergens
@@ -479,23 +445,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         console.log('Using existing recipe for favorite:', recipeId);
       } else {
         // Generate and upload image for new recipe
-        let imageFilename = null;
-        try {
-          console.log('🖼️ Generating image for favorite recipe:', recipe.title);
-          const imageUrl = await generateRecipeImage(recipe.title);
-          console.log('🖼️ Generated favorite image URL:', imageUrl);
-          
-          if (imageUrl && imageUrl !== 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg') {
-            console.log('🖼️ Valid favorite image URL received');
-            
-            // Store the URL temporarily, we'll upload after getting recipe ID
-            imageFilename = imageUrl;
-          } else {
-            console.log('🖼️ No valid favorite image URL generated');
-          }
-        } catch (imageError) {
-          console.error('🖼️ Error generating image for favorite:', imageError);
-        }
+        let persistedImageUrl = null;
 
         // Recipe doesn't exist, create a new one
         const { data: recipeData, error: recipeError } = await supabase
@@ -515,7 +465,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
             search_key: searchKey,
             notes: recipe.notes,
             nutrition_info: recipe.nutritionInfo,
-            image: null, // We'll update this after uploading
+            image: null, // Will be updated by persistRecipeImage
           }])
           .select()
           .single();
@@ -524,35 +474,19 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         recipeId = recipeData.id;
         console.log('New recipe created for favorite:', recipeId);
 
-        // Now upload the image with the recipe ID
-        if (imageFilename && imageFilename.startsWith('http')) {
-          try {
-            console.log('🖼️ Starting favorite image upload for recipe ID:', recipeId);
-            const filename = `recipe-${Date.now()}.png`;
-            const uploadedFilename = await uploadImageFromUrl(imageFilename, recipeId, filename);
-            console.log('🖼️ Favorite upload result:', uploadedFilename);
-            
-            if (uploadedFilename) {
-              // Update the recipe with the filename
-              console.log('🖼️ Updating favorite recipe with image filename:', uploadedFilename);
-              const { error: updateError } = await supabase
-                .from('recipes')
-                .update({ image: uploadedFilename })
-                .eq('id', recipeId);
-              
-              if (updateError) {
-                console.error('🖼️ Error updating favorite recipe with image:', updateError);
-              } else {
-                console.log('🖼️ ✅ Favorite image uploaded and recipe updated:', uploadedFilename);
-              }
-            } else {
-              console.log('🖼️ ❌ No filename returned from favorite upload');
-            }
-          } catch (uploadError) {
-            console.error('🖼️ ❌ Error uploading image for favorite recipe:', uploadError);
-          }
-        } else {
-          console.log('🖼️ No favorite image to upload - imageFilename:', imageFilename);
+        // Now persist the image using the same pattern as AppWrite
+        try {
+          const userAllergenNames = userAllergens.map(a => a.name);
+          persistedImageUrl = await persistRecipeImage({
+            recipeTitle: recipe.title,
+            searchQuery: recipe.searchQuery,
+            allergenNames: userAllergenNames,
+            recipeId: recipeId,
+            userId: user.id,
+          });
+          console.log('🖼️ ✅ Favorite image persisted successfully:', persistedImageUrl);
+        } catch (imageError) {
+          console.error('🖼️ Error persisting favorite image:', imageError);
         }
 
         // Insert allergen relationships based on user's selected allergens for new recipe
