@@ -890,25 +890,14 @@ export default function RegisterScreen() {
                     returnKeyType="next"
                     onSubmitEditing={() => setShowStates(true)}
                   />
-                  <View style={[styles.flex1, { position: 'relative' }]}>
-                    <TextInput
-                      style={styles.input}
-                      value={state}
-                      placeholder="State"
-                      placeholderTextColor={colors.textSecondary}
-                      onFocus={() => setShowStates(true)}
-                      onKeyPress={() => setShowStates(true)}
-                      showSoftInputOnFocus={false}
-                      caretHidden={true}
-                      autoCapitalize="characters"
-                      maxLength={2}
-                    />
-                    <TouchableOpacity
-                      style={styles.stateOverlay}
-                      onPress={() => setShowStates(true)}
-                      activeOpacity={1}
-                    />
-                  </View>
+                  <TouchableOpacity
+                    style={[styles.input, styles.flex1, styles.stateButton]}
+                    onPress={() => setShowStates(true)}
+                  >
+                    <Text style={styles.stateButtonText}>
+                      {state || 'State'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
 
                 <View style={styles.row}>
