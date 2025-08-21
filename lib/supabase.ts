@@ -78,8 +78,13 @@ export async function uploadImageFromUrl(
   try {
     console.log('🖼️ Fetching image from URL:', imageUrl);
     
-    // Fetch image directly
-    const response = await fetch(imageUrl);
+    // Fetch image from URL (this will work on web with OpenAI URLs)
+    const response = await fetch(imageUrl, {
+      mode: 'cors',
+      headers: {
+        'Accept': 'image/*',
+      },
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
