@@ -237,11 +237,6 @@ export default function ProfileScreen() {
           phone: profile.phone.replace(/\D/g, ''),
           updated_at: new Date().toISOString(),
         },
-        stateItemTextOnly: {
-          fontSize: 15,
-          fontFamily: 'Inter-Regular',
-          color: colors.text,
-        },
         { onConflict: 'user_id' }
       );
 
@@ -318,6 +313,11 @@ export default function ProfileScreen() {
       justifyContent: 'space-between',
     },
     stateButtonText: {
+      fontSize: 15,
+      fontFamily: 'Inter-Regular',
+      color: colors.text,
+    },
+    stateItemTextOnly: {
       fontSize: 15,
       fontFamily: 'Inter-Regular',
       color: colors.text,
@@ -692,8 +692,8 @@ export default function ProfileScreen() {
                 <View style={styles.phoneContainer}>
                   <TextInput
                     style={styles.input}
-                    value={phone}
-                    onChangeText={handlePhoneChange}
+                    value={profile.phone}
+                    onChangeText={(text) => {
                       const formatted = formatPhoneNumber(text);
                       setProfile((prev) => ({ ...prev, phone: formatted }));
                     }}
