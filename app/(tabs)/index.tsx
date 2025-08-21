@@ -49,6 +49,8 @@ export default function SearchScreen() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [savingRecipeId, setSavingRecipeId] = useState<string | null>(null);
+  const [favoritingRecipeId, setFavoritingRecipeId] = useState<string | null>(null);
   const [selectedAllergens, setSelectedAllergens] = useState<
     { $id: string; name: string }[]
   >([]);
@@ -97,7 +99,7 @@ export default function SearchScreen() {
 
   const handleSaveRecipe = async (recipe: any) => {
     try {
-      setLoading(true);
+      setSavingRecipeId(recipe.title);
       await saveRecipe(recipe);
       Alert.alert('Success', 'Recipe saved to your collection!');
       setSearchResults([]);
@@ -106,13 +108,13 @@ export default function SearchScreen() {
       console.error('Save recipe error:', error);
       Alert.alert('Error', 'Failed to save recipe. Please try again.');
     } finally {
-      setLoading(false);
+      setSavingRecipeId(null);
     }
   };
 
   const handleSaveAndFavoriteRecipe = async (recipe: any) => {
     try {
-      setLoading(true);
+      setFavoritingRecipeId(recipe.title);
       await saveAndFavoriteRecipe(recipe);
       Alert.alert('Success', 'Recipe saved and added to favorites!');
       setSearchResults([]);
@@ -121,7 +123,7 @@ export default function SearchScreen() {
       console.error('Save and favorite recipe error:', error);
       Alert.alert('Error', 'Failed to save recipe. Please try again.');
     } finally {
-      setLoading(false);
+      setFavoritingRecipeId(null);
     }
   };
 
@@ -399,6 +401,8 @@ export default function SearchScreen() {
                 onSaveAndFavorite={() => handleSaveAndFavoriteRecipe(recipe)}
                 showSaveButton={true}
                 selectedAllergens={selectedAllergens}
+                isSaving={savingRecipeId === recipe.title}
+                isFavoriting={favoritingRecipeId === recipe.title}
               />
             ))}
           </View>
