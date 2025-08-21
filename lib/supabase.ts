@@ -76,12 +76,6 @@ export async function uploadImageFromUrl(
   recipeId: string,
   filename: string
 ): Promise<string | null> {
-  // Skip upload on web platform to avoid CORS issues
-  if (Platform.OS === 'web') {
-    console.log('🖼️ Skipping image upload on web platform');
-    return null;
-  }
-
   try {
     console.log('🖼️ Fetching image from URL:', imageUrl);
     // Fetch the image from the URL
