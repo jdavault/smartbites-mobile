@@ -84,7 +84,9 @@ export default function SearchScreen() {
       console.error('Search error:', error);
       Alert.alert(
         'Search Error',
-        'Failed to search for recipes. Please try again.'
+        error instanceof Error && error.message.includes('OpenAI API key') 
+          ? 'OpenAI API key is required for recipe generation. Please configure your API key.'
+          : 'Failed to search for recipes. Please try again.'
       );
     } finally {
       setLoading(false);

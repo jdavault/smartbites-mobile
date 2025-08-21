@@ -54,8 +54,7 @@ export async function generateRecipe(
 ): Promise<GeneratedRecipe> {
   // Check if API key is available
   if (!process.env.EXPO_PUBLIC_OPENAI_API_KEY) {
-    console.warn('OpenAI API key not found. Please add EXPO_PUBLIC_OPENAI_API_KEY to your environment variables.');
-    return generateMockRecipe(query, allergens, dietaryPrefs);
+    throw new Error('OpenAI API key not found. Please add EXPO_PUBLIC_OPENAI_API_KEY to your environment variables.');
   }
 
   try {
@@ -180,8 +179,7 @@ export async function generateRecipes(
   // Check if API key is available
   const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
   if (!apiKey || apiKey.trim() === '') {
-    console.warn('OpenAI API key not found. Please add EXPO_PUBLIC_OPENAI_API_KEY to your environment variables.');
-    return [generateMockRecipe(query, allergens, dietaryPrefs)];
+    throw new Error('OpenAI API key not found. Please add EXPO_PUBLIC_OPENAI_API_KEY to your environment variables.');
   }
 
   try {

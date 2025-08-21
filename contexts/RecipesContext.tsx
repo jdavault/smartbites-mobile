@@ -130,7 +130,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user) {
       fetchRecipes();
-      loadFeaturedRecipes();
+      // Don't load static featured recipes, only database recipes
+      loadRandomFeaturedRecipes();
     } else {
       setSavedRecipes([]);
       setFeaturedRecipes([]);
@@ -138,29 +139,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const loadFeaturedRecipes = () => {
-    // Load static featured recipes
-    const staticFeaturedRecipes: Recipe[] = [
-      {
-        id: 'featured-1',
-        title: 'Mediterranean Quinoa Bowl',
-        headNote: 'A nutritious and colorful bowl packed with Mediterranean flavors',
-        description: 'Fresh quinoa topped with roasted vegetables, olives, and a tangy lemon dressing',
-        ingredients: [],
-        instructions: [],
-        prepTime: '',
-        cookTime: '',
-        servings: 4,
-        difficulty: 'easy',
-        tags: [],
-        searchQuery: '',
-        searchKey: '',
-        allergens: [],
-        dietaryPrefs: [],
-        notes: '',
-        nutritionInfo: '',
-      }
-    ];
-    setFeaturedRecipes(staticFeaturedRecipes);
+    // Don't load any static recipes - only load from database
+    setFeaturedRecipes([]);
   };
 
   // Load 5 random recipes that match user's allergens and dietary preferences
