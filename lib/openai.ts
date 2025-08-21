@@ -111,7 +111,6 @@ export async function generateRecipe(
           {
             "title": "Recipe Title",
             "headNote": "Brief, enticing description that explains the dish",
-            "description": "Brief, enticing description that explains the dish - context or extra tips",
             "ingredients": ["Ingredient 1", "Ingredient 2"],
             "instructions": ["Step 1", "Step 2"],
             "prepTime": "15 minutes",
@@ -120,9 +119,7 @@ export async function generateRecipe(
             "difficulty": "easy",
             "tags": ["tag1", "tag2"],
             "allergens": [],
-            "dietaryPrefs": [],
-            "notes": "for substitutions or troubleshooting",
-            "nutritionInfo": "nutrition information"
+            "dietaryPrefs": []
           }
         ]
       }
@@ -305,7 +302,6 @@ export async function generateRecipes(
           {
             "title": "Recipe Title",
             "headNote": "Brief, enticing description that explains the dish",
-            "description": "Brief, enticing description that explains the dish - context or extra tips",
             "ingredients": ["Ingredient 1", "Ingredient 2"],
             "instructions": ["Step 1", "Step 2"],
             "prepTime": "15 minutes",
@@ -314,9 +310,7 @@ export async function generateRecipes(
             "difficulty": "easy",
             "tags": ["tag1", "tag2"],
             "allergens": [],
-            "dietaryPrefs": [],
-            "notes": "for substitutions or troubleshooting",
-            "nutritionInfo": "nutrition information"
+            "dietaryPrefs": []
           }
         ]
       }
