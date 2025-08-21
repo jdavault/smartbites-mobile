@@ -56,9 +56,9 @@ export default function RecipeDetailScreen() {
   // Get the image URL - either from Supabase storage or fallback
   const getImageUrl = () => {
     if (recipe?.image) {
-      // Get from Supabase storage using user_id/filename structure
-      if (user?.id) {
-        const storageUrl = getStorageImageUrl(user.id, recipe.image);
+      // Get from Supabase storage using recipe_id/filename structure
+      if (recipe.id) {
+        const storageUrl = getStorageImageUrl(recipe.id, recipe.image);
         return storageUrl;
       }
     }
