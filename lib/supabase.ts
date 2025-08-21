@@ -76,17 +76,10 @@ export async function uploadImageFromUrl(
   filename: string
 ): Promise<string | null> {
   try {
-    console.log('🖼️ Fetching image from URL via proxy:', imageUrl);
+    console.log('🖼️ Fetching image from URL:', imageUrl);
     
-    // Use Edge Function proxy to avoid CORS issues
-    const proxyUrl = `${supabaseUrl}/functions/v1/proxy-image?url=${encodeURIComponent(imageUrl)}`;
-    console.log('🖼️ Proxy URL:', proxyUrl);
-    
-    const response = await fetch(proxyUrl, {
-      headers: {
-        'Authorization': `Bearer ${supabaseKey}`,
-      },
-    });
+    // Fetch image directly
+    const response = await fetch(imageUrl);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
