@@ -819,7 +819,7 @@ export default function RegisterScreen() {
 
                 {/* Names */}
 <View style={styles.row}>
-  <View style={styles.flex2}>
+  <View style={styles.flex1}>
     <TextInput
       style={styles.input}
       value={firstName}
@@ -833,7 +833,7 @@ export default function RegisterScreen() {
     />
   </View>
 
-  <View style={styles.flex1}>
+  <View style={styles.flex2}>
     <TextInput
       style={styles.input}
       value={lastName}
