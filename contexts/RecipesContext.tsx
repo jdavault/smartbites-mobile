@@ -152,16 +152,43 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
+      // Get allergen and dietary preference IDs from the lookup tables
+      const userAllergenNames = userAllergens.map(a => a.name);
+      const userDietaryNames = userDietaryPrefs.map(d => d.name);
+      
+      let allergenIds: string[] = [];
+      let dietaryIds: string[] = [];
+      
+      if (userAllergenNames.length > 0) {
+        const { data: allergenData, error: allergenError } = await supabase
+          .from('allergens')
+          .select('id')
+          .in('name', userAllergenNames);
+        
+        if (allergenError) throw allergenError;
+        allergenIds = allergenData?.map(a => a.id) || [];
+      }
+      
+      if (userDietaryNames.length > 0) {
+        const { data: dietaryData, error: dietaryError } = await supabase
+          .from('dietary_prefs')
+          .select('id')
+          .in('name', userDietaryNames);
+        
+        if (dietaryError) throw dietaryError;
+        dietaryIds = dietaryData?.map(d => d.id) || [];
+      }
+
       // Get recipes with their allergens and dietary preferences using joins
       const { data, error } = await supabase
         .from('recipes')
         .select(`
           *,
           recipe_allergens (
-            allergens (name)
+            allergen_id
           ),
           recipe_dietary_prefs (
-            dietary_prefs (name)
+            dietary_pref_id
           )
         `)
         .limit(20) // Get more than 5 to randomize from
@@ -171,28 +198,37 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
       let filteredRecipes = data || [];
 
-      const userAllergenNames = userAllergens.map(a => a.name);
-      const userDietaryNames = userDietaryPrefs.map(d => d.name);
-
       // Filter out recipes that contain user's allergens
-      if (userAllergenNames.length > 0) {
+      if (allergenIds.length > 0) {
         filteredRecipes = filteredRecipes.filter(recipe => {
-          const recipeAllergens = recipe.recipe_allergens?.map((ra: any) => ra.allergens.name) || [];
-          return !recipeAllergens.some((allergen: string) => userAllergenNames.includes(allergen));
+          const recipeAllergenIds = recipe.recipe_allergens?.map((ra: any) => ra.allergen_id) || [];
+          return !recipeAllergenIds.some((allergenId: string) => allergenIds.includes(allergenId));
         });
       }
 
       // Filter by dietary preferences if user has any
-      if (userDietaryNames.length > 0) {
+      if (dietaryIds.length > 0) {
         filteredRecipes = filteredRecipes.filter(recipe => {
-          const recipeDietaryPrefs = recipe.recipe_dietary_prefs?.map((rd: any) => rd.dietary_prefs.name) || [];
-          return userDietaryNames.some(userPref => recipeDietaryPrefs.includes(userPref));
+          const recipeDietaryIds = recipe.recipe_dietary_prefs?.map((rd: any) => rd.dietary_pref_id) || [];
+          return dietaryIds.some(userPrefId => recipeDietaryIds.includes(userPrefId));
         });
       }
 
       // Randomize and take 5
       const shuffled = filteredRecipes.sort(() => 0.5 - Math.random());
       const selectedRecipes = shuffled.slice(0, 5);
+
+      // Get allergen and dietary preference names for display
+      const { data: allAllergens } = await supabase
+        .from('allergens')
+        .select('id, name');
+      
+      const { data: allDietaryPrefs } = await supabase
+        .from('dietary_prefs')
+        .select('id, name');
+      
+      const allergenMap = new Map(allAllergens?.map(a => [a.id, a.name]) || []);
+      const dietaryMap = new Map(allDietaryPrefs?.map(d => [d.id, d.name]) || []);
 
       const formattedRecipes: Recipe[] = selectedRecipes.map(recipe => ({
         id: recipe.id,
@@ -208,8 +244,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         tags: recipe.tags || [],
         searchQuery: recipe.search_query || '',
         searchKey: recipe.search_key || '',
-        allergens: recipe.recipe_allergens?.map((ra: any) => ra.allergens.name) || [],
-        dietaryPrefs: recipe.recipe_dietary_prefs?.map((rd: any) => rd.dietary_prefs.name) || [],
+        allergens: recipe.recipe_allergens?.map((ra: any) => allergenMap.get(ra.allergen_id)).filter(Boolean) || [],
+        dietaryPrefs: recipe.recipe_dietary_prefs?.map((rd: any) => dietaryMap.get(rd.dietary_pref_id)).filter(Boolean) || [],
         notes: recipe.notes || '',
         nutritionInfo: recipe.nutrition_info || '',
         image: recipe.image,
