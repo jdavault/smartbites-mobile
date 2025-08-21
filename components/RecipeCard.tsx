@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Recipe } from '@/contexts/RecipesContext';
 import { Heart, BookmarkPlus, Clock, Users, ChefHat } from 'lucide-react-native';
@@ -28,6 +29,13 @@ export default function RecipeCard({
   showHeartButton = false
 }: RecipeCardProps) {
   const { colors } = useTheme();
+  const router = useRouter();
+
+  const handleCardPress = () => {
+    if (recipe.id) {
+      router.push(`/recipe/${recipe.id}`);
+    }
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
