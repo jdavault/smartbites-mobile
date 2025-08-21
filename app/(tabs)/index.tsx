@@ -18,6 +18,8 @@ import { useRecipes } from '@/contexts/RecipesContext';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useAllergens } from '@/contexts/AllergensContext';
 import { useDietary } from '@/contexts/DietaryContext';
+import { ALLERGENS } from '@/contexts/AllergensContext';
+import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 import { generateRecipes } from '@/lib/openai';
 import { Search, RefreshCw } from 'lucide-react-native';
 import RecipeCard from '@/components/RecipeCard';
@@ -40,8 +42,8 @@ export default function SearchScreen() {
     generateFeaturedRecipes,
     loading: recipesLoading,
   } = useRecipes();
-  const { userAllergens } = useAllergens();
-  const { userDietaryPrefs } = useDietary();
+  const { userAllergens, toggleAllergen } = useAllergens();
+  const { userDietaryPrefs, toggleDietaryPref } = useDietary();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -124,37 +126,41 @@ export default function SearchScreen() {
   };
 
   const handleToggleAllergenFilter = (allergenName: string) => {
-    const allergen = {
-      $id: allergenName.toLowerCase().replace(/\s+/g, '-'),
-      name: allergenName,
-    };
-    setSelectedAllergens((prev) => {
-      const exists = prev.some((a) => a.name === allergenName);
-      return exists
-        ? prev.filter((a) => a.name !== allergenName)
-        : [...prev, allergen];
-    });
+    // Find the allergen object from the ALLERGENS constant
+    const allergen = ALLERGENS.find(a => a.name === allergenName);
+    if (allergen) {
+      // Use the context method to toggle the allergen (this updates the database)
+      toggleAllergen(allergen);
+    }
   };
 
   const handleToggleDietaryFilter = (dietaryName: string) => {
-    const dietary = {
-      $id: dietaryName.toLowerCase().replace(/\s+/g, '-'),
-      name: dietaryName,
-    };
-    setSelectedDietary((prev) => {
-      const exists = prev.some((d) => d.name === dietaryName);
-      return exists
-        ? prev.filter((d) => d.name !== dietaryName)
-        : [...prev, dietary];
-    });
+    // Find the dietary preference object from the DIETARY_PREFERENCES constant
+    const dietary = DIETARY_PREFERENCES.find(d => d.name === dietaryName);
+    if (dietary) {
+      // Use the context method to toggle the dietary preference (this updates the database)
+      toggleDietaryPref(dietary);
+    }
   };
 
   const handleClearAllergenFilters = () => {
-    setSelectedAllergens([]);
+    // Clear all allergens by toggling off each selected one
+    selectedAllergens.forEach(allergen => {
+      const allergenObj = ALLERGENS.find(a => a.name === allergen.name);
+      if (allergenObj) {
+        toggleAllergen(allergenObj);
+      }
+    });
   };
 
   const handleClearDietaryFilters = () => {
-    setSelectedDietary([]);
+    // Clear all dietary preferences by toggling off each selected one
+    selectedDietary.forEach(dietary => {
+      const dietaryObj = DIETARY_PREFERENCES.find(d => d.name === dietary.name);
+      if (dietaryObj) {
+        toggleDietaryPref(dietaryObj);
+      }
+    });
   };
 
   const onRefresh = async () => {
