@@ -70,12 +70,6 @@ export function getSupabaseEmail(): SupabaseClient {
 export const supabaseEmail = getSupabaseEmail();
 export const supabase = getSupabase();
 
-// Helper function to upload image from URL to Supabase storage
-export async function uploadImageFromUrl(
-  imageUrl: string,
-  recipeId: string,
-  filename: string
-): Promise<string | null> {
   try {
     console.log('🖼️ Fetching image from URL:', imageUrl);
     // Fetch the image from the URL
