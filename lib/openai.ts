@@ -328,7 +328,7 @@ export async function generateRecipes(
         body: JSON.stringify({
           model: 'gpt-4o-mini', // better JSON compliance
           temperature: 0.4,
-          max_tokens: 1600, // lower than 3500
+          max_tokens: 4000, // increased to allow complete JSON response
           seed: 7, // more deterministic & compact
           response_format: {
             // stricter, less rambling
