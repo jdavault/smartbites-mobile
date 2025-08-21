@@ -410,6 +410,8 @@ export default function RegisterScreen() {
 
        zipContainer: { width: 80 },
        phoneContainer: { width: 140 },
+       lastNameContainer: { width: 140 },
+       firstNameContainer: { width: 140 },
 
         // Platform-specific vertical padding (web-safe)
         input: {
@@ -819,8 +821,9 @@ export default function RegisterScreen() {
 
                 {/* Names */}
                 <View style={styles.row}>
+                  <View style={styles.firstNameContainer}>
                   <TextInput
-                    style={[styles.input, { flex: 0.7 }]}
+                    style={styles.input}
                     value={firstName}
                     onChangeText={setFirstName}
                     placeholder="First name"
@@ -830,8 +833,10 @@ export default function RegisterScreen() {
                     textContentType="givenName"
                     autoComplete="given-name"
                   />
+                  </View>
+                   <View style={styles.firstNameContainer}>
                   <TextInput
-                    style={[styles.input, { flex: 1.3 }]}
+                    style={styles.input}
                     value={lastName}
                     onChangeText={setLastName}
                     placeholder="Last name"
@@ -841,6 +846,7 @@ export default function RegisterScreen() {
                     textContentType="familyName"
                     autoComplete="family-name"
                   />
+                   </View>
                 </View>
                 {/* Address */}
                 <TextInput
