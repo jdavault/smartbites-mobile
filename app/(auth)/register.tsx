@@ -747,30 +747,6 @@ export default function RegisterScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Names */}
-                <View style={styles.row}>
-                  <TextInput
-                    style={[styles.input, styles.flex1]}
-                    value={firstName}
-                    onChangeText={setFirstName}
-                    placeholder="First name"
-                    placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    textContentType="givenName"
-                  />
-                  <TextInput
-                    style={[styles.input, styles.flex1]}
-                    value={lastName}
-                    onChangeText={setLastName}
-                    placeholder="Last name"
-                    placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    textContentType="familyName"
-                  />
-                </View>
-
                 {/* Address */}
                 <TextInput
                   style={styles.input}

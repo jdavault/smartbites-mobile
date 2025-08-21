@@ -54,7 +54,7 @@ export async function generateRecipe(
 ): Promise<GeneratedRecipe> {
   // Check if API key is available
   if (!process.env.EXPO_PUBLIC_OPENAI_API_KEY) {
-    console.warn('OpenAI API key not found. Using mock recipe.');
+    console.warn('OpenAI API key not found. Please add EXPO_PUBLIC_OPENAI_API_KEY to your environment variables.');
     return generateMockRecipe(query, allergens, dietaryPrefs);
   }
 
@@ -162,7 +162,7 @@ export async function generateRecipe(
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes('401')) {
-      console.error('OpenAI API key is invalid or missing. Using mock recipe.');
+      console.error('OpenAI API key is invalid. Please check your EXPO_PUBLIC_OPENAI_API_KEY.');
     } else {
       console.error('Error generating recipe:', error);
     }
@@ -179,7 +179,7 @@ export async function generateRecipes(
 ): Promise<GeneratedRecipe[]> {
   // Check if API key is available
   if (!process.env.EXPO_PUBLIC_OPENAI_API_KEY) {
-    console.warn('OpenAI API key not found. Using mock recipes.');
+    console.warn('OpenAI API key not found. Please add EXPO_PUBLIC_OPENAI_API_KEY to your environment variables.');
     return [generateMockRecipe(query, allergens, dietaryPrefs)];
   }
 
@@ -258,7 +258,7 @@ Return ONLY valid JSON in this exact format:
     return recipes.slice(0, 5).map(r => ({ ...r, searchQuery: query }));
   } catch (error) {
     if (error instanceof Error && error.message.includes('401')) {
-      console.error('OpenAI API key is invalid or missing. Using mock recipes.');
+      console.error('OpenAI API key is invalid. Please check your EXPO_PUBLIC_OPENAI_API_KEY.');
       return [generateMockRecipe(query, allergens, dietaryPrefs)];
     } else {
       console.error('Error generating recipes:', error);
