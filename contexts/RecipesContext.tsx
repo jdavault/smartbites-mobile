@@ -152,25 +152,18 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      const userAllergenNames = userAllergens.map(a => a.name);
-      const userDietaryNames = userDietaryPrefs.map(d => d.name);
-
-      // Build the query to find recipes that:
-      // 1. DON'T contain user's allergens
-      // 2. DO contain user's dietary preferences (if any)
-      let query = supabase
+      // Get recipes with their allergens and dietary preferences using joins
+      const { data, error } = await supabase
         .from('recipes')
-        .select('*');
-
-      // If user has allergens, exclude recipes that contain them
-      if (userAllergenNames.length > 0) {
-        // Use NOT to exclude recipes that have any of the user's allergens
-        userAllergenNames.forEach(allergen => {
-          query = query.not('allergens', 'cs', `["${allergen}"]`);
-        });
-      }
-
-      const { data, error } = await query
+        .select(`
+          *,
+          recipe_allergens (
+            allergens (name)
+          ),
+          recipe_dietary_prefs (
+            dietary_prefs (name)
+          )
+        `)
         .limit(20) // Get more than 5 to randomize from
         .order('created_at', { ascending: false });
 
@@ -178,13 +171,22 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
       let filteredRecipes = data || [];
 
-      // Further filter by dietary preferences if user has any
+      const userAllergenNames = userAllergens.map(a => a.name);
+      const userDietaryNames = userDietaryPrefs.map(d => d.name);
+
+      // Filter out recipes that contain user's allergens
+      if (userAllergenNames.length > 0) {
+        filteredRecipes = filteredRecipes.filter(recipe => {
+          const recipeAllergens = recipe.recipe_allergens?.map((ra: any) => ra.allergens.name) || [];
+          return !recipeAllergens.some((allergen: string) => userAllergenNames.includes(allergen));
+        });
+      }
+
+      // Filter by dietary preferences if user has any
       if (userDietaryNames.length > 0) {
         filteredRecipes = filteredRecipes.filter(recipe => {
-          const recipeDietaryPrefs = recipe.dietary_prefs || [];
-          return userDietaryNames.some(userPref => 
-            recipeDietaryPrefs.includes(userPref)
-          );
+          const recipeDietaryPrefs = recipe.recipe_dietary_prefs?.map((rd: any) => rd.dietary_prefs.name) || [];
+          return userDietaryNames.some(userPref => recipeDietaryPrefs.includes(userPref));
         });
       }
 
@@ -206,8 +208,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         tags: recipe.tags || [],
         searchQuery: recipe.search_query || '',
         searchKey: recipe.search_key || '',
-        allergens: recipe.allergens || [],
-        dietaryPrefs: recipe.dietary_prefs || [],
+        allergens: recipe.recipe_allergens?.map((ra: any) => ra.allergens.name) || [],
+        dietaryPrefs: recipe.recipe_dietary_prefs?.map((rd: any) => rd.dietary_prefs.name) || [],
         notes: recipe.notes || '',
         nutritionInfo: recipe.nutrition_info || '',
         image: recipe.image,
