@@ -130,6 +130,65 @@ export async function generateRecipe(
         - Always be mindful that your recipe should teach and guide any home cook to success, regardless of their skill level.
       `;
 
+        const schema = {
+      name: 'recipes_payload',
+      schema: {
+        type: 'object',
+        properties: {
+          recipes: {
+            type: 'array',
+            minItems: 5,
+            maxItems: 5,
+            items: {
+              type: 'object',
+              properties: {
+                title: { type: 'string' },
+                headNote: { type: 'string', maxLength: 160 },
+                ingredients: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  maxItems: 12,
+                },
+                instructions: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  maxItems: 8,
+                },
+                prepTime: { type: 'string' },
+                cookTime: { type: 'string' },
+                servings: { type: 'integer' },
+                difficulty: {
+                  type: 'string',
+                  enum: ['easy', 'medium', 'hard'],
+                },
+                tags: { type: 'array', items: { type: 'string' }, maxItems: 6 },
+                allergens: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  maxItems: 6,
+                },
+              },
+              required: [
+                'title',
+                'headNote',
+                'ingredients',
+                'instructions',
+                'prepTime',
+                'cookTime',
+                'servings',
+                'difficulty',
+                'tags',
+                'allergens',
+              ],
+              additionalProperties: false,
+            },
+          },
+        },
+        required: ['recipes'],
+        additionalProperties: false,
+      },
+    };
+
     const response = await retryWithBackoff(() =>
       fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -139,7 +198,10 @@ export async function generateRecipe(
         },
         body: JSON.stringify({
           model: 'gpt-3.5-turbo',
-          response_format: { type: 'json_object' },
+          response_format: {
+            type: 'json_object',
+            json_schema: schema,
+          },
           messages: [
             {
               role: 'system',
@@ -151,7 +213,7 @@ export async function generateRecipe(
             },
           ],
           max_tokens: 3000,
-          temperature: 0.7,
+          temperature: 0.4,
         }),
       })
     );
