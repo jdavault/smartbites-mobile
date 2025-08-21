@@ -272,6 +272,53 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       if (recipeError) throw recipeError;
       console.log('Recipe inserted:', recipeData);
 
+      // Insert allergen relationships
+      if (recipe.allergens && recipe.allergens.length > 0) {
+        // Get allergen IDs by name
+        const { data: allergenData, error: allergenError } = await supabase
+          .from('allergens')
+          .select('id, name')
+          .in('name', recipe.allergens);
+
+        if (allergenError) throw allergenError;
+
+        if (allergenData && allergenData.length > 0) {
+          const allergenRelationships = allergenData.map(allergen => ({
+            recipe_id: recipeData.id,
+            allergen_id: allergen.id,
+          }));
+
+          const { error: allergenRelError } = await supabase
+            .from('recipe_allergens')
+            .insert(allergenRelationships);
+
+          if (allergenRelError) throw allergenRelError;
+        }
+      }
+
+      // Insert dietary preference relationships
+      if (recipe.dietaryPrefs && recipe.dietaryPrefs.length > 0) {
+        // Get dietary preference IDs by name
+        const { data: dietaryData, error: dietaryError } = await supabase
+          .from('dietary_prefs')
+          .select('id, name')
+          .in('name', recipe.dietaryPrefs);
+
+        if (dietaryError) throw dietaryError;
+
+        if (dietaryData && dietaryData.length > 0) {
+          const dietaryRelationships = dietaryData.map(dietary => ({
+            recipe_id: recipeData.id,
+            dietary_pref_id: dietary.id,
+          }));
+
+          const { error: dietaryRelError } = await supabase
+            .from('recipe_dietary_prefs')
+            .insert(dietaryRelationships);
+
+          if (dietaryRelError) throw dietaryRelError;
+        }
+      }
       // Then, create the user-recipe relationship
       const { error: userRecipeError } = await supabase
         .from('user_recipes')
@@ -316,9 +363,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         .from('recipes')
         .select('id')
         .eq('title', recipe.title)
-        .eq('search_key', searchKey)
-        .eq('allergens', JSON.stringify(recipe.allergens))
-        .eq('dietary_prefs', JSON.stringify(recipe.dietaryPrefs));
+        .eq('search_key', searchKey);
 
       if (searchError) throw searchError;
 
@@ -355,7 +400,56 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         if (recipeError) throw recipeError;
         recipeId = recipeData.id;
         console.log('New recipe created for favorite:', recipeId);
+
+        // Insert allergen relationships for new recipe
+        if (recipe.allergens && recipe.allergens.length > 0) {
+          // Get allergen IDs by name
+          const { data: allergenData, error: allergenError } = await supabase
+            .from('allergens')
+            .select('id, name')
+            .in('name', recipe.allergens);
+
+          if (allergenError) throw allergenError;
+
+          if (allergenData && allergenData.length > 0) {
+            const allergenRelationships = allergenData.map(allergen => ({
+              recipe_id: recipeId,
+              allergen_id: allergen.id,
+            }));
+
+            const { error: allergenRelError } = await supabase
+              .from('recipe_allergens')
+              .insert(allergenRelationships);
+
+            if (allergenRelError) throw allergenRelError;
+          }
+        }
+
+        // Insert dietary preference relationships for new recipe
+        if (recipe.dietaryPrefs && recipe.dietaryPrefs.length > 0) {
+          // Get dietary preference IDs by name
+          const { data: dietaryData, error: dietaryError } = await supabase
+            .from('dietary_prefs')
+            .select('id, name')
+            .in('name', recipe.dietaryPrefs);
+
+          if (dietaryError) throw dietaryError;
+
+          if (dietaryData && dietaryData.length > 0) {
+            const dietaryRelationships = dietaryData.map(dietary => ({
+              recipe_id: recipeId,
+              dietary_pref_id: dietary.id,
+            }));
+
+            const { error: dietaryRelError } = await supabase
+              .from('recipe_dietary_prefs')
+              .insert(dietaryRelationships);
+
+            if (dietaryRelError) throw dietaryRelError;
+          }
+        }
       }
+
       // Then, create the user-recipe relationship with favorite action
       const { error: userRecipeError } = await supabase
         .from('user_recipes')
