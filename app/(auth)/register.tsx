@@ -410,8 +410,6 @@ export default function RegisterScreen() {
 
        zipContainer: { width: 80 },
        phoneContainer: { width: 140 },
-       firstNameContainer: { width: 160 },
-       lastNameContainer: { width: 190 },
 
         // Platform-specific vertical padding (web-safe)
         input: {
@@ -820,34 +818,35 @@ export default function RegisterScreen() {
                 </View>
 
                 {/* Names */}
-                <View style={styles.row}>
-                  <View style={styles.firstNameContainer}>
-                  <TextInput
-                    style={styles.input}
-                    value={firstName}
-                    onChangeText={setFirstName}
-                    placeholder="First name"
-                    placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    textContentType="givenName"
-                    autoComplete="given-name"
-                  />
-                  </View>
-                   <View style={styles.lastNameContainer}>
-                  <TextInput
-                    style={styles.input}
-                    value={lastName}
-                    onChangeText={setLastName}
-                    placeholder="Last name"
-                    placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    textContentType="familyName"
-                    autoComplete="family-name"
-                  />
-                   </View>
-                </View>
+<View style={styles.row}>
+  <View style={styles.flex2}>
+    <TextInput
+      style={styles.input}
+      value={firstName}
+      onChangeText={setFirstName}
+      placeholder="First name"
+      placeholderTextColor={colors.textSecondary}
+      autoCapitalize="words"
+      autoCorrect={false}
+      textContentType="givenName"
+      autoComplete="given-name"
+    />
+  </View>
+
+  <View style={styles.flex1}>
+    <TextInput
+      style={styles.input}
+      value={lastName}
+      onChangeText={setLastName}
+      placeholder="Last name"
+      placeholderTextColor={colors.textSecondary}
+      autoCapitalize="words"
+      autoCorrect={false}
+      textContentType="familyName"
+      autoComplete="family-name"
+    />
+  </View>
+</View>
                 {/* Address */}
                 <TextInput
                   style={styles.input}
