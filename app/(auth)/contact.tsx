@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'; // <-- use this one
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
-import { useTheme } from '@/contexts/ThemeContext';
+import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import { ArrowLeft, Mail, MapPin } from 'lucide-react-native';
 
 const CONTACT_EMAIL =
@@ -105,7 +105,7 @@ export default function ContactScreen() {
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     // Replaces container background; we put padding here now
     content: {

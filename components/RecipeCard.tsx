@@ -1,16 +1,16 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useTheme } from '@/contexts/ThemeContext';
+import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import { Recipe } from '@/contexts/RecipesContext';
 import { getStorageImageUrl } from '@/lib/supabase';
-import { Heart, BookmarkPlus, Clock, Users, ChefHat } from 'lucide-react-native';
+import {
+  Heart,
+  BookmarkPlus,
+  Clock,
+  Users,
+  ChefHat,
+} from 'lucide-react-native';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -22,14 +22,14 @@ interface RecipeCardProps {
   selectedAllergens?: { $id: string; name: string }[];
 }
 
-export default function RecipeCard({ 
-  recipe, 
-  onSave, 
+export default function RecipeCard({
+  recipe,
+  onSave,
   onSaveAndFavorite,
   onToggleFavorite,
   showSaveButton = false,
   showHeartButton = false,
-  selectedAllergens = []
+  selectedAllergens = [],
 }: RecipeCardProps) {
   const { colors } = useTheme();
   const router = useRouter();
@@ -38,7 +38,10 @@ export default function RecipeCard({
   const getImageUrl = () => {
     if (recipe.image && recipe.id) {
       // Try to get from Supabase storage first
-      const storageUrl = getStorageImageUrl('recipe-images', `${recipe.id}/${recipe.image}`);
+      const storageUrl = getStorageImageUrl(
+        'recipe-images',
+        `${recipe.id}/${recipe.image}`
+      );
       return storageUrl;
     }
     // Fallback to default image
@@ -53,14 +56,177 @@ export default function RecipeCard({
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return colors.success;
-      case 'medium': return colors.warning;
-      case 'hard': return colors.error;
-      default: return colors.textSecondary;
+      case 'easy':
+        return colors.success;
+      case 'medium':
+        return colors.warning;
+      case 'hard':
+        return colors.error;
+      default:
+        return colors.textSecondary;
     }
   };
 
-  const styles = StyleSheet.create({
+  const styles = getStyles(colors);
+
+  // Show preview version for search results (no image)
+  if (showSaveButton) {
+    return (
+      <View style={styles.card}>
+        <View style={styles.previewContent}>
+          <Text style={styles.previewTitle}>{recipe.title}</Text>
+
+          <Text style={styles.headNote}>{recipe.headNote}</Text>
+
+          <Text style={styles.previewDescription}>{recipe.description}</Text>
+
+          <View style={styles.previewMetadata}>
+            <View style={styles.previewMetadataItem}>
+              <Clock size={16} color={colors.text} />
+              <Text style={styles.previewMetadataText}>{recipe.prepTime}</Text>
+            </View>
+
+            <View style={styles.previewMetadataItem}>
+              <Users size={16} color={colors.text} />
+              <Text style={styles.previewMetadataText}>
+                {recipe.servings} serving{recipe.servings !== 1 ? 's' : ''}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.previewTags}>
+            {selectedAllergens.map((allergen, index) => (
+              <View
+                key={`allergen-free-${index}`}
+                style={styles.allergenFreeTag}
+              >
+                <Text style={styles.previewTagText}>
+                  🚫 {allergen.name.toLowerCase()}-free
+                </Text>
+              </View>
+            ))}
+            {recipe.allergens.map((allergen, index) => (
+              <View key={`allergen-${index}`} style={styles.allergenTag}>
+                <Text style={styles.previewTagText}>🚫 {allergen}</Text>
+              </View>
+            ))}
+            {recipe.dietaryPrefs.map((dietary, index) => (
+              <View key={`dietary-${index}`} style={styles.dietaryTag}>
+                <Text style={styles.previewTagText}>🌱 {dietary}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.iconActions}>
+            {onSave && (
+              <TouchableOpacity
+                style={[styles.iconButton, styles.saveIconButton]}
+                onPress={onSave}
+              >
+                <BookmarkPlus size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+
+            {onSaveAndFavorite && (
+              <TouchableOpacity
+                style={[styles.iconButton, styles.favoriteIconButton]}
+                onPress={onSaveAndFavorite}
+              >
+                <Heart size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // Show full version with image for saved recipes
+  return (
+    <TouchableOpacity style={styles.card} onPress={handleCardPress}>
+      <Image source={{ uri: getImageUrl() }} style={styles.image} />
+
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.title}>{recipe.title}</Text>
+          <View style={styles.actionButtons}>
+            {onToggleFavorite && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={onToggleFavorite}
+              >
+                <Heart
+                  size={20}
+                  color={
+                    recipe.isFavorite ? colors.error : colors.textSecondary
+                  }
+                  fill={recipe.isFavorite ? colors.error : 'none'}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        <Text style={styles.description}>{recipe.description}</Text>
+
+        <View style={styles.metadata}>
+          <View style={styles.metadataItem}>
+            <Clock size={14} color={colors.textSecondary} />
+            <Text style={styles.metadataText}>
+              {recipe.prepTime} + {recipe.cookTime}
+            </Text>
+          </View>
+
+          <View style={styles.metadataItem}>
+            <Users size={14} color={colors.textSecondary} />
+            <Text style={styles.metadataText}>{recipe.servings} servings</Text>
+          </View>
+
+          <View style={styles.difficulty}>
+            <ChefHat size={14} color={getDifficultyColor(recipe.difficulty)} />
+            <Text
+              style={[
+                styles.difficultyText,
+                { color: getDifficultyColor(recipe.difficulty) },
+              ]}
+            >
+              {recipe.difficulty}
+            </Text>
+          </View>
+        </View>
+
+        {recipe.tags.length > 0 && (
+          <View style={styles.tags}>
+            {recipe.tags.slice(0, 3).map((tag, index) => (
+              <View key={index} style={styles.tag}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Show allergens and dietary preferences for saved recipes */}
+        {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
+          <View style={styles.tags}>
+            {recipe.allergens.map((allergen, index) => (
+              <View key={`allergen-${index}`} style={styles.allergenTag}>
+                <Text style={styles.tagText}>🚫 {allergen}</Text>
+              </View>
+            ))}
+            {recipe.dietaryPrefs.map((dietary, index) => (
+              <View key={`dietary-${index}`} style={styles.dietaryTag}>
+                <Text style={styles.tagText}>🌱 {dietary}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+const getStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
     card: {
       backgroundColor: colors.surface,
       borderRadius: 16,
@@ -238,152 +404,3 @@ export default function RecipeCard({
       color: '#FFFFFF',
     },
   });
-
-  // Show preview version for search results (no image)
-  if (showSaveButton) {
-    return (
-      <View style={styles.card}>
-        <View style={styles.previewContent}>
-          <Text style={styles.previewTitle}>{recipe.title}</Text>
-          
-          <Text style={styles.headNote}>{recipe.headNote}</Text>
-          
-          <Text style={styles.previewDescription}>{recipe.description}</Text>
-
-          <View style={styles.previewMetadata}>
-            <View style={styles.previewMetadataItem}>
-              <Clock size={16} color={colors.text} />
-              <Text style={styles.previewMetadataText}>
-                {recipe.prepTime}
-              </Text>
-            </View>
-            
-            <View style={styles.previewMetadataItem}>
-              <Users size={16} color={colors.text} />
-              <Text style={styles.previewMetadataText}>
-                {recipe.servings} serving{recipe.servings !== 1 ? 's' : ''}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.previewTags}>
-            {selectedAllergens.map((allergen, index) => (
-              <View key={`allergen-free-${index}`} style={styles.allergenFreeTag}>
-                <Text style={styles.previewTagText}>🚫 {allergen.name.toLowerCase()}-free</Text>
-              </View>
-            ))}
-            {recipe.allergens.map((allergen, index) => (
-              <View key={`allergen-${index}`} style={styles.allergenTag}>
-                <Text style={styles.previewTagText}>🚫 {allergen}</Text>
-              </View>
-            ))}
-            {recipe.dietaryPrefs.map((dietary, index) => (
-              <View key={`dietary-${index}`} style={styles.dietaryTag}>
-                <Text style={styles.previewTagText}>🌱 {dietary}</Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.iconActions}>
-            {onSave && (
-              <TouchableOpacity 
-                style={[styles.iconButton, styles.saveIconButton]} 
-                onPress={onSave}
-              >
-                <BookmarkPlus size={20} color="#FFFFFF" />
-              </TouchableOpacity>
-            )}
-            
-            {onSaveAndFavorite && (
-              <TouchableOpacity 
-                style={[styles.iconButton, styles.favoriteIconButton]} 
-                onPress={onSaveAndFavorite}
-              >
-                <Heart size={20} color="#FFFFFF" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      </View>
-    );
-  }
-
-  // Show full version with image for saved recipes
-  return (
-    <TouchableOpacity style={styles.card} onPress={handleCardPress}>
-      <Image
-        source={{ uri: getImageUrl() }}
-        style={styles.image}
-      />
-      
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{recipe.title}</Text>
-          <View style={styles.actionButtons}>
-            {onToggleFavorite && (
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={onToggleFavorite}
-              >
-                <Heart
-                  size={20}
-                  color={recipe.isFavorite ? colors.error : colors.textSecondary}
-                  fill={recipe.isFavorite ? colors.error : 'none'}
-                />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        <Text style={styles.description}>{recipe.description}</Text>
-
-        <View style={styles.metadata}>
-          <View style={styles.metadataItem}>
-            <Clock size={14} color={colors.textSecondary} />
-            <Text style={styles.metadataText}>
-              {recipe.prepTime} + {recipe.cookTime}
-            </Text>
-          </View>
-          
-          <View style={styles.metadataItem}>
-            <Users size={14} color={colors.textSecondary} />
-            <Text style={styles.metadataText}>{recipe.servings} servings</Text>
-          </View>
-          
-          <View style={styles.difficulty}>
-            <ChefHat size={14} color={getDifficultyColor(recipe.difficulty)} />
-            <Text style={[styles.difficultyText, { color: getDifficultyColor(recipe.difficulty) }]}>
-              {recipe.difficulty}
-            </Text>
-          </View>
-        </View>
-
-        {recipe.tags.length > 0 && (
-          <View style={styles.tags}>
-            {recipe.tags.slice(0, 3).map((tag, index) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Show allergens and dietary preferences for saved recipes */}
-        {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
-          <View style={styles.tags}>
-            {recipe.allergens.map((allergen, index) => (
-              <View key={`allergen-${index}`} style={styles.allergenTag}>
-                <Text style={styles.tagText}>🚫 {allergen}</Text>
-              </View>
-            ))}
-            {recipe.dietaryPrefs.map((dietary, index) => (
-              <View key={`dietary-${index}`} style={styles.dietaryTag}>
-                <Text style={styles.tagText}>🌱 {dietary}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-}

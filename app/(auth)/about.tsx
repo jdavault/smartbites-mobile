@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
-import { useTheme } from '@/contexts/ThemeContext';
+import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import {
   ArrowLeft,
   Utensils,
@@ -140,7 +140,7 @@ export default function AboutScreen() {
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     // Replaces container background; we put padding here now
     content: {
