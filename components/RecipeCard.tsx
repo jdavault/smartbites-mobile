@@ -277,7 +277,7 @@ export default function RecipeCard({
 
   // Show full version with image for saved recipes
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={handleCardPress}>
       <Image
         source={{ 
           uri: recipe.image || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg' 
@@ -337,6 +337,6 @@ export default function RecipeCard({
           </View>
         )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
