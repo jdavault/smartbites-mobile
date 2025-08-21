@@ -215,7 +215,7 @@ export async function generateRecipe(
           Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4o-mini',
           response_format: {
             type: 'json_object',
             json_schema: schema,
@@ -231,7 +231,7 @@ export async function generateRecipe(
             },
           ],
           max_tokens: 3000,
-          temperature: 0.4,
+          temperature: 0.3,
         }),
       })
     );
@@ -424,8 +424,8 @@ export async function generateRecipes(
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini', // better JSON compliance
-          temperature: 0.4,
+          model: 'gpt-4o-mini',
+          temperature: 0.3,
           max_tokens: 4000, // increased to allow complete JSON response
           seed: 7, // more deterministic & compact
           response_format: {
