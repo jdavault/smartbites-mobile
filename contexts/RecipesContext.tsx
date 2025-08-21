@@ -150,6 +150,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   // Load 5 random recipes that match user's allergens and dietary preferences
   const loadRandomFeaturedRecipes = async () => {
     if (!user) return;
+    
+    console.log('🔍 Loading featured recipes for user:', user.id);
 
     try {
       // Get allergen and dietary preference IDs from the lookup tables
@@ -159,6 +161,9 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       let allergenIds: string[] = [];
       let dietaryIds: string[] = [];
       
+      console.log('👤 User allergens:', userAllergenNames);
+      console.log('👤 User dietary prefs:', userDietaryNames);
+      
       if (userAllergenNames.length > 0) {
         const { data: allergenData, error: allergenError } = await supabase
           .from('allergens')
@@ -167,6 +172,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         
         if (allergenError) throw allergenError;
         allergenIds = allergenData?.map(a => a.id) || [];
+        console.log('🚫 Allergen IDs to avoid:', allergenIds);
       }
       
       if (userDietaryNames.length > 0) {
@@ -177,6 +183,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         
         if (dietaryError) throw dietaryError;
         dietaryIds = dietaryData?.map(d => d.id) || [];
+        console.log('🌱 Dietary IDs to include:', dietaryIds);
       }
 
       // Get recipes with their allergens and dietary preferences using joins
@@ -195,6 +202,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('📊 Total recipes found:', data?.length || 0);
 
       let filteredRecipes = data || [];
 
@@ -204,6 +213,9 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           const recipeAllergenIds = recipe.recipe_allergens?.map((ra: any) => ra.allergen_id) || [];
           return !recipeAllergenIds.some((allergenId: string) => allergenIds.includes(allergenId));
         });
+        
+        console.log('🚫 After allergen filtering:', filteredRecipes.length, 'recipes remain');
+        console.log('🔍 Sample recipe allergens:', filteredRecipes[0]?.recipe_allergens);
       }
 
       // Filter by dietary preferences if user has any
@@ -212,6 +224,9 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           const recipeDietaryIds = recipe.recipe_dietary_prefs?.map((rd: any) => rd.dietary_pref_id) || [];
           return dietaryIds.some(userPrefId => recipeDietaryIds.includes(userPrefId));
         });
+        
+        console.log('🌱 After dietary filtering:', filteredRecipes.length, 'recipes remain');
+        console.log('🔍 Sample recipe dietary prefs:', filteredRecipes[0]?.recipe_dietary_prefs);
       }
 
       // Randomize and take 5
@@ -219,6 +234,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       const selectedRecipes = shuffled.slice(0, 5);
 
       // Get allergen and dietary preference names for display
+      console.log('🎯 Selected recipes for featured:', selectedRecipes.length);
+      
       const { data: allAllergens } = await supabase
         .from('allergens')
         .select('id, name');
@@ -253,10 +270,12 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         createdAt: recipe.created_at,
       }));
 
+      console.log('✅ Final featured recipes:', formattedRecipes.length);
       setFeaturedRecipes(formattedRecipes);
     } catch (error) {
       console.error('Error loading featured recipes:', error);
       // Fallback to empty array if there's an error
+      console.log('❌ Featured recipes failed, setting empty array');
       setFeaturedRecipes([]);
     }
   };
