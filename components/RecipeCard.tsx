@@ -52,19 +52,6 @@ export default function RecipeCard({
     return 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
   };
 
-  const getImageUrl_old = () => {
-    if (recipe.image && recipe.id) {
-      // Try to get from Supabase storage first
-      const storageUrl = getStorageImageUrl(
-        'recipe-images',
-        `${recipe.id}/${recipe.image}`
-      );
-      return storageUrl;
-    }
-    // Fallback to default image
-    return 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
-  };
-
   const handleCardPress = () => {
     if (recipe.id) {
       router.push(`/recipe/${recipe.id}`);
