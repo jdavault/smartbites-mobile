@@ -95,7 +95,7 @@ export async function generateRecipe(
         - Use region or promotional title -- e.g. New England Johnny Cakes, Persian Rice, Ultimate Fudge Brownies
         - Title can/should also highlight saving time - 10-minute salad, no-bake trail mix
         - Title can/should reflect ingredients or health focus - Gluten-Free Mac n Cheese, Vegan Chocolate Chip Cookies
-        - Add “Rise Time” to recipes as needed. Ie hamburger buns, breads, pizza dough, etc.
+        - Add "Rise Time" to recipes as needed. Ie hamburger buns, breads, pizza dough, etc.
         
       Return ONLY a valid JSON object in the following exact structure:
       {
@@ -178,7 +178,8 @@ export async function generateRecipes(
   dietaryPrefs: string[] = []
 ): Promise<GeneratedRecipe[]> {
   // Check if API key is available
-  if (!process.env.EXPO_PUBLIC_OPENAI_API_KEY) {
+  const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
+  if (!apiKey || apiKey.trim() === '') {
     console.warn('OpenAI API key not found. Please add EXPO_PUBLIC_OPENAI_API_KEY to your environment variables.');
     return [generateMockRecipe(query, allergens, dietaryPrefs)];
   }
@@ -228,7 +229,7 @@ Return ONLY valid JSON in this exact format:
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENAI_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini', // better JSON compliance
@@ -257,13 +258,9 @@ Return ONLY valid JSON in this exact format:
     // Add the searchQuery to each
     return recipes.slice(0, 5).map(r => ({ ...r, searchQuery: query }));
   } catch (error) {
-    if (error instanceof Error && error.message.includes('401')) {
-      console.error('OpenAI API key is invalid. Please check your EXPO_PUBLIC_OPENAI_API_KEY.');
-      return [generateMockRecipe(query, allergens, dietaryPrefs)];
-    } else {
-      console.error('Error generating recipes:', error);
-      return [];
-    }
+    console.error('Error generating recipes:', error);
+    console.warn('Falling back to mock recipe due to API error.');
+    return [generateMockRecipe(query, allergens, dietaryPrefs)];
   }
 }
 
