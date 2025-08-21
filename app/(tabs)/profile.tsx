@@ -187,7 +187,7 @@ export default function ProfileScreen() {
         if (error.code === '42P01') {
           console.warn('Database tables not created yet. Please run the migration.');
           return;
-        }
+        },
         throw error;
       }
 
