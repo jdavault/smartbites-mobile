@@ -134,42 +134,40 @@ export default function RecipeCard({
             ))}
           </View>
 
-          <View style={styles.iconActions}>
+        </View>
+
+        {/* Corner action buttons for search results */}
+        {showSaveButton && (
+          <View style={styles.cornerActions}>
             {onSave && (
               <TouchableOpacity
-                style={[styles.iconButton, styles.saveIconButton]}
+                style={[styles.cornerButton, styles.saveCornerButton]}
                 onPress={onSave}
                 disabled={isSaving || isFavoriting}
               >
                 {isSaving ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                    <Text style={styles.loadingText}>Saving...</Text>
-                  </View>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <BookmarkPlus size={20} color="#FFFFFF" />
+                  <BookmarkPlus size={18} color="#FFFFFF" />
                 )}
               </TouchableOpacity>
             )}
 
             {onSaveAndFavorite && (
               <TouchableOpacity
-                style={[styles.iconButton, styles.favoriteIconButton]}
+                style={[styles.cornerButton, styles.favoriteCornerButton]}
                 onPress={onSaveAndFavorite}
                 disabled={isSaving || isFavoriting}
               >
                 {isFavoriting ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                    <Text style={styles.loadingText}>🧠 Generating...</Text>
-                  </View>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Heart size={20} color="#FFFFFF" />
+                  <Heart size={18} color="#FFFFFF" />
                 )}
               </TouchableOpacity>
             )}
           </View>
-        </View>
+        )}
       </View>
     );
   }
@@ -278,6 +276,7 @@ const getStyles = (colors: ThemeColors) =>
     },
     previewContent: {
       padding: 20,
+      position: 'relative',
     },
     header: {
       flexDirection: 'row',
@@ -315,40 +314,30 @@ const getStyles = (colors: ThemeColors) =>
       borderRadius: 8,
       backgroundColor: colors.background,
     },
-    iconActions: {
+    cornerActions: {
+      position: 'absolute',
+      top: 16,
+      right: 16,
       flexDirection: 'row',
-      gap: 12,
-      alignItems: 'center',
+      gap: 8,
     },
-    iconButton: {
-      padding: 8,
-      borderRadius: 8,
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      minWidth: 80,
-      minHeight: 36,
+    cornerButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       justifyContent: 'center',
       alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 4,
     },
-    saveIconButton: {
+    saveCornerButton: {
       backgroundColor: colors.primary,
-      borderColor: colors.primary,
     },
-    favoriteIconButton: {
+    favoriteCornerButton: {
       backgroundColor: colors.error,
-      borderColor: colors.error,
-    },
-    loadingContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 4,
-    },
-    loadingText: {
-      fontSize: 10,
-      fontFamily: 'Inter-Medium',
-      color: '#FFFFFF',
     },
     description: {
       fontSize: 14,
