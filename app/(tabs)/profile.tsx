@@ -232,11 +232,6 @@ export default function ProfileScreen() {
           address1: profile.address1,
           address2: profile.address2,
           city: profile.city,
-          state: profile.state,
-          zip: profile.zip,
-          phone: profile.phone.replace(/\D/g, ''),
-          updated_at: new Date().toISOString(),
-        },
         { onConflict: 'user_id' }
       );
 
