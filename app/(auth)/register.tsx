@@ -863,7 +863,7 @@ export default function RegisterScreen() {
                 {/* Names */}
                 <View style={styles.row}>
                   <TextInput
-                    style={[styles.input, styles.flex3]}
+                    style={[styles.input, styles.flex1]}
                     value={firstName}
                     onChangeText={setFirstName}
                     placeholder="First name"
