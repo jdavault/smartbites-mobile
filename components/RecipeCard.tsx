@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
 import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import { Recipe } from '@/contexts/RecipesContext';
 import { getStorageImageUrl } from '@/lib/supabase';
@@ -37,16 +38,10 @@ export default function RecipeCard({
   // Get the image URL - either from Supabase storage or fallback
   const getImageUrl = () => {
     if (recipe.image) {
-      // Check if it's already a full URL (from OpenAI)
-      if (recipe.image.startsWith('http://') || recipe.image.startsWith('https://')) {
-        return recipe.image;
-      }
-      // Otherwise, try to get from Supabase storage
-      if (recipe.id) {
-        const storageUrl = getStorageImageUrl(
-          'recipe-images',
-          `${recipe.id}/${recipe.image}`
-        );
+      // Get from Supabase storage using user_id/filename structure
+      const { user } = useAuth();
+      if (user?.id) {
+        const storageUrl = getStorageImageUrl(user.id, recipe.image);
         return storageUrl;
       }
     }

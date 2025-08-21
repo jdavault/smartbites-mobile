@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useRecipes } from '@/contexts/RecipesContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getStorageImageUrl } from '@/lib/supabase';
 import { ArrowLeft, Clock, Users, ChefHat } from 'lucide-react-native';
@@ -20,6 +21,7 @@ const DEFAULT_IMAGE_URL = 'https://images.pexels.com/photos/1640777/pexels-photo
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { user } = useAuth();
   const { savedRecipes, featuredRecipes, saveRecipe } = useRecipes();
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
@@ -54,13 +56,9 @@ export default function RecipeDetailScreen() {
   // Get the image URL - either from Supabase storage or fallback
   const getImageUrl = () => {
     if (recipe?.image) {
-      // Check if it's already a full URL (from OpenAI)
-      if (recipe.image.startsWith('http://') || recipe.image.startsWith('https://')) {
-        return recipe.image;
-      }
-      // Otherwise, try to get from Supabase storage
-      if (recipe.id) {
-        const storageUrl = getStorageImageUrl('recipe-images', `${recipe.id}/${recipe.image}`);
+      // Get from Supabase storage using user_id/filename structure
+      if (user?.id) {
+        const storageUrl = getStorageImageUrl(user.id, recipe.image);
         return storageUrl;
       }
     }

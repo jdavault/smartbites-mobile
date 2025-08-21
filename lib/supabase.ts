@@ -73,8 +73,8 @@ export const supabase = getSupabase();
 // Helper function to upload image from URL to Supabase storage
 export async function uploadImageFromUrl(
   imageUrl: string,
-  bucketName: string,
-  filePath: string
+  userId: string,
+  filename: string
 ): Promise<string | null> {
   try {
     // Fetch the image from the URL
@@ -85,9 +85,12 @@ export async function uploadImageFromUrl(
 
     const imageBlob = await response.blob();
     
+    // Create the full path: user_id/filename
+    const filePath = `${userId}/${filename}`;
+    
     // Upload to Supabase storage
     const { data, error } = await supabase.storage
-      .from(bucketName)
+      .from('recipe-images')
       .upload(filePath, imageBlob, {
         contentType: 'image/png',
         upsert: true, // Replace if exists
@@ -98,7 +101,7 @@ export async function uploadImageFromUrl(
       return null;
     }
 
-    return data.path;
+    return filename; // Return just the filename
   } catch (error) {
     console.error('Error in uploadImageFromUrl:', error);
     return null;
@@ -107,11 +110,12 @@ export async function uploadImageFromUrl(
 
 // Helper function to get public URL for stored image
 export function getStorageImageUrl(
-  bucketName: string,
-  filePath: string
+  userId: string,
+  filename: string
 ): string {
+  const filePath = `${userId}/${filename}`;
   const { data } = supabase.storage
-    .from(bucketName)
+    .from('recipe-images')
     .getPublicUrl(filePath);
   
   return data.publicUrl;
