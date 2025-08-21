@@ -13,19 +13,13 @@
       "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "cover",
       "backgroundColor": "#f9f8f2"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "androidStatusBar": {
       "backgroundColor": "#f9f8f2",
       "barStyle": "dark-content",
@@ -38,7 +32,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.allergy-aware-recipe-finder",
-      "buildNumber": "32",
+      "buildNumber": "35",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "This app uses the camera to scan items for allergy-friendly recipes.",
