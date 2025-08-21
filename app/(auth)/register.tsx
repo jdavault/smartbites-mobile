@@ -20,7 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { ArrowLeft, Eye, EyeOff, ChevronDown } from 'lucide-react-native';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import ThemedText from '@/components/ThemedText';
 import { ALLERGENS } from '@/contexts/AllergensContext';
@@ -209,8 +209,7 @@ export default function RegisterScreen() {
   const [selectedPrefIds, setSelectedPrefIds] = useState<Set<string>>(
     new Set()
   );
-
-  // consent toggle
+  const [showStates, setShowStates] = useState(false);
   const [showConsent, setShowConsent] = useState(false);
 
   const toggle = (
@@ -224,19 +223,6 @@ export default function RegisterScreen() {
   };
 
   // Filter states based on search text
-  const filteredStates = US_STATES.filter(state => 
-    state.name.toLowerCase().includes(stateSearchText.toLowerCase()) ||
-    state.code.toLowerCase().includes(stateSearchText.toLowerCase())
-  );
-
-  // Handle keyboard input for state selection
-  const handleStateKeyPress = (key: string) => {
-    const newSearchText = stateSearchText + key.toLowerCase();
-    setStateSearchText(newSearchText);
-    
-    // Clear search text after 1 second
-    setTimeout(() => setStateSearchText(''), 1000);
-  };
 
   const normalizePhone = (raw: string) => raw.replace(/[^\d+]/g, '');
   const zipOk = (z: string) => /^(\d{5})(-?\d{4})?$/.test(z.trim());
@@ -477,42 +463,6 @@ export default function RegisterScreen() {
           fontFamily: 'Inter-Regular',
           color: state ? colors.text : colors.textSecondary,
         },
-        stateList: {
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          backgroundColor: colors.surface,
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: 9,
-          maxHeight: 200,
-          zIndex: 1000,
-        },
-        stateSearchIndicator: {
-          paddingHorizontal: 12,
-          paddingVertical: 4,
-          backgroundColor: colors.primary,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
-        },
-        stateSearchText: {
-          fontSize: 12,
-          fontFamily: 'Inter-SemiBold',
-          color: '#FFFFFF',
-        },
-        stateItem: {
-          paddingHorizontal: 12,
-          paddingVertical: 8,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
-        },
-        stateItemLast: { borderBottomWidth: 0 },
-        stateItemText: {
-          fontSize: 15,
-          fontFamily: 'Inter-Regular',
-          color: colors.text,
-        },
 
         sectionToggle: { alignItems: 'center', paddingVertical: 2, marginTop: 4 },
         sectionToggleText: {
@@ -673,6 +623,46 @@ export default function RegisterScreen() {
         modalBtnText: { fontSize: 13, fontFamily: 'Inter-SemiBold', color: colors.text },
         modalBtnTextPrimary: { color: '#fff' },
 
+        // State picker modal styles
+        dropdownOverlay: {
+          ...StyleSheet.absoluteFillObject,
+          backgroundColor: 'rgba(0,0,0,0.35)',
+        },
+        dropdownSheet: {
+          position: 'absolute',
+          left: 16,
+          right: 16,
+          top: Platform.select({ ios: 120, android: 120, default: 120 }),
+          backgroundColor: colors.surface,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: colors.border,
+          padding: 12,
+          elevation: 50,
+          zIndex: 99999,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 10,
+        },
+        dropdownTitle: {
+          fontSize: 16,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.text,
+          marginBottom: 8,
+          textAlign: 'center',
+        },
+        dropdownList: { maxHeight: 300, borderRadius: 8 },
+        dropdownItem: {
+          paddingVertical: 10,
+          paddingHorizontal: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        dropdownItemText: { fontSize: 15, fontFamily: 'Inter-Regular', color: colors.text },
+        dropdownCancel: { marginTop: 8, alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 14 },
+        dropdownCancelText: { fontSize: 14, fontFamily: 'Inter-SemiBold', color: colors.primary },
+
         bottom: {
           paddingHorizontal: 24,
           paddingTop: 6,
@@ -697,6 +687,42 @@ export default function RegisterScreen() {
 
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={styles.content}>
+          {/* State picker modal */}
+          <Modal
+            transparent
+            visible={showStates}
+            animationType="fade"
+            onRequestClose={() => setShowStates(false)}
+          >
+            <TouchableWithoutFeedback onPress={() => setShowStates(false)}>
+              <View style={styles.dropdownOverlay} />
+            </TouchableWithoutFeedback>
+
+            <View style={styles.dropdownSheet}>
+              <Text style={styles.dropdownTitle}>Select a state</Text>
+              <ScrollView style={styles.dropdownList} keyboardShouldPersistTaps="handled">
+                {US_STATES.map((stateItem) => (
+                  <TouchableOpacity
+                    key={stateItem.code}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setState(stateItem.code);
+                      setShowStates(false);
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>
+                      {stateItem.code} — {stateItem.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <TouchableOpacity style={styles.dropdownCancel} onPress={() => setShowStates(false)}>
+                <Text style={styles.dropdownCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </Modal>
+
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerContent}>
@@ -848,56 +874,17 @@ export default function RegisterScreen() {
                     autoCapitalize="words"
                     autoCorrect={false}
                     textContentType="addressCity"
-                   returnKeyType="next"
-                   onSubmitEditing={() => setShowStates(true)}
+                    returnKeyType="next"
+                    onSubmitEditing={() => setShowStates(true)}
                   />
-                  <View style={[styles.stateDropdown, styles.flex1]}>
-                    <TouchableOpacity
-                      style={styles.stateButton}
-                      onPress={() => setShowStates(!showStates)}
-                      onKeyPress={(e) => {
-                        if (showStates && e.nativeEvent.key.length === 1) {
-                          handleStateKeyPress(e.nativeEvent.key);
-                        }
-                      }}
-                    >
-                      <Text style={styles.stateButtonText}>
-                        {state || 'State'}
-                      </Text>
-                      <ChevronDown size={16} color={colors.textSecondary} />
-                    </TouchableOpacity>
-
-                    {showStates && (
-                      <ScrollView style={styles.stateList} nestedScrollEnabled>
-                        {stateSearchText && (
-                          <View style={styles.stateSearchIndicator}>
-                            <Text style={styles.stateSearchText}>
-                              Searching: {stateSearchText}
-                            </Text>
-                          </View>
-                        )}
-                        {filteredStates.map((stateItem, index) => (
-                          <TouchableOpacity
-                            key={stateItem.code}
-                            style={[
-                              styles.stateItem,
-                              index === filteredStates.length - 1 && styles.stateItemLast,
-                            ]}
-                            onPress={() => {
-                              setState(stateItem.code);
-                              setShowStates(false);
-                              setStateSearchText('');
-                            }}
-                          >
-                            <Text style={styles.stateItemText}>
-                             {stateItem.name}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </ScrollView>
-                    )}
-                  </View>
-                </View>
+                  <TouchableOpacity
+                    style={[styles.input, styles.flex1, styles.stateButton]}
+                    onPress={() => setShowStates(true)}
+                  >
+                    <Text style={styles.stateButtonText}>
+                      {state || 'State'}
+                    </Text>
+                  </TouchableOpacity>
 
                 <View style={styles.row}>
                  <View style={styles.zipContainer}>
