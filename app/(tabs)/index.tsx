@@ -243,11 +243,29 @@ export default function SearchScreen() {
       paddingHorizontal: 24,
       marginBottom: 32,
     },
+    searchResultsHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
     searchResultsTitle: {
       fontSize: 20,
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
-      marginBottom: 16,
+    },
+    dismissButton: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    dismissButtonText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+      color: colors.textSecondary,
     },
     loadingContainer: {
       flex: 1,
@@ -352,7 +370,18 @@ export default function SearchScreen() {
 
         {searchResults.length > 0 && (
           <View style={styles.searchResults}>
-            <Text style={styles.searchResultsTitle}>Search Results</Text>
+            <View style={styles.searchResultsHeader}>
+              <Text style={styles.searchResultsTitle}>Search Results</Text>
+              <TouchableOpacity 
+                style={styles.dismissButton}
+                onPress={() => {
+                  setSearchResults([]);
+                  setSearchQuery('');
+                }}
+              >
+                <Text style={styles.dismissButtonText}>Dismiss</Text>
+              </TouchableOpacity>
+            </View>
             {searchResults.map((recipe, index) => (
               <RecipeCard
                 key={index}
