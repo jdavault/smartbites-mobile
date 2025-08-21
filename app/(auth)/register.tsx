@@ -208,7 +208,6 @@ export default function RegisterScreen() {
   );
   const [selectedPrefIds, setSelectedPrefIds] = useState<Set<string>>(
     new Set()
-  );
   const [showConsent, setShowConsent] = useState(false);
 
   const toggle = (
