@@ -76,7 +76,7 @@ export default function RecipeCard({
   // Show preview version for search results (no image)
   if (showSaveButton) {
     return (
-      <View style={styles.card}>
+      <TouchableOpacity style={styles.card} onPress={handleCardPress}>
         <View style={styles.previewContent}>
           <Text style={styles.previewTitle}>{recipe.title}</Text>
 
@@ -155,7 +155,7 @@ export default function RecipeCard({
             )}
           </View>
         )}
-      </View>
+      </TouchableOpacity>
     );
   }
 
