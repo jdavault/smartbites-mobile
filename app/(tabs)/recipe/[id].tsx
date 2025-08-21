@@ -12,6 +12,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useRecipes } from '@/contexts/RecipesContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { getStorageImageUrl } from '@/lib/supabase';
 import { ArrowLeft, Clock, Users, ChefHat } from 'lucide-react-native';
 
 const DEFAULT_IMAGE_URL = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
@@ -48,6 +49,17 @@ export default function RecipeDetailScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Get the image URL - either from Supabase storage or fallback
+  const getImageUrl = () => {
+    if (recipe?.image && recipe?.id) {
+      // Try to get from Supabase storage first
+      const storageUrl = getStorageImageUrl('recipe-images', `${recipe.id}/${recipe.image}`);
+      return storageUrl;
+    }
+    // Fallback to default image
+    return DEFAULT_IMAGE_URL;
   };
 
   const handleBack = () => {
@@ -319,7 +331,7 @@ export default function RecipeDetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <Image
-          source={{ uri: recipe.image || DEFAULT_IMAGE_URL }}
+          source={{ uri: getImageUrl() }}
           style={styles.image}
           resizeMode="cover"
         />

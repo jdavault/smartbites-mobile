@@ -9,6 +9,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Recipe } from '@/contexts/RecipesContext';
+import { getStorageImageUrl } from '@/lib/supabase';
 import { Heart, BookmarkPlus, Clock, Users, ChefHat } from 'lucide-react-native';
 
 interface RecipeCardProps {
@@ -32,6 +33,17 @@ export default function RecipeCard({
 }: RecipeCardProps) {
   const { colors } = useTheme();
   const router = useRouter();
+
+  // Get the image URL - either from Supabase storage or fallback
+  const getImageUrl = () => {
+    if (recipe.image && recipe.id) {
+      // Try to get from Supabase storage first
+      const storageUrl = getStorageImageUrl('recipe-images', `${recipe.id}/${recipe.image}`);
+      return storageUrl;
+    }
+    // Fallback to default image
+    return 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+  };
 
   const handleCardPress = () => {
     if (recipe.id) {
@@ -300,9 +312,7 @@ export default function RecipeCard({
   return (
     <TouchableOpacity style={styles.card} onPress={handleCardPress}>
       <Image
-        source={{ 
-          uri: recipe.image || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg' 
-        }}
+        source={{ uri: getImageUrl() }}
         style={styles.image}
       />
       
