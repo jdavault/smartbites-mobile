@@ -357,6 +357,22 @@ export default function RecipeCard({
             ))}
           </View>
         )}
+
+        {/* Show allergens and dietary preferences for saved recipes */}
+        {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
+          <View style={styles.tags}>
+            {recipe.allergens.map((allergen, index) => (
+              <View key={`allergen-${index}`} style={styles.allergenTag}>
+                <Text style={styles.tagText}>🚫 {allergen}</Text>
+              </View>
+            ))}
+            {recipe.dietaryPrefs.map((dietary, index) => (
+              <View key={`dietary-${index}`} style={styles.dietaryTag}>
+                <Text style={styles.tagText}>🌱 {dietary}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
