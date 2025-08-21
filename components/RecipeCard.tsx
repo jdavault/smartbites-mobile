@@ -18,6 +18,7 @@ interface RecipeCardProps {
   onToggleFavorite?: () => void;
   showSaveButton?: boolean;
   showHeartButton?: boolean;
+  selectedAllergens?: { $id: string; name: string }[];
 }
 
 export default function RecipeCard({ 
@@ -26,7 +27,8 @@ export default function RecipeCard({
   onSaveAndFavorite,
   onToggleFavorite,
   showSaveButton = false,
-  showHeartButton = false
+  showHeartButton = false,
+  selectedAllergens = []
 }: RecipeCardProps) {
   const { colors } = useTheme();
   const router = useRouter();
@@ -201,6 +203,12 @@ export default function RecipeCard({
       paddingVertical: 6,
       borderRadius: 12,
     },
+    allergenFreeTag: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 12,
+    },
     dietaryTag: {
       backgroundColor: colors.dietary,
       paddingHorizontal: 10,
@@ -247,6 +255,11 @@ export default function RecipeCard({
           </View>
 
           <View style={styles.previewTags}>
+            {selectedAllergens.map((allergen, index) => (
+              <View key={`allergen-free-${index}`} style={styles.allergenFreeTag}>
+                <Text style={styles.previewTagText}>🚫 {allergen.name.toLowerCase()}-free</Text>
+              </View>
+            ))}
             {recipe.allergens.map((allergen, index) => (
               <View key={`allergen-${index}`} style={styles.allergenTag}>
                 <Text style={styles.previewTagText}>🚫 {allergen}</Text>
