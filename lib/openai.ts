@@ -393,9 +393,7 @@ export async function generateRecipes(
           max_tokens: 4000, // increased to allow complete JSON response
           seed: 7, // more deterministic & compact
           response_format: {
-            // stricter, less rambling
-            type: 'json_object',
-            json_schema: schema,
+            type: 'json_object'
           },
           messages: [
             { role: 'system', content: prompt },
