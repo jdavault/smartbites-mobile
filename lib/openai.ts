@@ -258,6 +258,65 @@ export async function generateRecipes(
         - Titles must be direct, descriptive, and not misleading.
         - Always be mindful that your recipe should teach and guide any home cook to success, regardless of their skill level.
       `;
+    const schema = {
+      name: 'recipes_payload',
+      schema: {
+        type: 'object',
+        properties: {
+          recipes: {
+            type: 'array',
+            minItems: 5,
+            maxItems: 5,
+            items: {
+              type: 'object',
+              properties: {
+                title: { type: 'string' },
+                headNote: { type: 'string', maxLength: 160 },
+                ingredients: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  maxItems: 12,
+                },
+                instructions: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  maxItems: 8,
+                },
+                prepTime: { type: 'string' },
+                cookTime: { type: 'string' },
+                servings: { type: 'integer' },
+                difficulty: {
+                  type: 'string',
+                  enum: ['easy', 'medium', 'hard'],
+                },
+                tags: { type: 'array', items: { type: 'string' }, maxItems: 6 },
+                allergens: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  maxItems: 6,
+                },
+              },
+              required: [
+                'title',
+                'headNote',
+                'ingredients',
+                'instructions',
+                'prepTime',
+                'cookTime',
+                'servings',
+                'difficulty',
+                'tags',
+                'allergens',
+              ],
+              additionalProperties: false,
+            },
+          },
+        },
+        required: ['recipes'],
+        additionalProperties: false,
+      },
+    };
+
     const response = await retryWithBackoff(() =>
       fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -267,16 +326,23 @@ export async function generateRecipes(
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini', // better JSON compliance
-          response_format: { type: 'json_object' },
+          temperature: 0.4,
+          max_tokens: 1600, // lower than 3500
+          seed: 7, // more deterministic & compact
+          response_format: {
+            // stricter, less rambling
+            type: 'json_object',
+            json_schema: schema,
+          },
           messages: [
             { role: 'system', content: prompt },
             { role: 'user', content: `Generate 5 recipes for: ${query}` },
           ],
-          max_tokens: 3500,
-          temperature: 0.7,
         }),
       })
     );
+
+
 
     if (!response.ok) {
       throw new Error(`OpenAI API error: ${response.status}`);
