@@ -298,13 +298,22 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         .replace(/^-+|-+$/g, '');
 
       // Generate and upload image
-      let imageUrl = null;
+      let imageFilename = null;
       try {
         console.log('Generating image for recipe:', recipe.title);
-        imageUrl = await generateRecipeImage(recipe.title);
+        const imageUrl = await generateRecipeImage(recipe.title);
         
         if (imageUrl && imageUrl !== 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg') {
           console.log('Generated image URL:', imageUrl);
+          
+          // Generate filename and upload to Supabase storage
+          const filename = `recipe-${Date.now()}.png`;
+          const uploadedFilename = await uploadImageFromUrl(imageUrl, user.id, filename);
+          
+          if (uploadedFilename) {
+            imageFilename = uploadedFilename;
+            console.log('Image uploaded to storage:', imageFilename);
+          }
         }
       } catch (imageError) {
         console.error('Error generating image:', imageError);
@@ -329,7 +338,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           search_key: searchKey,
           notes: recipe.notes,
           nutrition_info: recipe.nutritionInfo,
-          image: imageUrl, // Store the full URL directly
+          image: imageFilename, // Store just the filename
         }])
         .select()
         .single();
@@ -442,13 +451,22 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         console.log('Using existing recipe for favorite:', recipeId);
       } else {
         // Generate and upload image for new recipe
-        let imageUrl = null;
+        let imageFilename = null;
         try {
           console.log('Generating image for favorite recipe:', recipe.title);
-          imageUrl = await generateRecipeImage(recipe.title);
+          const imageUrl = await generateRecipeImage(recipe.title);
           
           if (imageUrl && imageUrl !== 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg') {
             console.log('Generated image URL for favorite:', imageUrl);
+            
+            // Generate filename and upload to Supabase storage
+            const filename = `recipe-${Date.now()}.png`;
+            const uploadedFilename = await uploadImageFromUrl(imageUrl, user.id, filename);
+            
+            if (uploadedFilename) {
+              imageFilename = uploadedFilename;
+              console.log('Favorite image uploaded to storage:', imageFilename);
+            }
           }
         } catch (imageError) {
           console.error('Error generating image for favorite:', imageError);
@@ -472,7 +490,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
             search_key: searchKey,
             notes: recipe.notes,
             nutrition_info: recipe.nutritionInfo,
-            image: imageUrl, // Store the full URL directly
+            image: imageFilename, // Store just the filename
           }])
           .select()
           .single();
