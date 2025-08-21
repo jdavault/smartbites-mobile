@@ -317,11 +317,6 @@ export default function ProfileScreen() {
       fontFamily: 'Inter-Regular',
       color: colors.text,
     },
-    stateItemTextOnly: {
-      fontSize: 15,
-      fontFamily: 'Inter-Regular',
-      color: colors.text,
-    },
 
     // Card wrapper
     formCard: {
