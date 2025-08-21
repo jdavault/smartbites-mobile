@@ -78,20 +78,25 @@ export async function uploadImageFromUrl(
 ): Promise<string | null> {
   // Skip upload on web platform to avoid CORS issues
   if (Platform.OS === 'web') {
+    console.log('🖼️ Skipping image upload on web platform');
     return null;
   }
 
   try {
+    console.log('🖼️ Fetching image from URL:', imageUrl);
     // Fetch the image from the URL
     const response = await fetch(imageUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
+    console.log('🖼️ Image fetched successfully, converting to blob');
 
     const imageBlob = await response.blob();
+    console.log('🖼️ Image blob created, size:', imageBlob.size);
     
     // Create the full path: recipe_id/filename
     const filePath = `${recipeId}/${filename}`;
+    console.log('🖼️ Uploading to path:', filePath);
     
     // Upload to Supabase storage
     const { data, error } = await supabase.storage
@@ -102,13 +107,14 @@ export async function uploadImageFromUrl(
       });
 
     if (error) {
-      console.error('Error uploading image to Supabase:', error);
+      console.error('🖼️ Error uploading image to Supabase:', error);
       return null;
     }
 
+    console.log('🖼️ ✅ Image uploaded successfully to Supabase:', data);
     return filename; // Return just the filename
   } catch (error) {
-    console.error('Error in uploadImageFromUrl:', error);
+    console.error('🖼️ ❌ Error in uploadImageFromUrl:', error);
     return null;
   }
 }

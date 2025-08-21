@@ -300,17 +300,21 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       // Generate and upload image
       let imageFilename = null;
       try {
+        console.log('🖼️ Starting image generation for recipe:', recipe.title);
         console.log('Generating image for recipe:', recipe.title);
         const imageUrl = await generateRecipeImage(recipe.title);
+        console.log('🖼️ Generated image URL:', imageUrl);
         
         if (imageUrl && imageUrl !== 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg') {
-          console.log('Generated image URL:', imageUrl);
+          console.log('🖼️ Valid image URL received, storing for upload');
           
           // We'll upload after we get the recipe ID
           imageFilename = imageUrl; // Store the URL temporarily
+        } else {
+          console.log('🖼️ No valid image URL generated, using fallback');
         }
       } catch (imageError) {
-        console.error('Error generating image:', imageError);
+        console.error('🖼️ Error generating image:', imageError);
         // Continue without image
       }
 
@@ -343,25 +347,34 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       // Now upload the image with the recipe ID
       if (imageFilename && imageFilename.startsWith('http')) {
         try {
+          console.log('🖼️ Starting image upload for recipe ID:', recipeData.id);
+          console.log('🖼️ Image URL to upload:', imageFilename);
           const filename = `recipe-${Date.now()}.png`;
+          console.log('🖼️ Generated filename:', filename);
           const uploadedFilename = await uploadImageFromUrl(imageFilename, recipeData.id, filename);
+          console.log('🖼️ Upload result:', uploadedFilename);
           
           if (uploadedFilename) {
             // Update the recipe with the filename
+            console.log('🖼️ Updating recipe with image filename:', uploadedFilename);
             const { error: updateError } = await supabase
               .from('recipes')
               .update({ image: uploadedFilename })
               .eq('id', recipeData.id);
             
             if (updateError) {
-              console.error('Error updating recipe with image:', updateError);
+              console.error('🖼️ Error updating recipe with image:', updateError);
             } else {
-              console.log('Image uploaded and recipe updated:', uploadedFilename);
+              console.log('🖼️ ✅ Image uploaded and recipe updated successfully:', uploadedFilename);
             }
+          } else {
+            console.log('🖼️ ❌ No filename returned from upload');
           }
         } catch (uploadError) {
-          console.error('Error uploading image after recipe creation:', uploadError);
+          console.error('🖼️ ❌ Error uploading image after recipe creation:', uploadError);
         }
+      } else {
+        console.log('🖼️ No image to upload - imageFilename:', imageFilename);
       }
 
       // Insert allergen relationships based on user's selected allergens
@@ -471,17 +484,20 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         // Generate and upload image for new recipe
         let imageFilename = null;
         try {
-          console.log('Generating image for favorite recipe:', recipe.title);
+          console.log('🖼️ Generating image for favorite recipe:', recipe.title);
           const imageUrl = await generateRecipeImage(recipe.title);
+          console.log('🖼️ Generated favorite image URL:', imageUrl);
           
           if (imageUrl && imageUrl !== 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg') {
-            console.log('Generated image URL for favorite:', imageUrl);
+            console.log('🖼️ Valid favorite image URL received');
             
             // Store the URL temporarily, we'll upload after getting recipe ID
             imageFilename = imageUrl;
+          } else {
+            console.log('🖼️ No valid favorite image URL generated');
           }
         } catch (imageError) {
-          console.error('Error generating image for favorite:', imageError);
+          console.error('🖼️ Error generating image for favorite:', imageError);
         }
 
         // Recipe doesn't exist, create a new one
@@ -514,25 +530,32 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         // Now upload the image with the recipe ID
         if (imageFilename && imageFilename.startsWith('http')) {
           try {
+            console.log('🖼️ Starting favorite image upload for recipe ID:', recipeId);
             const filename = `recipe-${Date.now()}.png`;
             const uploadedFilename = await uploadImageFromUrl(imageFilename, recipeId, filename);
+            console.log('🖼️ Favorite upload result:', uploadedFilename);
             
             if (uploadedFilename) {
               // Update the recipe with the filename
+              console.log('🖼️ Updating favorite recipe with image filename:', uploadedFilename);
               const { error: updateError } = await supabase
                 .from('recipes')
                 .update({ image: uploadedFilename })
                 .eq('id', recipeId);
               
               if (updateError) {
-                console.error('Error updating favorite recipe with image:', updateError);
+                console.error('🖼️ Error updating favorite recipe with image:', updateError);
               } else {
-                console.log('Favorite image uploaded and recipe updated:', uploadedFilename);
+                console.log('🖼️ ✅ Favorite image uploaded and recipe updated:', uploadedFilename);
               }
+            } else {
+              console.log('🖼️ ❌ No filename returned from favorite upload');
             }
           } catch (uploadError) {
-            console.error('Error uploading image for favorite recipe:', uploadError);
+            console.error('🖼️ ❌ Error uploading image for favorite recipe:', uploadError);
           }
+        } else {
+          console.log('🖼️ No favorite image to upload - imageFilename:', imageFilename);
         }
 
         // Insert allergen relationships based on user's selected allergens for new recipe
