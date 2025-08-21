@@ -211,6 +211,30 @@ export default function RegisterScreen() {
   );
   const [showConsent, setShowConsent] = useState(false);
 
+  // avoid re-opening loops
+  const openStates = React.useCallback((initial?: string) => {
+    if (!showStates) {
+      setShowStates(true);
+      if (initial) {
+        // delay lets the modal mount before we seed the search
+        setTimeout(() => setStateSearchText(initial.toUpperCase()), 0);
+      }
+    }
+  }, [showStates]);
+
+  const handleStateKeyPress = (key: string) => {
+    // open if not open
+    if (!showStates) openStates();
+
+    // if user types A–Z, seed search text
+    if (/^[a-z]$/i.test(key)) {
+      setStateSearchText(prev => (prev + key).toUpperCase());
+    }
+    // Optional: handle Backspace to edit search
+    if (key === 'Backspace') {
+      setStateSearchText(prev => prev.slice(0, -1));
+    }
+  };
   const toggle = (
     set: Set<string>,
     id: string,
@@ -700,24 +724,42 @@ export default function RegisterScreen() {
 
             <View style={styles.dropdownSheet}>
               <Text style={styles.dropdownTitle}>Select a state</Text>
+              {stateSearchText && (
+                <Text style={{ textAlign: 'center', marginBottom: 8, fontSize: 14, color: colors.primary }}>
+                  Searching: {stateSearchText}
+                </Text>
+              )}
               <ScrollView style={styles.dropdownList} keyboardShouldPersistTaps="handled">
-                {US_STATES.map((stateItem) => (
+                {US_STATES
+                  .filter(stateItem => 
+                    !stateSearchText || 
+                    stateItem.code.startsWith(stateSearchText) || 
+                    stateItem.name.toUpperCase().includes(stateSearchText)
+                  )
+                  .map((stateItem) => (
                   <TouchableOpacity
                     key={stateItem.code}
                     style={styles.dropdownItem}
                     onPress={() => {
                       setState(stateItem.code);
                       setShowStates(false);
+                      setStateSearchText('');
                     }}
                   >
                     <Text style={styles.dropdownItemText}>
                       {stateItem.code} — {stateItem.name}
                     </Text>
                   </TouchableOpacity>
-                ))}
+                  ))}
               </ScrollView>
 
-              <TouchableOpacity style={styles.dropdownCancel} onPress={() => setShowStates(false)}>
+              <TouchableOpacity 
+                style={styles.dropdownCancel} 
+                onPress={() => {
+                  setShowStates(false);
+                  setStateSearchText('');
+                }}
+              >
                 <Text style={styles.dropdownCancelText}>Cancel</Text>
               </TouchableOpacity>
             </View>
@@ -879,7 +921,7 @@ export default function RegisterScreen() {
                   />
                   <TouchableOpacity
                     style={[styles.input, styles.flex1, styles.stateButton]}
-                    onPress={() => setShowStates(true)}
+                    onPress={() => openStates()}
                   >
                     <Text style={styles.stateButtonText}>
                       {state || 'State'}
@@ -901,6 +943,7 @@ export default function RegisterScreen() {
                      maxLength={10}
                      textContentType="postalCode"
                      returnKeyType="next"
+                     onSubmitEditing={() => openStates()}
                    />
                  </View>
                  <View style={styles.phoneContainer}>
