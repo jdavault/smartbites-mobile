@@ -301,18 +301,9 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       let imageFilename = null;
       try {
         console.log('🖼️ Starting image generation for recipe:', recipe.title);
-        console.log('Generating image for recipe:', recipe.title);
-        const imageUrl = await generateRecipeImage(recipe.title);
-        console.log('🖼️ Generated image URL:', imageUrl);
-        
-        if (imageUrl && imageUrl !== 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg') {
-          console.log('🖼️ Valid image URL received, storing for upload');
-          
-          // We'll upload after we get the recipe ID
-          imageFilename = imageUrl; // Store the URL temporarily
-        } else {
-          console.log('🖼️ No valid image URL generated, using fallback');
-        }
+        // Skip image generation on web due to CORS, use default image
+        console.log('🖼️ Using default image for web platform');
+        imageFilename = null; // No image to upload
       } catch (imageError) {
         console.error('🖼️ Error generating image:', imageError);
         // Continue without image
