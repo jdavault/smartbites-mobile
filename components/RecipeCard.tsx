@@ -279,11 +279,13 @@ const getStyles = (colors: ThemeColors) =>
       marginRight: 8,
     },
     previewTitle: {
-      fontSize: 20,
+      fontSize: 17,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
       marginBottom: 12,
       lineHeight: 26,
+      paddingRight: 80,
+      flexWrap: 'wrap',
     },
     headNote: {
       fontSize: 16,
