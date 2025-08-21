@@ -406,6 +406,7 @@ export default function RegisterScreen() {
         form: { gap: 8 },
         row: { flexDirection: 'row', gap: 8 },
         flex1: { flex: 1 },
+        flex3: { flex: 1.3 },
         flex2: { flex: 2 },
 
        zipContainer: { width: 80 },
@@ -818,35 +819,35 @@ export default function RegisterScreen() {
                 </View>
 
                 {/* Names */}
-<View style={styles.row}>
-  <View style={styles.flex1}>
-    <TextInput
-      style={styles.input}
-      value={firstName}
-      onChangeText={setFirstName}
-      placeholder="First name"
-      placeholderTextColor={colors.textSecondary}
-      autoCapitalize="words"
-      autoCorrect={false}
-      textContentType="givenName"
-      autoComplete="given-name"
-    />
-  </View>
-
-  <View style={styles.flex2}>
-    <TextInput
-      style={styles.input}
-      value={lastName}
-      onChangeText={setLastName}
-      placeholder="Last name"
-      placeholderTextColor={colors.textSecondary}
-      autoCapitalize="words"
-      autoCorrect={false}
-      textContentType="familyName"
-      autoComplete="family-name"
-    />
-  </View>
-</View>
+                <View style={styles.row}>
+                  <View style={styles.flex3}>
+                    <TextInput
+                      style={styles.input}
+                      value={firstName}
+                      onChangeText={setFirstName}
+                      placeholder="First name"
+                      placeholderTextColor={colors.textSecondary}
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                      textContentType="givenName"
+                      autoComplete="given-name"
+                    />
+                  </View>
+                
+                  <View style={styles.flex2}>
+                    <TextInput
+                      style={styles.input}
+                      value={lastName}
+                      onChangeText={setLastName}
+                      placeholder="Last name"
+                      placeholderTextColor={colors.textSecondary}
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                      textContentType="familyName"
+                      autoComplete="family-name"
+                    />
+                  </View>
+                </View>
                 {/* Address */}
                 <TextInput
                   style={styles.input}
