@@ -885,6 +885,8 @@ export default function RegisterScreen() {
                     autoComplete="family-name"
                   />
                 </View>
+                  />
+                </View>
                 {/* Address */}
                 <TextInput
                   style={styles.input}
