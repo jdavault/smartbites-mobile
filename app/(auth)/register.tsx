@@ -29,6 +29,23 @@ import SmartBitesLogo from '@/assets/images/smart-bites-logo.png'; // 72x72
 
 const DismissWrapper = Platform.OS === 'web' ? React.Fragment : TouchableWithoutFeedback;
 
+// Phone number formatting helper
+const formatPhoneNumber = (value: string): string => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length < 4) return digits;
+  if (digits.length <= 6) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  } else {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  }
+};
+
+// Phone number validation helper
+const isValidPhoneNumber = (phone: string): boolean => {
+  const digits = phone.replace(/\D/g, '');
+  return digits.length === 10;
+};
+
 // US States list
 const US_STATES = [
   { code: 'AL', name: 'Alabama' },
@@ -185,6 +202,7 @@ export default function RegisterScreen() {
   const [showAllergens, setShowAllergens] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
   const [showStates, setShowStates] = useState(false);
+  const [stateSearchText, setStateSearchText] = useState('');
   const [selectedAllergenIds, setSelectedAllergenIds] = useState<Set<string>>(
     new Set()
   );
@@ -205,9 +223,24 @@ export default function RegisterScreen() {
     setter(next);
   };
 
+  // Filter states based on search text
+  const filteredStates = US_STATES.filter(state => 
+    state.name.toLowerCase().includes(stateSearchText.toLowerCase()) ||
+    state.code.toLowerCase().includes(stateSearchText.toLowerCase())
+  );
+
+  // Handle keyboard input for state selection
+  const handleStateKeyPress = (key: string) => {
+    const newSearchText = stateSearchText + key.toLowerCase();
+    setStateSearchText(newSearchText);
+    
+    // Clear search text after 1 second
+    setTimeout(() => setStateSearchText(''), 1000);
+  };
+
   const normalizePhone = (raw: string) => raw.replace(/[^\d+]/g, '');
   const zipOk = (z: string) => /^(\d{5})(-?\d{4})?$/.test(z.trim());
-  const phoneOk = (p: string) => normalizePhone(p).replace(/\D/g, '').length >= 10;
+  const phoneOk = (p: string) => isValidPhoneNumber(p);
 
   const handleRegister = async () => {
     if (!email || !password || !confirmPassword || !firstName || !lastName) {
@@ -250,7 +283,7 @@ export default function RegisterScreen() {
     if (phone && !phoneOk(phone)) {
       openModal({
         title: 'Invalid Phone',
-        subtitle: 'Please enter a valid phone number.',
+        subtitle: 'Please enter a valid 10-digit phone number.',
         emoji: '📞',
         primary: { label: 'OK' },
       });
@@ -308,7 +341,7 @@ export default function RegisterScreen() {
             city: city.trim() || null,
             state: state.trim() || null,
             zip: zip.trim() || null,
-            phone: normalizePhone(phone) || null,
+            phone: phone.replace(/\D/g, '') || null,
           },
           { onConflict: 'user_id' }
         );
@@ -455,6 +488,18 @@ export default function RegisterScreen() {
           borderRadius: 9,
           maxHeight: 200,
           zIndex: 1000,
+        },
+        stateSearchIndicator: {
+          paddingHorizontal: 12,
+          paddingVertical: 4,
+          backgroundColor: colors.primary,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        stateSearchText: {
+          fontSize: 12,
+          fontFamily: 'Inter-SemiBold',
+          color: '#FFFFFF',
         },
         stateItem: {
           paddingHorizontal: 12,
@@ -810,6 +855,11 @@ export default function RegisterScreen() {
                     <TouchableOpacity
                       style={styles.stateButton}
                       onPress={() => setShowStates(!showStates)}
+                      onKeyPress={(e) => {
+                        if (showStates && e.nativeEvent.key.length === 1) {
+                          handleStateKeyPress(e.nativeEvent.key);
+                        }
+                      }}
                     >
                       <Text style={styles.stateButtonText}>
                         {state || 'State'}
@@ -819,16 +869,24 @@ export default function RegisterScreen() {
 
                     {showStates && (
                       <ScrollView style={styles.stateList} nestedScrollEnabled>
-                        {US_STATES.map((stateItem, index) => (
+                        {stateSearchText && (
+                          <View style={styles.stateSearchIndicator}>
+                            <Text style={styles.stateSearchText}>
+                              Searching: {stateSearchText}
+                            </Text>
+                          </View>
+                        )}
+                        {filteredStates.map((stateItem, index) => (
                           <TouchableOpacity
                             key={stateItem.code}
                             style={[
                               styles.stateItem,
-                              index === US_STATES.length - 1 && styles.stateItemLast,
+                              index === filteredStates.length - 1 && styles.stateItemLast,
                             ]}
                             onPress={() => {
                               setState(stateItem.code);
                               setShowStates(false);
+                              setStateSearchText('');
                             }}
                           >
                             <Text style={styles.stateItemText}>
@@ -861,12 +919,16 @@ export default function RegisterScreen() {
                    <TextInput
                      style={styles.input}
                      value={phone}
-                     onChangeText={setPhone}
+                     onChangeText={(text) => {
+                       const formatted = formatPhoneNumber(text);
+                       setPhone(formatted);
+                     }}
                      placeholder="Phone"
                      placeholderTextColor={colors.textSecondary}
                      keyboardType="phone-pad"
                      autoCapitalize="none"
                      autoCorrect={false}
+                     maxLength={14}
                      textContentType="telephoneNumber"
                      autoComplete="tel"
                      returnKeyType="done"
