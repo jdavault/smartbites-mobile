@@ -64,7 +64,17 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         .from('user_recipes')
         .select(`
           *,
-          recipes (*)
+          recipes (
+            *,
+            recipe_allergens (
+              allergen_id,
+              allergens (name)
+            ),
+            recipe_dietary_prefs (
+              dietary_pref_id,
+              dietary_prefs (name)
+            )
+          )
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false, foreignTable: 'recipes' });
@@ -93,8 +103,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         tags: item.recipes.tags || [],
         searchQuery: item.recipes.search_query || '',
         searchKey: item.recipes.search_key || '',
-        allergens: item.recipes.allergens || [],
-        dietaryPrefs: item.recipes.dietary_prefs || [],
+        allergens: item.recipes.recipe_allergens?.map((ra: any) => ra.allergens?.name).filter(Boolean) || [],
+        dietaryPrefs: item.recipes.recipe_dietary_prefs?.map((rd: any) => rd.dietary_prefs?.name).filter(Boolean) || [],
         notes: item.recipes.notes || '',
         nutritionInfo: item.recipes.nutrition_info || '',
         image: item.recipes.image,
@@ -102,6 +112,10 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         actions: item.actions || [],
         createdAt: item.recipes.created_at,
       })) || [];
+
+      console.log('📊 Fetched recipes with relationships:', formattedRecipes.length);
+      console.log('🔍 Sample recipe allergens:', formattedRecipes[0]?.allergens);
+      console.log('🔍 Sample recipe dietary prefs:', formattedRecipes[0]?.dietaryPrefs);
 
       setSavedRecipes(formattedRecipes);
     } catch (error) {
