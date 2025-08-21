@@ -107,21 +107,20 @@ export async function generateRecipe(
         
       Return ONLY a valid JSON object in the following exact structure:
       {
-        "title": "Recipe Title",
-        "headNote": "Brief, enticing description that explains the dish",
-        "description": "Brief, enticing description that explains the dish",
-        "ingredients": ["Ingredient 1", "Ingredient 2"],
-        "instructions": ["Step 1", "Step 2"],
-        "prepTime": "15 minutes",
-        "cookTime": "30 minutes",
-        "servings": 4,
-        "difficulty": "easy",
-        "tags": ["tag1", "tag2"],
-        "searchQuery": "${query}",
-        "allergens": [],
-        "dietaryPrefs": [],
-        "notes": "Substitutions or troubleshooting tips",
-        "nutritionInfo": "Nutrition information per serving"
+        "recipes": [
+          {
+            "title": "Recipe Title",
+            "headNote": "Brief, enticing description that explains the dish",
+            "ingredients": ["Ingredient 1", "Ingredient 2"],
+            "instructions": ["Step 1", "Step 2"],
+            "prepTime": "15 minutes",
+            "cookTime": "30 minutes",
+            "servings": 4,
+            "difficulty": "easy",
+            "tags": ["tag1", "tag2"],
+            "allergens": []
+          }
+        ]
       }
       
         - The JSON must be syntactically valid — no trailing commas, no extra commentary.
@@ -298,21 +297,20 @@ export async function generateRecipes(
         
       Return ONLY a valid JSON object in the following exact structure:
       {
-        "title": "Recipe Title",
-        "headNote": "Brief, enticing description that explains the dish",
-        "description": "Brief, enticing description that explains the dish",
-        "ingredients": ["Ingredient 1", "Ingredient 2"],
-        "instructions": ["Step 1", "Step 2"],
-        "prepTime": "15 minutes",
-        "cookTime": "30 minutes",
-        "servings": 4,
-        "difficulty": "easy",
-        "tags": ["tag1", "tag2"],
-        "searchQuery": "${query}",
-        "allergens": [],
-        "dietaryPrefs": [],
-        "notes": "Substitutions or troubleshooting tips",
-        "nutritionInfo": "Nutrition information per serving"
+        "recipes": [
+          {
+            "title": "Recipe Title",
+            "headNote": "Brief, enticing description that explains the dish",
+            "ingredients": ["Ingredient 1", "Ingredient 2"],
+            "instructions": ["Step 1", "Step 2"],
+            "prepTime": "15 minutes",
+            "cookTime": "30 minutes",
+            "servings": 4,
+            "difficulty": "easy",
+            "tags": ["tag1", "tag2"],
+            "allergens": []
+          }
+        ]
       }
       
         - The JSON must be syntactically valid — no trailing commas, no extra commentary.
