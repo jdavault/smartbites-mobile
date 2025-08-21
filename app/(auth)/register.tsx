@@ -930,41 +930,41 @@ export default function RegisterScreen() {
                 </View>
 
                 <View style={styles.row}>
-                 <View style={styles.zipContainer}>
-                   <TextInput
-                     style={styles.input}
-                     value={zip}
-                     onChangeText={setZip}
-                     placeholder="ZIP"
-                     placeholderTextColor={colors.textSecondary}
-                     keyboardType="number-pad"
-                     autoCapitalize="none"
-                     autoCorrect={false}
-                     maxLength={10}
-                     textContentType="postalCode"
-                     returnKeyType="next"
-                     onSubmitEditing={() => openStates()}
-                   />
-                 </View>
-                 <View style={styles.phoneContainer}>
-                   <TextInput
-                     style={styles.input}
-                     value={phone}
-                     onChangeText={(text) => {
-                       const formatted = formatPhoneNumber(text);
-                       setPhone(formatted);
-                     }}
-                     placeholder="Phone"
-                     placeholderTextColor={colors.textSecondary}
-                     keyboardType="phone-pad"
-                     autoCapitalize="none"
-                     autoCorrect={false}
-                     maxLength={14}
-                     textContentType="telephoneNumber"
-                     autoComplete="tel"
-                     returnKeyType="done"
-                   />
-                 </View>
+                  <View style={styles.zipContainer}>
+                    <TextInput
+                      style={styles.input}
+                      value={zip}
+                      onChangeText={setZip}
+                      placeholder="ZIP"
+                      placeholderTextColor={colors.textSecondary}
+                      keyboardType="number-pad"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      maxLength={10}
+                      textContentType="postalCode"
+                      returnKeyType="next"
+                      onSubmitEditing={() => openStates()}
+                    />
+                  </View>
+                  <View style={styles.phoneContainer}>
+                    <TextInput
+                      style={styles.input}
+                      value={phone}
+                      onChangeText={(text) => {
+                        const formatted = formatPhoneNumber(text);
+                        setPhone(formatted);
+                      }}
+                      placeholder="Phone"
+                      placeholderTextColor={colors.textSecondary}
+                      keyboardType="phone-pad"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      maxLength={14}
+                      textContentType="telephoneNumber"
+                      autoComplete="tel"
+                      returnKeyType="done"
+                    />
+                  </View>
                 </View>
 
                 {/* Allergens */}
