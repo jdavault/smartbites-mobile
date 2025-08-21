@@ -834,7 +834,7 @@ export default function RegisterScreen() {
                     autoComplete="given-name"
                   />
                   </View>
-                   <View style={styles.firstNameContainer}>
+                   <View style={styles.lastNameContainer}>
                   <TextInput
                     style={styles.input}
                     value={lastName}
