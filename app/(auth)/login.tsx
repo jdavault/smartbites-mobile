@@ -310,7 +310,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
 
     main: { flex: 1 },
     scrollInner: {
-      paddingBottom: 24, // space so last field isn’t tight against keyboard
+      paddingBottom: 24, // space so last field isn't tight against keyboard
     },
 
     brandLogo: {
@@ -369,6 +369,8 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       fontSize: FontSizes.md,
       color: colors.textPrimary,
       outlineWidth: 0,
+      textAlign: 'left',
+      writingDirection: 'ltr',
     },
     eyeButton: { padding: 12 },
 
