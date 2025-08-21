@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
@@ -21,6 +21,8 @@ interface RecipeCardProps {
   showSaveButton?: boolean;
   showHeartButton?: boolean;
   selectedAllergens?: { $id: string; name: string }[];
+  isSaving?: boolean;
+  isFavoriting?: boolean;
 }
 
 export default function RecipeCard({
@@ -31,6 +33,8 @@ export default function RecipeCard({
   showSaveButton = false,
   showHeartButton = false,
   selectedAllergens = [],
+  isSaving = false,
+  isFavoriting = false,
 }: RecipeCardProps) {
   const { colors } = useTheme();
   const router = useRouter();
@@ -135,8 +139,16 @@ export default function RecipeCard({
               <TouchableOpacity
                 style={[styles.iconButton, styles.saveIconButton]}
                 onPress={onSave}
+                disabled={isSaving || isFavoriting}
               >
-                <BookmarkPlus size={20} color="#FFFFFF" />
+                {isSaving ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <Text style={styles.loadingText}>Saving...</Text>
+                  </View>
+                ) : (
+                  <BookmarkPlus size={20} color="#FFFFFF" />
+                )}
               </TouchableOpacity>
             )}
 
@@ -144,8 +156,16 @@ export default function RecipeCard({
               <TouchableOpacity
                 style={[styles.iconButton, styles.favoriteIconButton]}
                 onPress={onSaveAndFavorite}
+                disabled={isSaving || isFavoriting}
               >
-                <Heart size={20} color="#FFFFFF" />
+                {isFavoriting ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <Text style={styles.loadingText}>🧠 Generating...</Text>
+                  </View>
+                ) : (
+                  <Heart size={20} color="#FFFFFF" />
+                )}
               </TouchableOpacity>
             )}
           </View>
@@ -306,6 +326,10 @@ const getStyles = (colors: ThemeColors) =>
       backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
+      minWidth: 80,
+      minHeight: 36,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     saveIconButton: {
       backgroundColor: colors.primary,
@@ -314,6 +338,17 @@ const getStyles = (colors: ThemeColors) =>
     favoriteIconButton: {
       backgroundColor: colors.error,
       borderColor: colors.error,
+    },
+    loadingContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+    },
+    loadingText: {
+      fontSize: 10,
+      fontFamily: 'Inter-Medium',
+      color: '#FFFFFF',
     },
     description: {
       fontSize: 14,
