@@ -820,7 +820,7 @@ export default function RegisterScreen() {
                 {/* Names */}
                 <View style={styles.row}>
                   <TextInput
-                    style={[styles.input, styles.flex1]}
+                    style={[styles.input, { flex: 0.8 }]}
                     value={firstName}
                     onChangeText={setFirstName}
                     placeholder="First name"
@@ -831,7 +831,7 @@ export default function RegisterScreen() {
                     autoComplete="given-name"
                   />
                   <TextInput
-                    style={[styles.input, styles.flex1]}
+                    style={[styles.input, { flex: 1.2 }]}
                     value={lastName}
                     onChangeText={setLastName}
                     placeholder="Last name"
