@@ -274,7 +274,7 @@ export default function SearchScreen() {
       paddingVertical: 40,
     },
     loadingText: {
-      fontSize: 12,
+      fontSize: 13,
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       marginTop: 12,
