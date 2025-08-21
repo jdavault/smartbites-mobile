@@ -258,8 +258,12 @@ Return ONLY valid JSON in this exact format:
     // Add the searchQuery to each
     return recipes.slice(0, 5).map(r => ({ ...r, searchQuery: query }));
   } catch (error) {
-    console.error('Error generating recipes:', error);
-    console.warn('Falling back to mock recipe due to API error.');
+    if (error instanceof Error && error.message.includes('401')) {
+      console.warn('OpenAI API key is invalid or expired. Falling back to mock recipe.');
+    } else {
+      console.error('Error generating recipes:', error);
+      console.warn('Falling back to mock recipe due to API error.');
+    }
     return [generateMockRecipe(query, allergens, dietaryPrefs)];
   }
 }
