@@ -76,6 +76,11 @@ export async function uploadImageFromUrl(
   userId: string,
   filename: string
 ): Promise<string | null> {
+  // Skip upload on web platform to avoid CORS issues
+  if (Platform.OS === 'web') {
+    return null;
+  }
+
   try {
     // Fetch the image from the URL
     const response = await fetch(imageUrl);
