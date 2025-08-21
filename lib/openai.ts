@@ -258,6 +258,7 @@ export async function generateRecipes(
         - Titles must be direct, descriptive, and not misleading.
         - Always be mindful that your recipe should teach and guide any home cook to success, regardless of their skill level.
       `;
+
     const schema = {
       name: 'recipes_payload',
       schema: {
@@ -341,8 +342,6 @@ export async function generateRecipes(
         }),
       })
     );
-
-
 
     if (!response.ok) {
       throw new Error(`OpenAI API error: ${response.status}`);
