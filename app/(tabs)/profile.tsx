@@ -9,7 +9,6 @@ import {
   SafeAreaView,
   ScrollView,
   Switch,
-  Alert,
   Platform,
   ActivityIndicator,
   Linking,
@@ -32,18 +31,26 @@ import {
   ExternalLink,
 } from 'lucide-react-native';
 
-// Helper function for email redirect URLs
-const getEmailRedirectTo = () =>
-  Platform.select({
-    web: typeof window !== 'undefined'
-      ? `${window.location.origin}/auth/callback`
-      : undefined,
-    default: process.env.EXPO_PUBLIC_DEEP_LINK ?? 'smartbites://auth-callback',
-  });
-
 // Get version from package.json
 const packageJson = require('../../package.json');
 const APP_VERSION = packageJson.version;
+
+// Phone number formatting helper
+const formatPhoneNumber = (value: string): string => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length < 4) return digits;
+  if (digits.length <= 6) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  } else {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  }
+};
+
+// Phone number validation helper
+const isValidPhoneNumber = (phone: string): boolean => {
+  const digits = phone.replace(/\D/g, '');
+  return digits.length === 10;
+};
 
 type ModalInfo = {
   visible: boolean;
@@ -146,7 +153,7 @@ export default function ProfileScreen() {
     setModalInfo({ ...info, visible: true });
   const closeModal = () => setModalInfo((m) => ({ ...m, visible: false }));
 
-  // --------- NEW: Scroll to bottom when expanding About ----------
+  // --------- Scroll to bottom when expanding About ----------
   const scrollRef = useRef<RNScrollView | null>(null);
   useEffect(() => {
     if (showAbout) {
@@ -160,12 +167,12 @@ export default function ProfileScreen() {
       scrollRef.current?.scrollToEnd({ animated: true });
     }
   };
-  // --------------------------------------------------------------
+  // ---------------------------------------------------------
 
   useEffect(() => {
     if (user) {
-     loadProfile();
-   }
+      loadProfile();
+    }
   }, [user]);
 
   const loadProfile = async () => {
@@ -178,9 +185,7 @@ export default function ProfileScreen() {
 
       if (error) {
         if (error.code === '42P01') {
-          console.warn(
-            'Database tables not created yet. Please run the migration.'
-          );
+          console.warn('Database tables not created yet. Please run the migration.');
           return;
         }
         throw error;
@@ -191,14 +196,12 @@ export default function ProfileScreen() {
           ...prev,
           firstName: data.first_name || '',
           lastName: data.last_name || '',
-          // IMPORTANT: email comes from auth, not user_profiles
-          email: user?.email ?? '',
           address1: data.address1 || '',
           address2: data.address2 || '',
           city: data.city || '',
           state: data.state || '',
           zip: data.zip || '',
-          phone: data.phone || '',
+          phone: data.phone ? formatPhoneNumber(data.phone) : '',
         }));
       }
     } catch (err) {
@@ -208,63 +211,19 @@ export default function ProfileScreen() {
 
   const saveProfile = async () => {
     if (!user) return;
+
+    if (profile.phone && !isValidPhoneNumber(profile.phone)) {
+      openModal({
+        title: 'Invalid Phone Number',
+        subtitle: 'Please enter a valid 10-digit phone number.',
+        emoji: '📞',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const provider = (user.app_metadata?.provider as string) || 'email';
-
-      // A) Handle email change through Supabase Auth (source of truth)
-      const currentEmail = (user.email ?? '').trim().toLowerCase();
-      const nextEmail = (profile.email ?? '').trim().toLowerCase();
-      const emailChanged = !!nextEmail && nextEmail !== currentEmail;
-
-      if (emailChanged) {
-        // Block OAuth users: email must be changed at the identity provider
-        if (provider !== 'email') {
-          openModal({
-            title: 'Email Managed by Provider',
-            subtitle:
-              'This account is linked with a social provider (e.g., Google/Apple). Update your email in the provider settings, then re-login.',
-            emoji: 'ℹ️',
-          });
-          setLoading(false);
-          return;
-        }
-
-        const emailRedirectTo = getEmailRedirectTo();
-
-        const { data: upd, error: emailError } = await supabase.auth.updateUser(
-          { email: nextEmail },
-          emailRedirectTo ? { emailRedirectTo } : undefined
-        );
-
-        if (emailError) {
-          // Common gotchas we can hint about
-          const hint =
-            emailError.message?.toLowerCase().includes('redirect') ||
-            emailError.message?.toLowerCase().includes('not allowed')
-              ? '\n\nHint: Add your callback URL to Supabase → Auth → URL Configuration → Additional Redirect URLs. For web, use https://yourdomain.com/auth/callback (and localhost while developing). For native, allow your deep link scheme like smartbites://auth-callback.'
-              : '';
-
-          openModal({
-            title: 'Email Update Failed',
-            subtitle: `${emailError.message || 'Failed to update email.'}${hint}`,
-            emoji: '❌',
-          });
-          setLoading(false);
-          return;
-        }
-
-        // If confirmations are on, the email won't change until the link is clicked
-        openModal({
-          title: 'Check Your Inbox',
-          subtitle:
-            'We sent a confirmation link to your new email. Click the link to finalize the change. Your profile details will still be saved below.',
-          emoji: '✉️',
-        });
-      }
-
-      // B) Upsert everything else in your profile table (no email stored here)
       const { error } = await supabase.from('user_profiles').upsert(
         {
           user_id: user.id,
@@ -275,7 +234,7 @@ export default function ProfileScreen() {
           city: profile.city,
           state: profile.state,
           zip: profile.zip,
-          phone: profile.phone,
+          phone: profile.phone.replace(/\D/g, ''),
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'user_id' }
@@ -283,19 +242,15 @@ export default function ProfileScreen() {
 
       if (error) throw error;
 
-      // Final toast (if email changed, we already showed a modal; keep this concise)
-      if (!emailChanged) {
-        openModal({
-          title: 'Profile Updated!',
-          subtitle: 'Your changes have been saved successfully.',
-          emoji: '✅',
-        });
-      }
+      openModal({
+        title: 'Profile Updated!',
+        subtitle: 'Your changes have been saved successfully.',
+        emoji: '✅',
+      });
     } catch (err: any) {
       openModal({
         title: 'Update Failed',
-        subtitle:
-          err?.message || 'Failed to update profile. Please try again later.',
+        subtitle: err?.message || 'Failed to update profile. Please try again later.',
         emoji: '❌',
       });
       console.error('Save profile error:', err);
@@ -321,27 +276,17 @@ export default function ProfileScreen() {
       justifyContent: 'space-between',
       alignItems: 'center',
     },
-    headerContent: {
-      flex: 1,
-    },
-    headerLogo: {
-      width: 72,
-      height: 72,
-      marginLeft: 16,
-    },
+    headerContent: { flex: 1 },
+    headerLogo: { width: 72, height: 72, marginLeft: 16 },
     title: {
       fontSize: 28,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
       marginBottom: 4,
     },
-    subtitle: {
-      fontSize: 16,
-      fontFamily: 'Lato-Regular',
-      color: colors.textSecondary,
-    },
+    subtitle: { fontSize: 16, fontFamily: 'Lato-Regular', color: colors.textSecondary },
 
-    // Form styling matching registration
+    // Form styling
     form: { gap: 12 },
     row: { flexDirection: 'row', gap: 8 },
     flex1: { flex: 1 },
@@ -361,52 +306,19 @@ export default function ProfileScreen() {
       backgroundColor: colors.background,
     },
 
-    // State dropdown matching registration
-    stateDropdown: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 9,
-      backgroundColor: colors.background,
-      position: 'relative',
-    },
-    stateButton: {
+    // NEW: state select button (looks like input)
+    stateSelectButton: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 9,
+      justifyContent: 'space-between',
     },
     stateButtonText: {
-      fontSize: 15,
-      fontFamily: 'Inter-Regular',
-      color: profile.state ? colors.text : colors.textSecondary,
-    },
-    stateList: {
-      position: 'absolute',
-      top: '100%',
-      left: 0,
-      right: 0,
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 9,
-      maxHeight: 200,
-      zIndex: 1000,
-    },
-    stateItem: {
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    stateItemLast: { borderBottomWidth: 0 },
-    stateItemText: {
       fontSize: 15,
       fontFamily: 'Inter-Regular',
       color: colors.text,
     },
 
-    // Form card wrapper
+    // Card wrapper
     formCard: {
       backgroundColor: colors.surface,
       marginHorizontal: 24,
@@ -417,7 +329,7 @@ export default function ProfileScreen() {
       borderColor: colors.border,
     },
 
-    // Section styling
+    // Sections
     sectionTitle: {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
@@ -435,7 +347,7 @@ export default function ProfileScreen() {
       paddingHorizontal: 24,
     },
 
-    // Chip grid styling
+    // Chips
     chipGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -451,14 +363,8 @@ export default function ProfileScreen() {
       borderColor: colors.border,
       backgroundColor: colors.surface,
     },
-    chipSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    chipSelectedDietary: {
-      backgroundColor: colors.dietary,
-      borderColor: colors.dietary,
-    },
+    chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+    chipSelectedDietary: { backgroundColor: colors.dietary, borderColor: colors.dietary },
     chipText: { fontSize: 12, fontFamily: 'Inter-Medium', color: colors.text },
     chipTextSelected: { color: '#fff' },
 
@@ -477,11 +383,7 @@ export default function ProfileScreen() {
       borderWidth: 1,
       borderColor: colors.accent,
     },
-    themeText: {
-      fontSize: 16,
-      fontFamily: 'Inter-Medium',
-      color: colors.accentDark,
-    },
+    themeText: { fontSize: 16, fontFamily: 'Inter-Medium', color: colors.accentDark },
 
     // Buttons
     button: {
@@ -499,32 +401,17 @@ export default function ProfileScreen() {
       marginBottom: 12,
     },
     halfButton: { flex: 1 },
-    saveButton: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
+    saveButton: { backgroundColor: colors.primary, borderColor: colors.primary },
     buttonText: { fontSize: 14, fontFamily: 'Inter-SemiBold' },
     saveButtonText: { color: '#FFFFFF' },
     signOutButton: { backgroundColor: '#FFFFFF', borderColor: colors.error },
     signOutButtonText: { color: colors.error },
 
-    aboutToggle: {
-      alignItems: 'center',
-      paddingVertical: 6,
-      marginBottom: 4,
-    },
-    aboutToggleText: {
-      fontSize: 16,
-      fontFamily: 'Inter-SemiBold',
-      color: colors.primary,
-    },
+    aboutToggle: { alignItems: 'center', paddingVertical: 6, marginBottom: 4 },
+    aboutToggleText: { fontSize: 16, fontFamily: 'Inter-SemiBold', color: colors.primary },
 
-    // tightened legal section spacing
-    legalSection: {
-      paddingHorizontal: 24,
-      paddingTop: 8,
-      paddingBottom: 12,
-    },
+    // Legal section
+    legalSection: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
     disclaimerBox: {
       flexDirection: 'row',
       alignItems: 'flex-start',
@@ -535,10 +422,7 @@ export default function ProfileScreen() {
       borderWidth: 1,
       borderColor: '#f59e0b',
     },
-    disclaimerIcon: {
-      marginRight: 10,
-      marginTop: 2,
-    },
+    disclaimerIcon: { marginRight: 10, marginTop: 2 },
     disclaimerText: {
       flex: 1,
       fontSize: 14,
@@ -555,12 +439,7 @@ export default function ProfileScreen() {
       marginBottom: 0,
       paddingBottom: 0,
     },
-    linkText: {
-      fontSize: 13,
-      fontFamily: 'Inter-Medium',
-      color: colors.primary,
-      marginRight: 6,
-    },
+    linkText: { fontSize: 13, fontFamily: 'Inter-Medium', color: colors.primary, marginRight: 6 },
     versionText: {
       fontSize: 14,
       fontWeight: '700',
@@ -570,7 +449,7 @@ export default function ProfileScreen() {
       marginTop: 10,
     },
 
-    // Modal styles
+    // Modal (success/error)
     modalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.4)',
@@ -606,10 +485,46 @@ export default function ProfileScreen() {
       textAlign: 'center',
       marginBottom: 16,
     },
-    modalEmoji: {
-      fontSize: 40,
-      marginBottom: 12,
+    modalEmoji: { fontSize: 40, marginBottom: 12 },
+
+    // NEW: Dropdown modal (portal) styles
+    dropdownOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.35)',
     },
+    dropdownSheet: {
+      position: 'absolute',
+      left: 16,
+      right: 16,
+      top: Platform.select({ ios: 120, android: 120, default: 120 }),
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: 12,
+      elevation: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 10,
+    },
+    dropdownTitle: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.text,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    dropdownList: { maxHeight: 300, borderRadius: 8 },
+    dropdownItem: {
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    dropdownItemText: { fontSize: 15, fontFamily: 'Inter-Regular', color: colors.text },
+    dropdownCancel: { marginTop: 8, alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 14 },
+    dropdownCancelText: { fontSize: 14, fontFamily: 'Inter-SemiBold', color: colors.primary },
   });
 
   return (
@@ -625,9 +540,7 @@ export default function ProfileScreen() {
           <TouchableWithoutFeedback onPress={closeModal}>
             <View style={styles.modalOverlay}>
               <View style={styles.modalContent}>
-                {modalInfo.emoji && (
-                  <Text style={styles.modalEmoji}>{modalInfo.emoji}</Text>
-                )}
+                {modalInfo.emoji && <Text style={styles.modalEmoji}>{modalInfo.emoji}</Text>}
                 <Text style={styles.modalTitle}>{modalInfo.title}</Text>
                 {!!modalInfo.subtitle && (
                   <Text style={styles.modalSubtitle}>{modalInfo.subtitle}</Text>
@@ -650,6 +563,42 @@ export default function ProfileScreen() {
         />
       </View>
 
+      {/* NEW: State picker modal (portal) */}
+      <Modal
+        transparent
+        visible={showStates}
+        animationType="fade"
+        onRequestClose={() => setShowStates(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowStates(false)}>
+          <View style={styles.dropdownOverlay} />
+        </TouchableWithoutFeedback>
+
+        <View style={styles.dropdownSheet}>
+          <Text style={styles.dropdownTitle}>Select a state</Text>
+          <ScrollView style={styles.dropdownList} keyboardShouldPersistTaps="handled">
+            {US_STATES.map((stateItem) => (
+              <TouchableOpacity
+                key={stateItem.code}
+                style={styles.dropdownItem}
+                onPress={() => {
+                  setProfile((prev) => ({ ...prev, state: stateItem.code }));
+                  setShowStates(false);
+                }}
+              >
+                <Text style={styles.dropdownItemText}>
+                  {stateItem.code} — {stateItem.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          <TouchableOpacity style={styles.dropdownCancel} onPress={() => setShowStates(false)}>
+            <Text style={styles.dropdownCancelText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
@@ -660,50 +609,28 @@ export default function ProfileScreen() {
           <View style={styles.formCard}>
             <View style={styles.form}>
               {/* Names */}
-              <View style={styles.row}>
-                <TextInput
-                  style={[styles.input, { flex: 0.9 }]}
-                  value={profile.firstName}
-                  onChangeText={(text) =>
-                    setProfile((prev) => ({ ...prev, firstName: text }))
-                  }
-                  placeholder="First name"
-                  placeholderTextColor={colors.textSecondary}
-                  autoCapitalize="words"
-                />
-                <TextInput
-                  style={[styles.input, { flex: 1.1 }]}
-                  value={profile.lastName}
-                  onChangeText={(text) =>
-                    setProfile((prev) => ({ ...prev, lastName: text }))
-                  }
-                  placeholder="Last name"
-                  placeholderTextColor={colors.textSecondary}
-                  autoCapitalize="words"
-                />
-              </View>
-
-              {/* Email */}
               <TextInput
                 style={styles.input}
-                value={profile.email}
-                onChangeText={(text) =>
-                  setProfile((prev) => ({ ...prev, email: text }))
-                }
-                placeholder="Email address"
+                value={profile.firstName}
+                onChangeText={(text) => setProfile((prev) => ({ ...prev, firstName: text }))}
+                placeholder="First name"
                 placeholderTextColor={colors.textSecondary}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
+                autoCapitalize="words"
+              />
+              <TextInput
+                style={styles.input}
+                value={profile.lastName}
+                onChangeText={(text) => setProfile((prev) => ({ ...prev, lastName: text }))}
+                placeholder="Last name"
+                placeholderTextColor={colors.textSecondary}
+                autoCapitalize="words"
               />
 
-              {/* Address fields remain the same */}
+              {/* Address */}
               <TextInput
                 style={styles.input}
                 value={profile.address1}
-                onChangeText={(text) =>
-                  setProfile((prev) => ({ ...prev, address1: text }))
-                }
+                onChangeText={(text) => setProfile((prev) => ({ ...prev, address1: text }))}
                 placeholder="Address line 1"
                 placeholderTextColor={colors.textSecondary}
                 autoCapitalize="words"
@@ -711,62 +638,37 @@ export default function ProfileScreen() {
               <TextInput
                 style={styles.input}
                 value={profile.address2}
-                onChangeText={(text) =>
-                  setProfile((prev) => ({ ...prev, address2: text }))
-                }
+                onChangeText={(text) => setProfile((prev) => ({ ...prev, address2: text }))}
                 placeholder="Address line 2 (optional)"
                 placeholderTextColor={colors.textSecondary}
                 autoCapitalize="words"
               />
 
-              <View style={styles.row}>
+              <View className="city-state-row" style={styles.row}>
                 <TextInput
                   style={[styles.input, styles.flex2]}
                   value={profile.city}
-                  onChangeText={(text) =>
-                    setProfile((prev) => ({ ...prev, city: text }))
-                  }
+                  onChangeText={(text) => setProfile((prev) => ({ ...prev, city: text }))}
                   placeholder="City"
                   placeholderTextColor={colors.textSecondary}
                   autoCapitalize="words"
                 />
-                <View style={[styles.stateDropdown, styles.flex1]}>
-                  <TouchableOpacity
-                    style={styles.stateButton}
-                    onPress={() => setShowStates(!showStates)}
-                  >
-                    <Text style={styles.stateButtonText}>
-                      {profile.state || 'State'}
-                    </Text>
-                    <ChevronDown size={16} color={colors.textSecondary} />
-                  </TouchableOpacity>
 
-                  {showStates && (
-                    <ScrollView style={styles.stateList} nestedScrollEnabled>
-                      {US_STATES.map((stateItem, index) => (
-                        <TouchableOpacity
-                          key={stateItem.code}
-                          style={[
-                            styles.stateItem,
-                            index === US_STATES.length - 1 &&
-                              styles.stateItemLast,
-                          ]}
-                          onPress={() => {
-                            setProfile((prev) => ({
-                              ...prev,
-                              state: stateItem.code,
-                            }));
-                            setShowStates(false);
-                          }}
-                        >
-                          <Text style={styles.stateItemText}>
-                            {stateItem.code} - {stateItem.name}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  )}
-                </View>
+                {/* NEW: State selector as modal trigger (no inline dropdown) */}
+                <TouchableOpacity
+                  style={[styles.input, styles.stateSelectButton, styles.flex1]}
+                  onPress={() => setShowStates(true)}
+                >
+                  <Text
+                    style={[
+                      styles.stateButtonText,
+                      { color: profile.state ? colors.text : colors.textSecondary },
+                    ]}
+                  >
+                    {profile.state || 'State'}
+                  </Text>
+                  <ChevronDown size={16} color={colors.textSecondary} />
+                </TouchableOpacity>
               </View>
 
               <View style={styles.row}>
@@ -774,9 +676,7 @@ export default function ProfileScreen() {
                   <TextInput
                     style={styles.input}
                     value={profile.zip}
-                    onChangeText={(text) =>
-                      setProfile((prev) => ({ ...prev, zip: text }))
-                    }
+                    onChangeText={(text) => setProfile((prev) => ({ ...prev, zip: text }))}
                     placeholder="ZIP"
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="number-pad"
@@ -787,12 +687,14 @@ export default function ProfileScreen() {
                   <TextInput
                     style={styles.input}
                     value={profile.phone}
-                    onChangeText={(text) =>
-                      setProfile((prev) => ({ ...prev, phone: text }))
-                    }
+                    onChangeText={(text) => {
+                      const formatted = formatPhoneNumber(text);
+                      setProfile((prev) => ({ ...prev, phone: formatted }));
+                    }}
                     placeholder="Phone"
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="phone-pad"
+                    maxLength={14}
                   />
                 </View>
               </View>
@@ -807,9 +709,7 @@ export default function ProfileScreen() {
           ) : (
             <View style={styles.chipGrid}>
               {ALLERGENS.map((allergen) => {
-                const selected = userAllergens.some(
-                  (a) => a.$id === allergen.$id
-                );
+                const selected = userAllergens.some((a) => a.$id === allergen.$id);
                 return (
                   <TouchableOpacity
                     key={allergen.$id}
@@ -817,12 +717,7 @@ export default function ProfileScreen() {
                     onPress={() => toggleAllergen(allergen)}
                     disabled={allergensLoading}
                   >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        selected && styles.chipTextSelected,
-                      ]}
-                    >
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
                       {allergen.name}
                     </Text>
                   </TouchableOpacity>
@@ -839,25 +734,15 @@ export default function ProfileScreen() {
           ) : (
             <View style={styles.chipGrid}>
               {DIETARY_PREFERENCES.map((pref) => {
-                const selected = userDietaryPrefs.some(
-                  (p) => p.$id === pref.$id
-                );
+                const selected = userDietaryPrefs.some((p) => p.$id === pref.$id);
                 return (
                   <TouchableOpacity
                     key={pref.$id}
-                    style={[
-                      styles.chip,
-                      selected && styles.chipSelectedDietary,
-                    ]}
+                    style={[styles.chip, selected && styles.chipSelectedDietary]}
                     onPress={() => toggleDietaryPref(pref)}
                     disabled={dietaryLoading}
                   >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        selected && styles.chipTextSelected,
-                      ]}
-                    >
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
                       {pref.name}
                     </Text>
                   </TouchableOpacity>
@@ -867,17 +752,9 @@ export default function ProfileScreen() {
           )}
 
           <View style={styles.themeContainer}>
-            <View
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
-            >
-              {isDark ? (
-                <Moon size={20} color={colors.text} />
-              ) : (
-                <Sun size={20} color={colors.text} />
-              )}
-              <Text style={styles.themeText}>
-                {isDark ? 'Dark Mode' : 'Light Mode'}
-              </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              {isDark ? <Moon size={20} color={colors.text} /> : <Sun size={20} color={colors.text} />}
+              <Text style={styles.themeText}>{isDark ? 'Dark Mode' : 'Light Mode'}</Text>
             </View>
             <Switch
               value={isDark}
@@ -889,12 +766,7 @@ export default function ProfileScreen() {
 
           <View style={styles.buttonRow}>
             <TouchableOpacity
-              style={[
-                styles.button,
-                styles.saveButton,
-                styles.halfButton,
-                loading && { opacity: 0.6 },
-              ]}
+              style={[styles.button, styles.saveButton, styles.halfButton, loading && { opacity: 0.6 }]}
               onPress={saveProfile}
               disabled={loading}
             >
@@ -907,18 +779,13 @@ export default function ProfileScreen() {
               style={[styles.button, styles.signOutButton, styles.halfButton]}
               onPress={handleSignOut}
             >
-              <Text style={[styles.buttonText, styles.signOutButtonText]}>
-                Log Out
-              </Text>
+              <Text style={[styles.buttonText, styles.signOutButtonText]}>Log Out</Text>
             </TouchableOpacity>
           </View>
 
           {/* About / Legal Section (collapsible) */}
           <View>
-            <TouchableOpacity
-              onPress={() => setShowAbout((v) => !v)}
-              style={styles.aboutToggle}
-            >
+            <TouchableOpacity onPress={() => setShowAbout((v) => !v)} style={styles.aboutToggle}>
               <Text style={styles.aboutToggleText}>
                 {showAbout ? 'Hide About ▲' : 'Show About ▼'}
               </Text>
@@ -927,15 +794,10 @@ export default function ProfileScreen() {
             {showAbout && (
               <View style={styles.legalSection}>
                 <View style={styles.disclaimerBox}>
-                  <AlertCircle
-                    size={20}
-                    color="#f59e0b"
-                    style={styles.disclaimerIcon}
-                  />
+                  <AlertCircle size={20} color="#f59e0b" style={styles.disclaimerIcon} />
                   <Text style={styles.disclaimerText}>
-                    This app helps avoid allergens in recipes but is not a
-                    substitute for professional advice. Always verify
-                    ingredients if you have severe allergies.
+                    This app helps avoid allergens in recipes but is not a substitute for professional
+                    advice. Always verify ingredients if you have severe allergies.
                   </Text>
                 </View>
 
