@@ -463,6 +463,14 @@ export default function RegisterScreen() {
           fontFamily: 'Inter-Regular',
           color: state ? colors.text : colors.textSecondary,
         },
+        stateOverlay: {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'transparent',
+        },
 
         sectionToggle: { alignItems: 'center', paddingVertical: 2, marginTop: 4 },
         sectionToggleText: {
@@ -882,14 +890,25 @@ export default function RegisterScreen() {
                     returnKeyType="next"
                     onSubmitEditing={() => setShowStates(true)}
                   />
-                  <TouchableOpacity
-                    style={[styles.input, styles.flex1, styles.stateButton]}
-                    onPress={() => setShowStates(true)}
-                  >
-                    <Text style={styles.stateButtonText}>
-                      {state || 'State'}
-                    </Text>
-                  </TouchableOpacity>
+                  <View style={[styles.flex1, { position: 'relative' }]}>
+                    <TextInput
+                      style={styles.input}
+                      value={state}
+                      placeholder="State"
+                      placeholderTextColor={colors.textSecondary}
+                      onFocus={() => setShowStates(true)}
+                      onKeyPress={() => setShowStates(true)}
+                      showSoftInputOnFocus={false}
+                      caretHidden={true}
+                      autoCapitalize="characters"
+                      maxLength={2}
+                    />
+                    <TouchableOpacity
+                      style={styles.stateOverlay}
+                      onPress={() => setShowStates(true)}
+                      activeOpacity={1}
+                    />
+                  </View>
                 </View>
 
                 <View style={styles.row}>
