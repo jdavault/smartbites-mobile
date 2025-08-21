@@ -410,8 +410,8 @@ export default function RegisterScreen() {
 
        zipContainer: { width: 80 },
        phoneContainer: { width: 140 },
-       lastNameContainer: { width: 140 },
-       firstNameContainer: { width: 140 },
+       firstNameContainer: { width: 150 },
+       lastNameContainer: { width: 180 },
 
         // Platform-specific vertical padding (web-safe)
         input: {
