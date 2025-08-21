@@ -118,7 +118,8 @@ export async function generateRecipe(
             "servings": 4,
             "difficulty": "easy",
             "tags": ["tag1", "tag2"],
-            "allergens": []
+            "allergens": [],
+            "dietaryPrefs": []
           }
         ]
       }
@@ -166,11 +167,6 @@ export async function generateRecipe(
                   items: { type: 'string' },
                   maxItems: 6,
                 },
-                dietaryPrefs: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  maxItems: 6,
-                },
               },
               required: [
                 'title',
@@ -183,7 +179,6 @@ export async function generateRecipe(
                 'difficulty',
                 'tags',
                 'allergens',
-                'dietaryPrefs',
               ],
               additionalProperties: false,
             },
@@ -314,7 +309,8 @@ export async function generateRecipes(
             "servings": 4,
             "difficulty": "easy",
             "tags": ["tag1", "tag2"],
-            "allergens": []
+            "allergens": [],
+            "dietaryPrefs": []
           }
         ]
       }
@@ -362,11 +358,6 @@ export async function generateRecipes(
                   items: { type: 'string' },
                   maxItems: 6,
                 },
-                dietaryPrefs: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  maxItems: 6,
-                },
               },
               required: [
                 'title',
@@ -379,7 +370,6 @@ export async function generateRecipes(
                 'difficulty',
                 'tags',
                 'allergens',
-                'dietaryPrefs',
               ],
               additionalProperties: false,
             },
