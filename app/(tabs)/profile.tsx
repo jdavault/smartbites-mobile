@@ -237,6 +237,11 @@ export default function ProfileScreen() {
           phone: profile.phone.replace(/\D/g, ''),
           updated_at: new Date().toISOString(),
         },
+        stateItemTextOnly: {
+          fontSize: 15,
+          fontFamily: 'Inter-Regular',
+          color: colors.text,
+        },
         { onConflict: 'user_id' }
       );
 
@@ -502,7 +507,8 @@ export default function ProfileScreen() {
       borderWidth: 1,
       borderColor: colors.border,
       padding: 12,
-      elevation: 8,
+      elevation: 50,
+      zIndex: 99999,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.25,
