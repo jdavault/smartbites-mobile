@@ -209,7 +209,6 @@ export default function RegisterScreen() {
   const [selectedPrefIds, setSelectedPrefIds] = useState<Set<string>>(
     new Set()
   );
-  const [showStates, setShowStates] = useState(false);
   const [showConsent, setShowConsent] = useState(false);
 
   const toggle = (
@@ -885,6 +884,7 @@ export default function RegisterScreen() {
                       {state || 'State'}
                     </Text>
                   </TouchableOpacity>
+                </View>
 
                 <View style={styles.row}>
                  <View style={styles.zipContainer}>
