@@ -346,7 +346,7 @@ export default function SearchScreen() {
         {loading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>Generating recipes...</Text>
+            <Text style={styles.loadingText}>            🍳 Cooking up something delicious just for you...</Text>
           </View>
         )}
 
