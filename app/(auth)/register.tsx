@@ -431,7 +431,7 @@ export default function RegisterScreen() {
         row: { flexDirection: 'row', gap: 8 },
         flex1: { flex: 1 },
         flex2: { flex: 2 },
-        flex3: { flex: 1.3 },
+        flex3: { flex: 1.5 },
 
        zipContainer: { width: 80 },
        phoneContainer: { width: 140 },
@@ -863,7 +863,7 @@ export default function RegisterScreen() {
                 {/* Names */}
                 <View style={styles.row}>
                   <TextInput
-                    style={[styles.input, styles.flex1]}
+                    style={[styles.input, styles.flex2]}
                     value={firstName}
                     onChangeText={setFirstName}
                     placeholder="First name"
@@ -874,7 +874,7 @@ export default function RegisterScreen() {
                     autoComplete="given-name"
                   />
                   <TextInput
-                    style={[styles.input, styles.flex2]}
+                    style={[styles.input, styles.flex3]}
                     value={lastName}
                     onChangeText={setLastName}
                     placeholder="Last name"
