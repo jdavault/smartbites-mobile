@@ -350,8 +350,8 @@ export async function generateRecipes(
         properties: {
           recipes: {
             type: 'array',
-            minItems: 5,
-            maxItems: 5,
+            minItems: 3,
+            maxItems: 3,
             items: {
               type: 'object',
               properties: {
@@ -426,14 +426,14 @@ export async function generateRecipes(
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           temperature: 0.3,
-          max_tokens: 4000, // increased to allow complete JSON response
+          max_tokens: 2500,
           seed: 7, // more deterministic & compact
           response_format: {
             type: 'json_object'
           },
           messages: [
             { role: 'system', content: prompt },
-            { role: 'user', content: `Generate 5 recipes for: ${query}` },
+            { role: 'user', content: `Generate 3 recipes for: ${query}` },
           ],
         }),
       })
@@ -453,7 +453,7 @@ export async function generateRecipes(
       : [];
 
     // Add the searchQuery to each
-    return recipes.slice(0, 5).map((r) => ({ ...r, searchQuery: query }));
+    return recipes.slice(0, 3).map((r) => ({ ...r, searchQuery: query }));
   } catch (error) {
     if (error instanceof Error && error.message.includes('401')) {
       console.warn(
