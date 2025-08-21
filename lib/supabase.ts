@@ -69,3 +69,50 @@ export function getSupabaseEmail(): SupabaseClient {
 
 export const supabaseEmail = getSupabaseEmail();
 export const supabase = getSupabase();
+
+// Helper function to upload image from URL to Supabase storage
+export async function uploadImageFromUrl(
+  imageUrl: string,
+  bucketName: string,
+  filePath: string
+): Promise<string | null> {
+  try {
+    // Fetch the image from the URL
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
+
+    const imageBlob = await response.blob();
+    
+    // Upload to Supabase storage
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, imageBlob, {
+        contentType: 'image/png',
+        upsert: true, // Replace if exists
+      });
+
+    if (error) {
+      console.error('Error uploading image to Supabase:', error);
+      return null;
+    }
+
+    return data.path;
+  } catch (error) {
+    console.error('Error in uploadImageFromUrl:', error);
+    return null;
+  }
+}
+
+// Helper function to get public URL for stored image
+export function getStorageImageUrl(
+  bucketName: string,
+  filePath: string
+): string {
+  const { data } = supabase.storage
+    .from(bucketName)
+    .getPublicUrl(filePath);
+  
+  return data.publicUrl;
+}
