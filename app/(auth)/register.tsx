@@ -221,11 +221,39 @@ export default function RegisterScreen() {
     setter(next);
   };
 
-  // Filter states based on search text
-
   const normalizePhone = (raw: string) => raw.replace(/[^\d+]/g, '');
   const zipOk = (z: string) => /^(\d{5})(-?\d{4})?$/.test(z.trim());
   const phoneOk = (p: string) => isValidPhoneNumber(p);
+
+  // ---- NEW: guarded opener + key handling for State field
+  const openStates = React.useCallback((initial?: string) => {
+    if (!showStates) {
+      setShowStates(true);
+      if (initial) {
+        setTimeout(() => setStateSearchText(initial.toUpperCase()), 0);
+      }
+    }
+  }, [showStates]);
+
+  const handleStateKeyPress = (key: string) => {
+    if (!showStates) openStates();
+    if (/^[a-z]$/i.test(key)) {
+      setStateSearchText(prev => (prev + key).toUpperCase());
+    } else if (key === 'Backspace') {
+      setStateSearchText(prev => prev.slice(0, -1));
+    }
+  };
+
+  // Filter states based on typed letters (if any)
+  const filteredStates = useMemo(() => {
+    const q = stateSearchText.trim().toUpperCase();
+    if (!q) return US_STATES;
+    return US_STATES.filter(
+      s =>
+        s.code.startsWith(q) ||
+        s.name.toUpperCase().includes(q)
+    );
+  }, [stateSearchText]);
 
   const handleRegister = async () => {
     if (!email || !password || !confirmPassword || !firstName || !lastName) {
@@ -402,17 +430,15 @@ export default function RegisterScreen() {
           height: 72,
         },
 
-
         form: { gap: 8 },
         row: { flexDirection: 'row', gap: 8 },
         flex1: { flex: 1 },
-        flex3: { flex: 1.3 },
         flex2: { flex: 2 },
+        flex3: { flex: 1.3 },
 
-       zipContainer: { width: 80 },
-       phoneContainer: { width: 140 },
+        zipContainer: { width: 80 },
+        phoneContainer: { width: 140 },
 
-        // Platform-specific vertical padding (web-safe)
         input: {
           borderWidth: 1,
           borderColor: colors.border,
@@ -707,14 +733,17 @@ export default function RegisterScreen() {
             </TouchableWithoutFeedback>
 
             <View style={styles.dropdownSheet}>
-              <Text style={styles.dropdownTitle}>Select a state</Text>
+              <Text style={styles.dropdownTitle}>
+                {stateSearchText ? `Select a state — filter: "${stateSearchText}"` : 'Select a state'}
+              </Text>
               <ScrollView style={styles.dropdownList} keyboardShouldPersistTaps="handled">
-                {US_STATES.map((stateItem) => (
+                {filteredStates.map((stateItem) => (
                   <TouchableOpacity
                     key={stateItem.code}
                     style={styles.dropdownItem}
                     onPress={() => {
                       setState(stateItem.code);
+                      setStateSearchText('');
                       setShowStates(false);
                     }}
                   >
@@ -725,7 +754,13 @@ export default function RegisterScreen() {
                 ))}
               </ScrollView>
 
-              <TouchableOpacity style={styles.dropdownCancel} onPress={() => setShowStates(false)}>
+              <TouchableOpacity
+                style={styles.dropdownCancel}
+                onPress={() => {
+                  setShowStates(false);
+                  setStateSearchText('');
+                }}
+              >
                 <Text style={styles.dropdownCancelText}>Cancel</Text>
               </TouchableOpacity>
             </View>
@@ -760,9 +795,8 @@ export default function RegisterScreen() {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-
               <View style={styles.form}>
-                {/* Email + Passwords first (compact, no labels) */}
+                {/* Email + Passwords first */}
                 <TextInput
                   style={styles.input}
                   value={email}
@@ -841,7 +875,6 @@ export default function RegisterScreen() {
                       autoComplete="given-name"
                     />
                   </View>
-                
                   <View style={styles.flex2}>
                     <TextInput
                       style={styles.input}
@@ -856,6 +889,7 @@ export default function RegisterScreen() {
                     />
                   </View>
                 </View>
+
                 {/* Address */}
                 <TextInput
                   style={styles.input}
@@ -877,6 +911,7 @@ export default function RegisterScreen() {
                   autoCapitalize="words"
                   autoCorrect={false}
                 />
+
                 <View style={styles.row}>
                   <TextInput
                     style={[styles.input, styles.flex2]}
@@ -888,53 +923,57 @@ export default function RegisterScreen() {
                     autoCorrect={false}
                     textContentType="addressCity"
                     returnKeyType="next"
-                    onSubmitEditing={() => setShowStates(true)}
+                    onSubmitEditing={() => openStates()}
                   />
-                  <TouchableOpacity
-                    style={[styles.input, styles.flex1, styles.stateButton]}
-                    onPress={() => setShowStates(true)}
-                  >
-                    <Text style={styles.stateButtonText}>
-                      {state || 'State'}
-                    </Text>
-                  </TouchableOpacity>
+                  {/* NEW: State field as read-only TextInput that opens modal on focus/typing */}
+                  <TextInput
+                    style={[styles.input, styles.flex1]}
+                    value={state}
+                    placeholder="State"
+                    placeholderTextColor={colors.textSecondary}
+                    editable={false}
+                    {...(Platform.OS === 'web' ? { readOnly: true as any } : {})}
+                    showSoftInputOnFocus={false}
+                    onFocus={() => openStates()}
+                    onKeyPress={({ nativeEvent }) => handleStateKeyPress(nativeEvent.key)}
+                  />
                 </View>
 
                 <View style={styles.row}>
-                 <View style={styles.zipContainer}>
-                   <TextInput
-                     style={styles.input}
-                     value={zip}
-                     onChangeText={setZip}
-                     placeholder="ZIP"
-                     placeholderTextColor={colors.textSecondary}
-                     keyboardType="number-pad"
-                     autoCapitalize="none"
-                     autoCorrect={false}
-                     maxLength={10}
-                     textContentType="postalCode"
-                     returnKeyType="next"
-                   />
-                 </View>
-                 <View style={styles.phoneContainer}>
-                   <TextInput
-                     style={styles.input}
-                     value={phone}
-                     onChangeText={(text) => {
-                       const formatted = formatPhoneNumber(text);
-                       setPhone(formatted);
-                     }}
-                     placeholder="Phone"
-                     placeholderTextColor={colors.textSecondary}
-                     keyboardType="phone-pad"
-                     autoCapitalize="none"
-                     autoCorrect={false}
-                     maxLength={14}
-                     textContentType="telephoneNumber"
-                     autoComplete="tel"
-                     returnKeyType="done"
-                   />
-                 </View>
+                  <View style={styles.zipContainer}>
+                    <TextInput
+                      style={styles.input}
+                      value={zip}
+                      onChangeText={setZip}
+                      placeholder="ZIP"
+                      placeholderTextColor={colors.textSecondary}
+                      keyboardType="number-pad"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      maxLength={10}
+                      textContentType="postalCode"
+                      returnKeyType="next"
+                    />
+                  </View>
+                  <View style={styles.phoneContainer}>
+                    <TextInput
+                      style={styles.input}
+                      value={phone}
+                      onChangeText={(text) => {
+                        const formatted = formatPhoneNumber(text);
+                        setPhone(formatted);
+                      }}
+                      placeholder="Phone"
+                      placeholderTextColor={colors.textSecondary}
+                      keyboardType="phone-pad"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      maxLength={14}
+                      textContentType="telephoneNumber"
+                      autoComplete="tel"
+                      returnKeyType="done"
+                    />
+                  </View>
                 </View>
 
                 {/* Allergens */}
