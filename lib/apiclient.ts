@@ -31,6 +31,11 @@ export async function fetchImageBlob(url: string): Promise<Blob | string> {
         throw new Error('Unable to fetch image');
       }
     }
+  } else {
+    try {
+      const res = await RNBlobUtil.config({
+        fileCache: true,
+      }).fetch('GET', url);
 
       console.log('[✅ fetchImageBlob2() - File saved at:', res.path());
       return res.path();
