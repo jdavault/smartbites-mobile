@@ -20,7 +20,7 @@ interface RecipeSectionProps {
   horizontal?: boolean;
 }
 
-export default function RecipeSection({ title, recipes, onToggleFavorite, horizontal = true }: RecipeSectionProps) {
+export default function RecipeSection({ title, recipes, onToggleFavorite, onDelete = undefined, horizontal = true }: RecipeSectionProps) {
   const { colors } = useTheme();
 
   if (recipes.length === 0) return null;
