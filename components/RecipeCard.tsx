@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import { Recipe } from '@/contexts/RecipesContext';
-import { getStorageImageUrl } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import {
   Heart,
   BookmarkPlus,
@@ -37,14 +37,19 @@ export default function RecipeCard({
   isFavoriting = false,
 }: RecipeCardProps) {
   const { colors } = useTheme();
+  const { user } = useAuth();
   const router = useRouter();
 
   // Get the image URL - either from Supabase storage or fallback
   const getImageUrl = () => {
     if (recipe.image) {
-      // Get from Supabase storage using recipe_id/filename structure
-      if (recipe.id) {
-        const storageUrl = getStorageImageUrl(recipe.id, recipe.image);
+      // Get from Supabase storage using user_id/recipe_id/filename structure
+      if (recipe.id && user?.id) {
+        const filePath = `${user.id}/${recipe.id}/${recipe.image}`;
+        const { data } = supabase.storage
+          .from('recipe-images')
+          .getPublicUrl(filePath);
+        const storageUrl = data?.publicUrl;
         return storageUrl;
       }
     }
