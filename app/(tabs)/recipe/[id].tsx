@@ -12,11 +12,12 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useRecipes } from '@/contexts/RecipesContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
+import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { ArrowLeft, Clock, Users, ChefHat } from 'lucide-react-native';
 
-const DEFAULT_IMAGE_URL = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+const DEFAULT_IMAGE_URL =
+  'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -27,11 +28,13 @@ export default function RecipeDetailScreen() {
   const [loading, setLoading] = useState(false);
 
   // Find recipe in saved recipes first, then featured recipes
-  const recipe = savedRecipes.find((r) => r.id === id) || 
-                 featuredRecipes.find((r) => r.id === id);
+  const recipe =
+    savedRecipes.find((r) => r.id === id) ||
+    featuredRecipes.find((r) => r.id === id);
 
-  const isFeaturedRecipe = !savedRecipes.find((r) => r.id === id) && 
-                          featuredRecipes.find((r) => r.id === id);
+  const isFeaturedRecipe =
+    !savedRecipes.find((r) => r.id === id) &&
+    featuredRecipes.find((r) => r.id === id);
 
   useEffect(() => {
     // If this is a featured recipe (not saved), automatically save it
@@ -42,7 +45,7 @@ export default function RecipeDetailScreen() {
 
   const handleAutoSave = async () => {
     if (!recipe) return;
-    
+
     setLoading(true);
     try {
       await saveRecipe(recipe);
@@ -72,12 +75,18 @@ export default function RecipeDetailScreen() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return colors.success;
-      case 'medium': return colors.warning;
-      case 'hard': return colors.error;
-      default: return colors.textSecondary;
+      case 'easy':
+        return colors.success;
+      case 'medium':
+        return colors.warning;
+      case 'hard':
+        return colors.error;
+      default:
+        return colors.textSecondary;
     }
   };
+
+ const styles = getStyles(colors);
 
   if (!recipe) {
     return (
@@ -96,7 +105,135 @@ export default function RecipeDetailScreen() {
     );
   }
 
-  const styles = StyleSheet.create({
+  return (
+    <SafeAreaView style={styles.container}>
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      )}
+
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <ArrowLeft size={24} color={colors.primary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {recipe.title}
+        </Text>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Image
+          source={{ uri: getImageUrl() }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+
+        <View style={styles.content}>
+          <Text style={styles.title}>{recipe.title}</Text>
+
+          {recipe.headNote && (
+            <Text style={styles.headNote}>{recipe.headNote}</Text>
+          )}
+
+          <Text style={styles.description}>{recipe.description}</Text>
+
+          <View style={styles.metadata}>
+            <View style={styles.metadataItem}>
+              <Clock size={16} color={colors.text} />
+              <Text style={styles.metadataText}>{recipe.prepTime}</Text>
+            </View>
+
+            <View style={styles.metadataItem}>
+              <Users size={16} color={colors.text} />
+              <Text style={styles.metadataText}>
+                {recipe.servings} serving{recipe.servings !== 1 ? 's' : ''}
+              </Text>
+            </View>
+
+            <View style={styles.difficulty}>
+              <ChefHat
+                size={16}
+                color={getDifficultyColor(recipe.difficulty)}
+              />
+              <Text
+                style={[
+                  styles.difficultyText,
+                  { color: getDifficultyColor(recipe.difficulty) },
+                ]}
+              >
+                {recipe.difficulty}
+              </Text>
+            </View>
+          </View>
+
+          <Text style={styles.sectionTitle}>Ingredients</Text>
+          {recipe.ingredients.map((ingredient, index) => (
+            <Text key={index} style={styles.ingredientItem}>
+              • {ingredient}
+            </Text>
+          ))}
+
+          <Text style={styles.sectionTitle}>Instructions</Text>
+          {recipe.instructions.map((instruction, index) => (
+            <Text key={index} style={styles.instructionItem}>
+              <Text style={styles.instructionNumber}>{index + 1}.</Text>{' '}
+              {instruction}
+            </Text>
+          ))}
+
+          {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
+            <>
+              <Text style={styles.sectionTitle}>Dietary Information</Text>
+              <View style={styles.tagsContainer}>
+                {recipe.allergens.map((allergen, index) => (
+                  <View key={`allergen-${index}`} style={styles.allergenTag}>
+                    <Text style={styles.tagText}>🚫 {allergen}</Text>
+                  </View>
+                ))}
+                {recipe.dietaryPrefs.map((dietary, index) => (
+                  <View key={`dietary-${index}`} style={styles.dietaryTag}>
+                    <Text style={styles.tagText}>🌱 {dietary}</Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
+
+          {recipe.tags.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Tags</Text>
+              <View style={styles.tagsContainer}>
+                {recipe.tags.map((tag, index) => (
+                  <View key={index} style={styles.tag}>
+                    <Text style={styles.tagText}>#{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
+
+          {recipe.notes && (
+            <View style={styles.notesSection}>
+              <Text style={styles.notesTitle}>Chef's Notes</Text>
+              <Text style={styles.notesText}>{recipe.notes}</Text>
+            </View>
+          )}
+
+          {recipe.nutritionInfo && (
+            <View style={styles.nutritionSection}>
+              <Text style={styles.nutritionTitle}>Nutrition Information</Text>
+              <Text style={styles.nutritionText}>{recipe.nutritionInfo}</Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const getStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
@@ -315,123 +452,3 @@ export default function RecipeDetailScreen() {
       marginBottom: 24,
     },
   });
-
-  return (
-    <SafeAreaView style={styles.container}>
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      )}
-
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <ArrowLeft size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {recipe.title}
-        </Text>
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <Image
-          source={{ uri: getImageUrl() }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-
-        <View style={styles.content}>
-          <Text style={styles.title}>{recipe.title}</Text>
-          
-          {recipe.headNote && (
-            <Text style={styles.headNote}>{recipe.headNote}</Text>
-          )}
-          
-          <Text style={styles.description}>{recipe.description}</Text>
-
-          <View style={styles.metadata}>
-            <View style={styles.metadataItem}>
-              <Clock size={16} color={colors.text} />
-              <Text style={styles.metadataText}>
-                {recipe.prepTime}
-              </Text>
-            </View>
-            
-            <View style={styles.metadataItem}>
-              <Users size={16} color={colors.text} />
-              <Text style={styles.metadataText}>
-                {recipe.servings} serving{recipe.servings !== 1 ? 's' : ''}
-              </Text>
-            </View>
-
-            <View style={styles.difficulty}>
-              <ChefHat size={16} color={getDifficultyColor(recipe.difficulty)} />
-              <Text style={[styles.difficultyText, { color: getDifficultyColor(recipe.difficulty) }]}>
-                {recipe.difficulty}
-              </Text>
-            </View>
-          </View>
-
-          <Text style={styles.sectionTitle}>Ingredients</Text>
-          {recipe.ingredients.map((ingredient, index) => (
-            <Text key={index} style={styles.ingredientItem}>
-              • {ingredient}
-            </Text>
-          ))}
-
-          <Text style={styles.sectionTitle}>Instructions</Text>
-          {recipe.instructions.map((instruction, index) => (
-            <Text key={index} style={styles.instructionItem}>
-              <Text style={styles.instructionNumber}>{index + 1}.</Text> {instruction}
-            </Text>
-          ))}
-
-          {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
-            <>
-              <Text style={styles.sectionTitle}>Dietary Information</Text>
-              <View style={styles.tagsContainer}>
-                {recipe.allergens.map((allergen, index) => (
-                  <View key={`allergen-${index}`} style={styles.allergenTag}>
-                    <Text style={styles.tagText}>🚫 {allergen}</Text>
-                  </View>
-                ))}
-                {recipe.dietaryPrefs.map((dietary, index) => (
-                  <View key={`dietary-${index}`} style={styles.dietaryTag}>
-                    <Text style={styles.tagText}>🌱 {dietary}</Text>
-                  </View>
-                ))}
-              </View>
-            </>
-          )}
-
-          {recipe.tags.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>Tags</Text>
-              <View style={styles.tagsContainer}>
-                {recipe.tags.map((tag, index) => (
-                  <View key={index} style={styles.tag}>
-                    <Text style={styles.tagText}>#{tag}</Text>
-                  </View>
-                ))}
-              </View>
-            </>
-          )}
-
-          {recipe.notes && (
-            <View style={styles.notesSection}>
-              <Text style={styles.notesTitle}>Chef's Notes</Text>
-              <Text style={styles.notesText}>{recipe.notes}</Text>
-            </View>
-          )}
-
-          {recipe.nutritionInfo && (
-            <View style={styles.nutritionSection}>
-              <Text style={styles.nutritionTitle}>Nutrition Information</Text>
-              <Text style={styles.nutritionText}>{recipe.nutritionInfo}</Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
