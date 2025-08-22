@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { uploadImageFromUrl, getStorageImageUrl, persistRecipeImage } from '@/lib/supabase';
+import { getStorageImageUrl } from '@/lib/supabase';
+import { persistRecipeImage } from '@/services/recipeService';
 import { useAuth } from './AuthContext';
 import { useAllergens } from './AllergensContext';
 import { useDietary } from './DietaryContext';
@@ -477,14 +478,14 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         // Now persist the image using the same pattern as AppWrite
         try {
           const userAllergenNames = userAllergens.map(a => a.name);
-          persistedImageUrl = await persistRecipeImage({
+          await persistRecipeImage({
             recipeTitle: recipe.title,
             searchQuery: recipe.searchQuery,
             allergenNames: userAllergenNames,
             recipeId: recipeId,
             userId: user.id,
           });
-          console.log('🖼️ ✅ Favorite image persisted successfully:', persistedImageUrl);
+          console.log('🖼️ ✅ Favorite image persisted successfully');
         } catch (imageError) {
           console.error('🖼️ Error persisting favorite image:', imageError);
         }
