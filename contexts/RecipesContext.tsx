@@ -365,13 +365,14 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       // Now persist the image using the same pattern as AppWrite
       try {
         const userAllergenNames = userAllergens.map(a => a.name);
-        persistedImageUrl = await persistRecipeImage({
+        const imageResult = await persistRecipeImage({
           recipeTitle: recipe.title,
           searchQuery: recipe.searchQuery,
           allergenNames: userAllergenNames,
           recipeId: recipeData.id,
           userId: user.id,
         });
+        persistedImageUrl = imageResult;
         // console.log('🖼️ ✅ Image persisted successfully:', persistedImageUrl);
       } catch (imageError) {
         // console.error('🖼️ Error persisting image:', imageError);
@@ -443,12 +444,36 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         ...recipe,
         id: recipeData.id,
         searchKey,
+        image: recipeData.image, // Use the updated image from the database
         isFavorite: false,
         actions: [],
         createdAt: recipeData.created_at,
       };
       
       setSavedRecipes(prev => [newRecipe, ...prev]);
+
+      // Wait a moment for image to be fully processed, then refresh the specific recipe
+      setTimeout(async () => {
+        try {
+          const { data: updatedRecipe, error } = await supabase
+            .from('recipes')
+            .select('image')
+            .eq('id', recipeData.id)
+            .single();
+
+          if (!error && updatedRecipe?.image) {
+            setSavedRecipes(prev => 
+              prev.map(r => 
+                r.id === recipeData.id 
+                  ? { ...r, image: updatedRecipe.image }
+                  : r
+              )
+            );
+          }
+        } catch (err) {
+          console.error('Error refreshing recipe image:', err);
+        }
+      }, 2000); // Wait 2 seconds for image processing
     } catch (error) {
       console.error('Error saving recipe:', error);
       throw error;
@@ -514,7 +539,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         // Now persist the image using the same pattern as AppWrite
         try {
           const userAllergenNames = userAllergens.map(a => a.name);
-          await persistRecipeImage({
+          const imageResult = await persistRecipeImage({
             recipeTitle: recipe.title,
             searchQuery: recipe.searchQuery,
             allergenNames: userAllergenNames,
@@ -599,6 +624,29 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       };
       
       setSavedRecipes(prev => [newRecipe, ...prev]);
+
+      // Wait for image to be processed, then refresh the specific recipe
+      setTimeout(async () => {
+        try {
+          const { data: updatedRecipe, error } = await supabase
+            .from('recipes')
+            .select('image')
+            .eq('id', recipeId)
+            .single();
+
+          if (!error && updatedRecipe?.image) {
+            setSavedRecipes(prev => 
+              prev.map(r => 
+                r.id === recipeId 
+                  ? { ...r, image: updatedRecipe.image }
+                  : r
+              )
+            );
+          }
+        } catch (err) {
+          console.error('Error refreshing recipe image:', err);
+        }
+      }, 2000); // Wait 2 seconds for image processing
     } catch (error) {
       console.error('Error saving and favoriting recipe:', error);
       throw error;
