@@ -26,12 +26,12 @@ function normalizeFileUri(uri: string) {
 export async function uploadImageToSupabaseStorage(
   input: Blob | string,
   fileName: string,
-  userId: string,           // kept to mirror your signature (useful for foldering)
-  recipeId?: string,        // optional: nice to nest by recipe
-  bucket = 'recipe-images', // your bucket
+  userId: string, // kept to mirror your signature (useful for foldering)
+  recipeId?: string, // optional: nice to nest by recipe
+  bucket = 'recipe-images' // your bucket
 ) {
   const contentType = contentTypeFromName(fileName);
-  const path = `${userId}/${recipeId ?? 'misc'}/${fileName}`;
+  const path = recipeId ? `${recipeId}/${fileName}` : `/${fileName}`;
 
   // Turn input into a Blob for Supabase
   let blob: Blob;
