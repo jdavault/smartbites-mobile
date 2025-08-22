@@ -383,7 +383,7 @@ const getStyles = (colors: ThemeColors) =>
     tagText: {
       fontSize: 13,
       fontFamily: 'Inter-Medium',
-      color: colors.text,
+      color: colors.textWhite,
     },
     notesSection: {
       backgroundColor: colors.surface,
