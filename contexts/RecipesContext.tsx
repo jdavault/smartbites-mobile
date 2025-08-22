@@ -201,6 +201,12 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       
       // console.log('📊 Total recipes found:', data?.length || 0);
 
+      // Handle empty database case
+      if (!data || data.length === 0) {
+        console.log('📊 No recipes found in database, setting empty featured recipes');
+        setFeaturedRecipes([]);
+        return;
+      }
       let filteredRecipes = data || [];
 
       // Filter out recipes that contain user's allergens
@@ -225,6 +231,12 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         // console.log('🔍 Sample recipe dietary prefs:', filteredRecipes[0]?.recipe_dietary_prefs);
       }
 
+      // Handle case where filtering results in no recipes
+      if (filteredRecipes.length === 0) {
+        console.log('📊 No recipes match user preferences, setting empty featured recipes');
+        setFeaturedRecipes([]);
+        return;
+      }
       // Randomize and take 5
       const shuffled = filteredRecipes.sort(() => 0.5 - Math.random());
       const selectedRecipes = shuffled.slice(0, 5);
@@ -240,6 +252,12 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         .from('dietary_prefs')
         .select('id, name');
       
+      // Handle case where lookup tables are empty
+      if (!allAllergens || !allDietaryPrefs) {
+        console.log('📊 Lookup tables not populated, setting empty featured recipes');
+        setFeaturedRecipes([]);
+        return;
+      }
       const allergenMap = new Map(allAllergens?.map(a => [a.id, a.name]) || []);
       const dietaryMap = new Map(allDietaryPrefs?.map(d => [d.id, d.name]) || []);
 
