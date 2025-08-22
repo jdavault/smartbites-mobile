@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import axios from 'axios';
 import RNBlobUtil from 'react-native-blob-util';
+import { supabaseUrl } from './supabase';
 export async function fetchImageBlob(url: string): Promise<Blob | string> {
   if (Platform.OS === 'web') {
     // ✅ Web - Use axios to download blob directly
