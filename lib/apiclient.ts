@@ -1,12 +1,23 @@
 import { Platform } from 'react-native';
 import axios from 'axios';
 import RNBlobUtil from 'react-native-blob-util';
+import { supabase } from '@/lib/supabase';
 
 export async function fetchImageBlob(url: string): Promise<Blob | string> {
   if (Platform.OS === 'web') {
-    // ✅ Web
-    const response = await axios.get(url, { responseType: 'blob' });
-    return response.data; // native Blob
+    // ✅ Web - Use Supabase Edge Function proxy to avoid CORS
+    const { data, error } = await supabase.functions.invoke('proxy-image', {
+      body: { imageUrl: url }
+    });
+    
+    if (error) {
+      console.error('Error fetching image via proxy:', error);
+      throw new Error(`Failed to fetch image: ${error.message}`);
+    }
+    
+    // Convert the response to a Blob
+    const response = await fetch(`data:image/png;base64,${data.imageData}`);
+    return await response.blob();
   } else {
     try {
       const safeName = 'image_' + Date.now() + '.png';
