@@ -188,12 +188,12 @@ export default function RecipeDetailScreen() {
               <View style={styles.tagsContainer}>
                 {recipe.allergens.map((allergen, index) => (
                   <View key={`allergen-${index}`} style={styles.allergenTag}>
-                    <Text style={styles.tagText}>🚫 {allergen}</Text>
+                    <Text style={styles.prefText}>🚫 {allergen}</Text>
                   </View>
                 ))}
                 {recipe.dietaryPrefs.map((dietary, index) => (
                   <View key={`dietary-${index}`} style={styles.dietaryTag}>
-                    <Text style={styles.tagText}>🌱 {dietary}</Text>
+                    <Text style={styles.prefText}>🌱 {dietary}</Text>
                   </View>
                 ))}
               </View>
@@ -381,6 +381,11 @@ const getStyles = (colors: ThemeColors) =>
       borderRadius: 12,
     },
     tagText: {
+      fontSize: 13,
+      fontFamily: 'Inter-Medium',
+      color: colors.textPrimary,
+    },
+    prefText: {
       fontSize: 13,
       fontFamily: 'Inter-Medium',
       color: colors.textWhite,
