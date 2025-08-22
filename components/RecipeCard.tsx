@@ -220,6 +220,20 @@ export default function RecipeCard({
           </View>
         )}
 
+        {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
+          <View style={styles.tags}>
+            {recipe.allergens.map((allergen, index) => (
+              <View key={`allergen-${index}`} style={styles.allergenTag}>
+                <Text style={styles.tagText}>🚫 {allergen}</Text>
+              </View>
+            ))}
+            {recipe.dietaryPrefs.map((dietary, index) => (
+              <View key={`dietary-${index}`} style={styles.dietaryTag}>
+                <Text style={styles.tagText}>🌱 {dietary}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -397,9 +411,9 @@ const getStyles = (colors: ThemeColors) =>
     },
     dietaryTag: {
       backgroundColor: colors.dietary,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 12,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
     },
     tagText: {
       fontSize: 12,
