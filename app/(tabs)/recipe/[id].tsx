@@ -58,11 +58,9 @@ export default function RecipeDetailScreen() {
     if (recipe?.image) {
       // Get from Supabase storage using user_id/recipe_id/filename structure
       if (recipe.id && user?.id) {
-        const filePath = `${user.id}/${recipe.id}/${recipe.image}`;
-        const { data } = supabase.storage
-          .from('recipe-images')
-          .getPublicUrl(filePath);
-        return data?.publicUrl;
+        const baseUrl = process.env.EXPO_PUBLIC_RECIPE_IMAGES_BASE_URL || 
+          `${supabase.supabaseUrl}/storage/v1/object/public/recipe-images`;
+        return `${baseUrl}/${user.id}/${recipe.id}/${recipe.image}`;
       }
     }
     // Fallback to default image
