@@ -136,7 +136,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       setSavedRecipes([]);
       setFeaturedRecipes([]);
     }
-  }, [user]);
+  }, [user?.id]);
 
   const loadFeaturedRecipes = () => {
     // Don't load any static recipes - only load from database
@@ -278,10 +278,10 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
   // Reload featured recipes when user's allergens or dietary preferences change
   useEffect(() => {
-    if (user && userAllergens && userDietaryPrefs) {
+    if (user?.id && userAllergens.length >= 0 && userDietaryPrefs.length >= 0) {
       loadRandomFeaturedRecipes();
     }
-  }, [user, userAllergens, userDietaryPrefs]);
+  }, [user?.id, userAllergens.length, userDietaryPrefs.length]);
 
   const generateFeaturedRecipes = async () => {
     await loadRandomFeaturedRecipes();
