@@ -6,17 +6,17 @@ import { supabase } from '@/lib/supabase';
 export async function fetchImageBlob(url: string): Promise<Blob | string> {
   if (Platform.OS === 'web') {
     // ✅ Web - Use Supabase Edge Function proxy to avoid CORS
-    const { data, error } = await supabase.functions.invoke('proxy-image', {
-      body: { imageUrl: url }
+    const response = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/proxy-image?url=${encodeURIComponent(url)}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_KEY}`,
+      },
     });
     
-    if (error) {
-      console.error('Error fetching image via proxy:', error);
-      throw new Error(`Failed to fetch image: ${error.message}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image via proxy: ${response.statusText}`);
     }
     
-    // Convert the response to a Blob
-    const response = await fetch(`data:image/png;base64,${data.imageData}`);
     return await response.blob();
   } else {
     try {
