@@ -10,7 +10,7 @@ export async function fetchImageBlob(url: string): Promise<Blob | string> {
       const proxyUrl = `${supabaseUrl}/functions/v1/proxy-image?url=${encodeURIComponent(url)}`;
       const response = await axios.get(proxyUrl, { 
         responseType: 'blob',
-        timeout: 30000,
+        timeout: 15000,
         headers: {
           'Accept': 'image/*',
         },
