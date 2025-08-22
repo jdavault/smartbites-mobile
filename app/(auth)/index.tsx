@@ -136,30 +136,28 @@ export default function SplashScreen() {
                           { color: colors.textPrimary },
                         ]}
                       >
-                        🤖 Download for Android
+                        🤖 Android (coming Sep 2025)
                       </Text>
                     </TouchableOpacity>
                   </View>
                 </Animated.View>
               )}
 
-              {Platform.OS !== 'webTemp' && (
-                <View style={styles.buttonContainer}>
-                  <Link href="/(auth)/login" asChild>
-                    <TouchableOpacity style={styles.primaryButton}>
-                      <Text style={styles.primaryButtonText}>Sign In</Text>
-                    </TouchableOpacity>
-                  </Link>
+              <View style={styles.buttonContainer}>
+                <Link href="/(auth)/login" asChild>
+                  <TouchableOpacity style={styles.primaryButton}>
+                    <Text style={styles.primaryButtonText}>Sign In</Text>
+                  </TouchableOpacity>
+                </Link>
 
-                  <Link href="/(auth)/register" asChild>
-                    <TouchableOpacity style={styles.secondaryButton}>
-                      <Text style={styles.secondaryButtonText}>
-                        Create Account
-                      </Text>
-                    </TouchableOpacity>
-                  </Link>
-                </View>
-              )}
+                <Link href="/(auth)/register" asChild>
+                  <TouchableOpacity style={styles.secondaryButton}>
+                    <Text style={styles.secondaryButtonText}>
+                      Create Account
+                    </Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
             </View>
 
             {/* Bottom: footer links (column uses space-between to push this down) */}

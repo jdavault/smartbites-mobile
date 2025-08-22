@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
@@ -42,15 +49,11 @@ export default function RecipeCard({
 
   // Get the image URL - either from Supabase storage or fallback
   const getImageUrl = () => {
-    if (recipe.image) {
-      // Get from Supabase storage using user_id/recipe_id/filename structure
-      if (recipe.id && user?.id) {
-        const baseUrl = process.env.EXPO_PUBLIC_RECIPE_IMAGES_BASE_URL || 
-          `${supabase.supabaseUrl}/storage/v1/object/public/recipe-images`;
-        return `${baseUrl}/${user.id}/${recipe.id}/${recipe.image}`;
-      }
+    if (recipe.image && recipe.id && user?.id) {
+      const baseUrl = process.env.EXPO_PUBLIC_RECIPE_IMAGES_BASE_URL!; // define it in your .env
+      return `${baseUrl}/${user.id}/${recipe.id}/${recipe.image}`;
     }
-    // Fallback to default image
+
     return 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
   };
 
@@ -122,7 +125,6 @@ export default function RecipeCard({
               </View>
             ))}
           </View>
-
         </View>
 
         {/* Corner action buttons for search results */}
