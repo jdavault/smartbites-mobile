@@ -281,7 +281,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
     if (user && userAllergens && userDietaryPrefs) {
       loadRandomFeaturedRecipes();
     }
-  }, [user, userAllergens, userDietaryPrefs]);
+  }, [user?.id, userAllergens.length, userDietaryPrefs.length]);
 
   const generateFeaturedRecipes = async () => {
     await loadRandomFeaturedRecipes();
