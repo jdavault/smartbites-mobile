@@ -72,16 +72,3 @@ export function getSupabaseEmail(): SupabaseClient {
 
 export const supabaseEmail = getSupabaseEmail();
 export const supabase = getSupabase();
-
-// Helper function to get public URL for stored image
-export function getStorageImageUrl(
-  recipeId: string,
-  filename: string
-): string {
-  const filePath = `${recipeId}/${filename}`;
-  const { data } = supabase.storage
-    .from('recipe-images')
-    .getPublicUrl(filePath);
-  
-  return data.publicUrl;
-}
