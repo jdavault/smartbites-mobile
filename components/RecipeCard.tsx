@@ -263,14 +263,14 @@ const getStyles = (colors: ThemeColors) =>
     title: {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
-      color: '#FF8866',
+      color: colors.textPrimary,
       flex: 1,
       marginRight: 8,
     },
     previewTitle: {
       fontSize: 17,
       fontFamily: 'Inter-Bold',
-      color: '#FF8866',
+      color: colors.textPrimary,
       marginBottom: 12,
       lineHeight: 26,
       paddingRight: 80,
@@ -318,14 +318,14 @@ const getStyles = (colors: ThemeColors) =>
       backgroundColor: colors.error,
     },
     description: {
-      fontSize: 14,
+      fontSize: 15,
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       lineHeight: 20,
       marginBottom: 12,
     },
     previewDescription: {
-      fontSize: 15,
+      fontSize: 16,
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       lineHeight: 22,
