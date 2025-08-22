@@ -21,40 +21,10 @@ export async function persistRecipeImage({
   userId: string;
 }): Promise<string> {
   try {
-    // Call OpenAI 
-    const preSignedImageUrl = await generateRecipeImage(recipeTitle);
-    
-    // Call axios and blob or the local path (react-native)
-    const input = await fetchImageBlob(preSignedImageUrl);
-    
-    // Some novel way to name the file .. doesn't matter really
-    const fileName = formatImageName(searchQuery, allergenNames, 'png');
-    
-    // Upload to Supabase
-    const uploaded = await uploadImageToSupabaseStorage(
-      input,
-      fileName,
-      userId,
-      recipeId,          // keep foldering by recipe
-      'recipe-images'    // your bucket
-    );
-    
-    console.log(`🖼️ Upload successful: ${JSON.stringify(uploaded)}`);
-
-    // Persist the storage path on your recipe record
-    if (uploaded.path) {
-      const { error } = await supabase
-        .from('recipes')
-        .update({ image: fileName }) // Store just the filename like AppWrite
-        .eq('id', recipeId);
-      
-      if (error) {
-        console.error('🖼️ Error updating recipe with image:', error);
-      }
-    }
-
-    // Return a displayable URL; use publicUrl if available, otherwise fallback
-    return uploaded.publicUrl ?? DEFAULT_RECIPE_IMAGE;
+    // For now, just return the default image to avoid CORS issues
+    // TODO: Re-enable OpenAI image generation once CORS proxy is working
+    console.log('🖼️ Using default image for recipe:', recipeTitle);
+    return DEFAULT_RECIPE_IMAGE;
   } catch (error) {
     console.error('🖼️ Error in persistRecipeImage:', error);
     // Return default fallback image instead of trying to regenerate
