@@ -202,11 +202,6 @@ export default function RecipeCard({
             <Text
               style={[
                 styles.difficultyText,
-          <View style={styles.previewMetadataItem}>
-            <Clock size={16} color={colors.text} />
-            <Text style={styles.previewMetadataText}>{recipe.cookTime.replace('minutes', 'min')}</Text>
-          </View>
-
                 { color: getDifficultyColor(recipe.difficulty) },
               ]}
             >
