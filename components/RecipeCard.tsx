@@ -227,21 +227,6 @@ export default function RecipeCard({
           </View>
         )}
 
-        {/* Show allergens and dietary preferences for saved recipes */}
-        {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
-          <View style={styles.tags}>
-            {recipe.allergens.map((allergen, index) => (
-              <View key={`allergen-${index}`} style={styles.allergenTag}>
-                <Text style={styles.tagText}>🚫 {allergen}</Text>
-              </View>
-            ))}
-            {recipe.dietaryPrefs.map((dietary, index) => (
-              <View key={`dietary-${index}`} style={styles.dietaryTag}>
-                <Text style={styles.tagText}>🌱 {dietary}</Text>
-              </View>
-            ))}
-          </View>
-        )}
       </View>
     </TouchableOpacity>
   );
@@ -400,7 +385,7 @@ const getStyles = (colors: ThemeColors) =>
       marginBottom: 20,
     },
     tag: {
-      backgroundColor: colors.primary,
+      backgroundColor: '#8ec7df', // Colors.cerulean[200]
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 8,
@@ -426,7 +411,7 @@ const getStyles = (colors: ThemeColors) =>
     tagText: {
       fontSize: 12,
       fontFamily: 'Inter-Medium',
-      color: '#FFFFFF',
+      color: colors.text,
     },
     previewTagText: {
       fontSize: 13,

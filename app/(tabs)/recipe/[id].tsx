@@ -363,7 +363,7 @@ const getStyles = (colors: ThemeColors) =>
       marginTop: 8,
     },
     tag: {
-      backgroundColor: colors.primary,
+      backgroundColor: '#8ec7df', // Colors.cerulean[200]
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 12,
@@ -383,7 +383,7 @@ const getStyles = (colors: ThemeColors) =>
     tagText: {
       fontSize: 13,
       fontFamily: 'Inter-Medium',
-      color: '#FFFFFF',
+      color: colors.text,
     },
     notesSection: {
       backgroundColor: colors.surface,
