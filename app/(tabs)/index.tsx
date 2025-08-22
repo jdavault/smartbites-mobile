@@ -47,6 +47,7 @@ export default function SearchScreen() {
     saveRecipe,
     saveAndFavoriteRecipe,
     toggleFavorite,
+    deleteRecipe,
     generateFeaturedRecipes,
     loading: recipesLoading,
   } = useRecipes();
@@ -521,6 +522,7 @@ export default function SearchScreen() {
                 title="❤️ Your Favorites"
                 recipes={favoriteRecipes}
                 onToggleFavorite={toggleFavorite}
+                onDelete={deleteRecipe}
                 horizontal={true}
               />
             )}
@@ -530,6 +532,7 @@ export default function SearchScreen() {
                 title="🕑 Recently Added"
                 recipes={recentRecipes}
                 onToggleFavorite={toggleFavorite}
+                onDelete={deleteRecipe}
                 horizontal={false}
               />
             )}

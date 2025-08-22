@@ -16,6 +16,7 @@ interface RecipeSectionProps {
   title: string;
   recipes: Recipe[];
   onToggleFavorite: (recipeId: string) => void;
+  onDelete?: (recipeId: string) => void;
   horizontal?: boolean;
 }
 
@@ -64,6 +65,7 @@ export default function RecipeSection({ title, recipes, onToggleFavorite, horizo
               <RecipeCard
                 recipe={recipe}
                 onToggleFavorite={() => onToggleFavorite(recipe.id!)}
+                onDelete={onDelete ? () => onDelete(recipe.id!) : undefined}
               />
             </View>
           ))}
@@ -81,6 +83,7 @@ export default function RecipeSection({ title, recipes, onToggleFavorite, horizo
             <RecipeCard
               recipe={recipe}
               onToggleFavorite={() => onToggleFavorite(recipe.id!)}
+              onDelete={onDelete ? () => onDelete(recipe.id!) : undefined}
             />
           </View>
         ))}

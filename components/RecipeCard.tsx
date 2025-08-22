@@ -18,6 +18,7 @@ import {
   Clock,
   Users,
   ChefHat,
+  Trash2,
 } from 'lucide-react-native';
 
 interface RecipeCardProps {
@@ -25,6 +26,7 @@ interface RecipeCardProps {
   onSave?: () => void;
   onSaveAndFavorite?: () => void;
   onToggleFavorite?: () => void;
+  onDelete?: () => void;
   showSaveButton?: boolean;
   showHeartButton?: boolean;
   selectedAllergens?: { $id: string; name: string }[];
@@ -37,6 +39,7 @@ export default function RecipeCard({
   onSave,
   onSaveAndFavorite,
   onToggleFavorite,
+  onDelete,
   showSaveButton = false,
   showHeartButton = false,
   selectedAllergens = [],
@@ -167,6 +170,17 @@ export default function RecipeCard({
         <View style={styles.header}>
           <Text style={styles.title}>{recipe.title}</Text>
           <View style={styles.actionButtons}>
+            {onDelete && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={onDelete}
+              >
+                <Trash2
+                  size={20}
+                  color={colors.error}
+                />
+              </TouchableOpacity>
+            )}
             {onToggleFavorite && (
               <TouchableOpacity
                 style={styles.actionButton}
@@ -399,9 +413,9 @@ const getStyles = (colors: ThemeColors) =>
     },
     allergenTag: {
       backgroundColor: colors.primary,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 12,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
     },
     allergenFreeTag: {
       backgroundColor: colors.primary,
@@ -418,11 +432,11 @@ const getStyles = (colors: ThemeColors) =>
     tagText: {
       fontSize: 12,
       fontFamily: 'Inter-Medium',
-      color: colors.text,
+      color: colors.textWhite,
     },
     previewTagText: {
       fontSize: 13,
       fontFamily: 'Inter-Medium',
-      color: '#FFFFFF',
+      color: colors.textWhite,
     },
   });

@@ -131,7 +131,7 @@ export const ColorScheme = {
     error: Colors.error,
     success: Colors.success,
     warning: Colors.warning,
-    dietary: '#073c51',
+    dietary: Colors.cerulean[500],
   },
   dark: {
     // Background
