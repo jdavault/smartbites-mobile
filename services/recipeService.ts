@@ -101,7 +101,7 @@ export async function persistRecipeImage({
       return DEFAULT_RECIPE_IMAGE;
     }
 
-    const filePath = `${userId}/${recipeId}/${fileName}`;
+    const filePath = `${recipeId}/${fileName}`;
     const { error: uploadError } = await supabase.storage
       .from('recipe-images')
       .upload(filePath, bytes, {

@@ -134,7 +134,7 @@ export async function generateRecipe(
         - Always be mindful that your recipe should teach and guide any home cook to success, regardless of their skill level.
       `;
 
-        const schema = {
+    const schema = {
       name: 'recipes_payload',
       schema: {
         type: 'object',
@@ -313,7 +313,8 @@ export async function generateRecipes(
         - Title can/should also highlight saving time - 10-minute salad, no-bake trail mix
         - Title can/should reflect ingredients or health focus - Gluten-Free Mac n Cheese, Vegan Chocolate Chip Cookies
         - Add "Rise Time" to recipes as needed. Ie hamburger buns, breads, pizza dough, etc.
-        
+        - Tags are not allergens or dietary preferences .. they are additional descriptors, categories or conveniences for the recipe, such as no-bake, quick, easy, or one-pot.
+
       Return ONLY a valid JSON object in the following exact structure:
       {
         "recipes": [
@@ -329,7 +330,7 @@ export async function generateRecipes(
             "difficulty": "easy",
             "tags": ["tag1", "tag2"],
             "searchQuery": "search query used to generate this recipe",
-            "allergens": [],
+            "allergens": [any of the ],
             "dietaryPrefs": [],
             "notes": "for substitutions or troubleshooting",
             "nutritionInfo": "nutrition information"
@@ -429,11 +430,11 @@ export async function generateRecipes(
           max_tokens: 2500,
           seed: 7, // more deterministic & compact
           response_format: {
-            type: 'json_object'
+            type: 'json_object',
           },
           messages: [
             { role: 'system', content: prompt },
-            { role: 'user', content: `Generate 3 recipes for: ${query}` },
+            { role: 'user', content: `Generate 5r recipes for: ${query}` },
           ],
         }),
       })
