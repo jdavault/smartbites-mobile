@@ -131,7 +131,7 @@ export const ColorScheme = {
     error: Colors.error,
     success: Colors.success,
     warning: Colors.warning,
-    dietary: Colors.cerulean[500],
+    dietary: Colors.cerulean[600],
   },
   dark: {
     // Background
