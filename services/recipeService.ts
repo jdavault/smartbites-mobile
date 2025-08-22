@@ -21,29 +21,16 @@ export async function persistRecipeImage({
   userId: string;
 }): Promise<string> {
   try {
-    // 1) Get pre-signed OpenAI image URL
+    // Call OpenAI 
     const preSignedImageUrl = await generateRecipeImage(recipeTitle);
     
-    // If OpenAI returns the default fallback, use it directly
-    if (preSignedImageUrl === DEFAULT_RECIPE_IMAGE) {
-      return DEFAULT_RECIPE_IMAGE;
-    }
-    
-    console.log(`🖼️ Generated pre-signed image URL: ${preSignedImageUrl} for recipeId: ${recipeId}`);
-
-    // 2) Fetch it as Blob (web) or local path (native)
+    // Call axios and blob or the local path (react-native)
     const input = await fetchImageBlob(preSignedImageUrl);
-    if (!input) {
-      console.log(`🖼️ No blob found searchQuery: ${searchQuery}`);
-      return preSignedImageUrl;
-    }
-
-    // 3) Use same filename logic you had
+    
+    // Some novel way to name the file .. doesn't matter really
     const fileName = formatImageName(searchQuery, allergenNames, 'png');
-    console.log(`🖼️ Generated fileName: ${fileName}`);
-    console.log(`🖼️ Input details: ${typeof input}`);
-
-    // 4) Upload to Supabase Storage (mirrors your Appwrite fn signature)
+    
+    // Upload to Supabase
     const uploaded = await uploadImageToSupabaseStorage(
       input,
       fileName,
@@ -51,9 +38,10 @@ export async function persistRecipeImage({
       recipeId,          // keep foldering by recipe
       'recipe-images'    // your bucket
     );
-    console.log(`🖼️ UPLOAD file (so close): ${JSON.stringify(uploaded)}`);
+    
+    console.log(`🖼️ Upload successful: ${JSON.stringify(uploaded)}`);
 
-    // 5) Persist the storage path on your recipe record
+    // Persist the storage path on your recipe record
     if (uploaded.path) {
       const { error } = await supabase
         .from('recipes')
@@ -65,8 +53,8 @@ export async function persistRecipeImage({
       }
     }
 
-    // 6) Return a displayable URL; use publicUrl if available, otherwise preSigned as temp
-    return uploaded.publicUrl ?? preSignedImageUrl;
+    // Return a displayable URL; use publicUrl if available, otherwise fallback
+    return uploaded.publicUrl ?? DEFAULT_RECIPE_IMAGE;
   } catch (error) {
     console.error('🖼️ Error in persistRecipeImage:', error);
     // Return default fallback image instead of trying to regenerate
