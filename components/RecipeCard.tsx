@@ -50,13 +50,12 @@ export default function RecipeCard({
   // Get the image URL - either from Supabase storage or fallback
   const getImageUrl = () => {
     if (recipe.image && recipe.id) {
-      const baseUrl = process.env.EXPO_PUBLIC_RECIPE_IMAGES_BASE_URL!; // define it in your .env
+      const baseUrl = process.env.EXPO_PUBLIC_RECIPE_IMAGES!; // define it in your .env
       return `${baseUrl}/${recipe.id}/${recipe.image}`;
     }
 
     return 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
   };
-
 
   const handleCardPress = () => {
     if (recipe.id) {
