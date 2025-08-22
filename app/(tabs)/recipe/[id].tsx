@@ -66,16 +66,6 @@ export default function RecipeDetailScreen() {
     return DEFAULT_IMAGE_URL;
   };
 
-  const getImageUrl_old = () => {
-    if (recipe?.image && recipe?.id) {
-      // Try to get from Supabase storage first
-      const storageUrl = getStorageImageUrl('recipe-images', `${recipe.id}/${recipe.image}`);
-      return storageUrl;
-    }
-    // Fallback to default image
-    return DEFAULT_IMAGE_URL;
-  };
-
   const handleBack = () => {
     router.back();
   };
