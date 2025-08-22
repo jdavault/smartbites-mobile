@@ -1,6 +1,7 @@
 // lib/supabase.ts
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
+import axios from 'axios';
 
 import {
   createClient,
@@ -71,39 +72,89 @@ export function getSupabaseEmail(): SupabaseClient {
 export const supabaseEmail = getSupabaseEmail();
 export const supabase = getSupabase();
 
-// Helper function to fetch image as blob (like your AppWrite fetchImageBlob)
-async function fetchImageBlob(imageUrl: string): Promise<Blob | null> {
-  try {
-    console.log('🖼️ Fetching image blob from URL:', imageUrl);
-    
-    const response = await fetch(imageUrl, {
-      mode: 'cors',
-      headers: {
-        'Accept': 'image/*',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.statusText}`);
+// Helper function to fetch image as blob (exactly like your AppWrite fetchImageBlob)
+export async function fetchImageBlob(url: string): Promise<Blob | string> {
+  if (Platform.OS === 'web') {
+    // ✅ Web - use axios with blob response type
+    const response = await axios.get(url, { responseType: 'blob' });
+    return response.data; // native Blob
+  } else {
+    // ✅ Native - save to cache directory and return file path
+    // Note: This would require react-native-blob-util for full implementation
+    // For now, we'll use a simpler approach with fetch
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return blob;
+    } catch (error) {
+      console.error('🖼️ Error fetching image on native:', error);
+      throw error;
     }
-    
-    const blob = await response.blob();
-    console.log('🖼️ Image blob created, size:', blob.size);
-    return blob;
-  } catch (error) {
-    console.error('🖼️ Error fetching image blob:', error);
-    return null;
   }
 }
 
-// Helper function to format image name (like your AppWrite formatImageName)
+// Helper function to format image name (exactly like your AppWrite formatImageName)
 function formatImageName(searchQuery: string, allergenNames: string[], extension: string): string {
   const cleanQuery = searchQuery.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const allergenSuffix = allergenNames.length > 0 ? `-${allergenNames.join('-').toLowerCase()}` : '';
   return `${cleanQuery}${allergenSuffix}-${Date.now()}.${extension}`;
 }
 
-// Main function to persist recipe image (like your AppWrite persistRecipeImage)
+// Upload function (like your AppWrite uploadImageToAppwriteStorage)
+export async function uploadImageToSupabaseStorage(
+  input: Blob | string,
+  fileName: string,
+  recipeId: string
+): Promise<string | null> {
+  try {
+    if (Platform.OS === 'web') {
+      // ✅ Web - input is a Blob
+      const blob = input as Blob;
+      const filePath = `${recipeId}/${fileName}`;
+      
+      console.log('🖼️ Uploading blob to Supabase storage:', filePath);
+      
+      const { data, error } = await supabase.storage
+        .from('recipe-images')
+        .upload(filePath, blob, {
+          contentType: 'image/png',
+          upsert: true,
+        });
+
+      if (error) {
+        console.error('🖼️ Error uploading to Supabase:', error);
+        return null;
+      }
+
+      console.log('🖼️ ✅ Upload successful:', data);
+      return fileName;
+    } else {
+      // ✅ Native - input is a file path string
+      // For now, treat as blob since we're using fetch fallback
+      const blob = input as Blob;
+      const filePath = `${recipeId}/${fileName}`;
+      
+      const { data, error } = await supabase.storage
+        .from('recipe-images')
+        .upload(filePath, blob, {
+          contentType: 'image/png',
+          upsert: true,
+        });
+
+      if (error) {
+        console.error('🖼️ Error uploading to Supabase:', error);
+        return null;
+      }
+
+      return fileName;
+    }
+  } catch (error) {
+    console.error('🖼️ Error in uploadImageToSupabaseStorage:', error);
+    return null;
+  }
+}
+
+// Main function to persist recipe image (exactly like your AppWrite persistRecipeImage)
 export async function persistRecipeImage({
   recipeTitle,
   searchQuery,
@@ -118,119 +169,46 @@ export async function persistRecipeImage({
   userId: string;
 }): Promise<string> {
   try {
-    console.log(`🖼️ Starting persistRecipeImage for: ${recipeTitle}`);
-    
     const preSignedImageUrl = await generateRecipeImage(recipeTitle);
     console.log(`🖼️ Generated pre-signed image URL: ${preSignedImageUrl} for recipeId: ${recipeId}`);
     
     const blob = await fetchImageBlob(preSignedImageUrl);
     if (!blob) {
-      console.log(`🖼️ No blob found for searchQuery: ${searchQuery}`);
-      return preSignedImageUrl; // Return the OpenAI URL as fallback
+      console.log(`🖼️ No blob found searchQuery: ${searchQuery}`);
+      return preSignedImageUrl;
     }
 
     const fileName = formatImageName(searchQuery, allergenNames, 'png');
     console.log(`🖼️ Generated fileName: ${fileName}`);
-    console.log(`🖼️ Blob details: size=${blob.size}, type=${blob.type}`);
+    console.log(`🖼️ Blob details: ${JSON.stringify(blob)}`);
     
-    // Upload to Supabase storage (similar to your AppWrite uploadImageToAppwriteStorage)
-    const uploadedFileName = await uploadImageFromUrl(preSignedImageUrl, recipeId, fileName);
+    // Upload to Supabase storage (like your AppWrite uploadImageToAppwriteStorage)
+    const uploadedFileName = await uploadImageToSupabaseStorage(
+      blob,
+      fileName,
+      recipeId
+    );
+    console.log(`🖼️ UPLOAD file (so close): ${JSON.stringify(uploadedFileName)}`);
     
-    if (!uploadedFileName) {
-      console.log(`🖼️ Upload failed, returning pre-signed URL`);
-      return preSignedImageUrl;
+    if (uploadedFileName) {
+      // Update the recipe with the uploaded filename (like your AppWrite updateRecipe)
+      const { error } = await supabase
+        .from('recipes')
+        .update({ image: uploadedFileName })
+        .eq('id', recipeId);
+      
+      if (error) {
+        console.error('🖼️ Error updating recipe with image:', error);
+      }
     }
     
-    console.log(`🖼️ UPLOAD file successful: ${uploadedFileName}`);
-    
-    // Update the recipe with the uploaded filename
-    const { error } = await supabase
-      .from('recipes')
-      .update({ image: uploadedFileName })
-      .eq('id', recipeId);
-    
-    if (error) {
-      console.error('🖼️ Error updating recipe with image:', error);
-    }
-    
-    // Return the pre-signed URL temporarily (like AppWrite pattern)
-    // The actual Supabase URL will be used when the recipe is loaded later
+    // It takes Supabase a while to set the image, so we return and temporarily use the OpenAI pre-signed URL
     return preSignedImageUrl;
     
   } catch (error) {
     console.error('🖼️ Error in persistRecipeImage:', error);
     // Fallback to generating a new image URL
     return await generateRecipeImage(recipeTitle);
-  }
-}
-
-// Test function to verify image upload is working
-export async function testImageUpload(): Promise<void> {
-  try {
-    console.log('🧪 Testing image upload functionality...');
-    const testImageUrl = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
-    const testRecipeId = 'test-recipe-' + Date.now();
-    const testFilename = 'test-image.jpg';
-    
-    const result = await uploadImageFromUrl(testImageUrl, testRecipeId, testFilename);
-    
-    if (result) {
-      console.log('🧪 ✅ Test upload successful:', result);
-      console.log('🧪 Image URL:', getStorageImageUrl(testRecipeId, result));
-    } else {
-      console.log('🧪 ❌ Test upload failed');
-    }
-  } catch (error) {
-    console.error('🧪 ❌ Test upload error:', error);
-  }
-}
-
-export async function uploadImageFromUrl(
-  imageUrl: string,
-  recipeId: string,
-  filename: string
-): Promise<string | null> {
-  try {
-    console.log('🖼️ Fetching image from URL:', imageUrl);
-    
-    // Fetch image from URL (this will work on web with OpenAI URLs)
-    const response = await fetch(imageUrl, {
-      mode: 'cors',
-      headers: {
-        'Accept': 'image/*',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.statusText}`);
-    }
-    console.log('🖼️ Image fetched successfully, converting to blob');
-
-    const imageBlob = await response.blob();
-    console.log('🖼️ Image blob created, size:', imageBlob.size);
-    
-    // Create the full path: recipe_id/filename
-    const filePath = `${recipeId}/${filename}`;
-    console.log('🖼️ Uploading to path:', filePath);
-    
-    // Upload to Supabase storage
-    const { data, error } = await supabase.storage
-      .from('recipe-images')
-      .upload(filePath, imageBlob, {
-        contentType: 'image/png',
-        upsert: true, // Replace if exists
-      });
-
-    if (error) {
-      console.error('🖼️ Error uploading image to Supabase:', error);
-      return null;
-    }
-
-    console.log('🖼️ ✅ Image uploaded successfully to Supabase:', data);
-    return filename; // Return just the filename
-  } catch (error) {
-    console.error('🖼️ ❌ Error in uploadImageFromUrl:', error);
-    return null;
   }
 }
 
