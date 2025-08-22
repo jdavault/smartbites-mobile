@@ -39,7 +39,7 @@ export default function RecipeCard({
   onSave,
   onSaveAndFavorite,
   onToggleFavorite,
-  onDelete,
+  onDelete = () => {},
   showSaveButton = false,
   showHeartButton = false,
   selectedAllergens = [],
