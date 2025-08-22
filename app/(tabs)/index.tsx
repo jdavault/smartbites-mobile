@@ -7,10 +7,11 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Alert,
   RefreshControl,
   Image,
   ActivityIndicator,
+  Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -26,6 +27,13 @@ import RecipeCard from '@/components/RecipeCard';
 import RecipeSection from '@/components/RecipeSection';
 import AllergenFilter from '@/components/AllergenFilter';
 import DietaryFilter from '@/components/DietaryFilter';
+
+type ModalInfo = {
+  visible: boolean;
+  title: string;
+  subtitle?: string;
+  emoji?: string;
+};
 
 export default function SearchScreen() {
   const { user } = useAuth();
@@ -57,6 +65,14 @@ export default function SearchScreen() {
   const [selectedDietary, setSelectedDietary] = useState<
     { $id: string; name: string }[]
   >([]);
+  const [modalInfo, setModalInfo] = useState<ModalInfo>({
+    visible: false,
+    title: '',
+  });
+
+  const openModal = (info: Omit<ModalInfo, 'visible'>) =>
+    setModalInfo({ ...info, visible: true });
+  const closeModal = () => setModalInfo((m) => ({ ...m, visible: false }));
 
   // Initialize filters with user's preferences
   useEffect(() => {
@@ -66,10 +82,11 @@ export default function SearchScreen() {
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      Alert.alert(
-        'Search Required',
-        'Please enter a recipe or ingredient to search for.'
-      );
+      openModal({
+        title: 'Search Required',
+        subtitle: 'Please enter a recipe or ingredient to search for.',
+        emoji: '🔍',
+      });
       return;
     }
 
@@ -86,12 +103,13 @@ export default function SearchScreen() {
       setSearchResults(recipes);
     } catch (error) {
       console.error('Search error:', error);
-      Alert.alert(
-        'Search Error',
-        error instanceof Error && error.message.includes('OpenAI API key') 
+      openModal({
+        title: 'Search Error',
+        subtitle: error instanceof Error && error.message.includes('OpenAI API key') 
           ? 'OpenAI API key is required for recipe generation. Please configure your API key.'
-          : 'Failed to search for recipes. Please try again.'
-      );
+          : 'Failed to search for recipes. Please try again.',
+        emoji: '❌',
+      });
     } finally {
       setLoading(false);
     }
@@ -101,12 +119,20 @@ export default function SearchScreen() {
     try {
       setSavingRecipeId(recipe.title);
       await saveRecipe(recipe);
-      Alert.alert('Success', 'Recipe saved to your collection!');
+      openModal({
+        title: 'Recipe Saved!',
+        subtitle: 'Recipe saved to your collection!',
+        emoji: '✅',
+      });
       setSearchResults([]);
       setSearchQuery('');
     } catch (error) {
       console.error('Save recipe error:', error);
-      Alert.alert('Error', 'Failed to save recipe. Please try again.');
+      openModal({
+        title: 'Save Failed',
+        subtitle: 'Failed to save recipe. Please try again.',
+        emoji: '❌',
+      });
     } finally {
       setSavingRecipeId(null);
     }
@@ -116,12 +142,20 @@ export default function SearchScreen() {
     try {
       setFavoritingRecipeId(recipe.title);
       await saveAndFavoriteRecipe(recipe);
-      Alert.alert('Success', 'Recipe saved and added to favorites!');
+      openModal({
+        title: 'Recipe Favorited!',
+        subtitle: 'Recipe saved and added to favorites!',
+        emoji: '❤️',
+      });
       setSearchResults([]);
       setSearchQuery('');
     } catch (error) {
       console.error('Save and favorite recipe error:', error);
-      Alert.alert('Error', 'Failed to save recipe. Please try again.');
+      openModal({
+        title: 'Save Failed',
+        subtitle: 'Failed to save recipe. Please try again.',
+        emoji: '❌',
+      });
     } finally {
       setFavoritingRecipeId(null);
     }
@@ -314,10 +348,73 @@ export default function SearchScreen() {
       textAlign: 'center',
       lineHeight: 24,
     },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: colors.surface,
+      padding: 24,
+      borderRadius: 12,
+      width: '80%',
+      maxWidth: 420,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 5,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.text,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    modalSubtitle: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+    modalEmoji: {
+      fontSize: 40,
+      marginBottom: 12,
+    },
   });
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Success/Error Modal */}
+      {modalInfo.visible && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={modalInfo.visible}
+          onRequestClose={closeModal}
+        >
+          <TouchableWithoutFeedback onPress={closeModal}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                {modalInfo.emoji && (
+                  <Text style={styles.modalEmoji}>{modalInfo.emoji}</Text>
+                )}
+                <Text style={styles.modalTitle}>{modalInfo.title}</Text>
+                {!!modalInfo.subtitle && (
+                  <Text style={styles.modalSubtitle}>{modalInfo.subtitle}</Text>
+                )}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
+
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>
