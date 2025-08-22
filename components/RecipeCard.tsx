@@ -91,11 +91,6 @@ export default function RecipeCard({
 
           <View style={styles.previewMetadata}>
             <View style={styles.previewMetadataItem}>
-              <Clock size={16} color={colors.text} />
-              <Text style={styles.previewMetadataText}>{recipe.prepTime}</Text>
-            </View>
-
-            <View style={styles.previewMetadataItem}>
               <Users size={16} color={colors.text} />
               <Text style={styles.previewMetadataText}>
                 {recipe.servings} serving{recipe.servings !== 1 ? 's' : ''}
@@ -192,13 +187,6 @@ export default function RecipeCard({
         <Text style={styles.description}>{recipe.description}</Text>
 
         <View style={styles.metadata}>
-          <View style={styles.metadataItem}>
-            <Clock size={14} color={colors.textSecondary} />
-            <Text style={styles.metadataText}>
-              {recipe.prepTime} + {recipe.cookTime}
-            </Text>
-          </View>
-
           <View style={styles.metadataItem}>
             <Users size={14} color={colors.textSecondary} />
             <Text style={styles.metadataText}>{recipe.servings} servings</Text>
