@@ -170,7 +170,7 @@ export default function RecipeCard({
         <View style={styles.header}>
           <Text style={styles.title}>{recipe.title}</Text>
           <View style={styles.actionButtons}>
-            {onDelete && (
+            {onDelete && !showSaveButton && (
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={onDelete}

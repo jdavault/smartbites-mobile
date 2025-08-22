@@ -150,6 +150,17 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
     // console.log('🔍 Loading featured recipes for user:', user.id);
 
     try {
+      // First, get the user's saved recipe IDs to exclude them
+      const { data: userRecipeData, error: userRecipeError } = await supabase
+        .from('user_recipes')
+        .select('recipe_id')
+        .eq('user_id', user.id);
+
+      if (userRecipeError) throw userRecipeError;
+      
+      const savedRecipeIds = userRecipeData?.map(ur => ur.recipe_id) || [];
+      // console.log('📚 User already has these recipes:', savedRecipeIds);
+
       // Get allergen and dietary preference IDs from the lookup tables
       const userAllergenNames = userAllergens.map(a => a.name);
       const userDietaryNames = userDietaryPrefs.map(d => d.name);
@@ -182,8 +193,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         // console.log('🌱 Dietary IDs to include:', dietaryIds);
       }
 
-      // Get recipes with their allergens and dietary preferences using joins
-      const { data, error } = await supabase
+      // Get recipes with their allergens and dietary preferences using joins, excluding user's saved recipes
+      let query = supabase
         .from('recipes')
         .select(`
           *,
@@ -196,6 +207,13 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         `)
         .limit(20) // Get more than 5 to randomize from
         .order('created_at', { ascending: false });
+
+      // Exclude recipes the user already has
+      if (savedRecipeIds.length > 0) {
+        query = query.not('id', 'in', `(${savedRecipeIds.join(',')})`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       
