@@ -70,3 +70,4 @@ export async function persistRecipeImage({
     return DEFAULT_RECIPE_IMAGE;
   }
     // console.error('🖼️ Error in persistRecipeImage:', error);
+}
