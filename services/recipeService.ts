@@ -4,6 +4,9 @@ import { generateRecipeImage } from '@/lib/openai';
 import { formatImageName } from '@/utils/filenames';
 import { supabase } from '@/lib/supabase';
 
+// Default fallback image URL for when image generation fails
+const DEFAULT_RECIPE_IMAGE = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+
 export async function persistRecipeImage({
   recipeTitle,
   searchQuery,
@@ -20,6 +23,12 @@ export async function persistRecipeImage({
   try {
     // 1) Get pre-signed OpenAI image URL
     const preSignedImageUrl = await generateRecipeImage(recipeTitle);
+    
+    // If OpenAI returns the default fallback, use it directly
+    if (preSignedImageUrl === DEFAULT_RECIPE_IMAGE) {
+      return DEFAULT_RECIPE_IMAGE;
+    }
+    
     console.log(`🖼️ Generated pre-signed image URL: ${preSignedImageUrl} for recipeId: ${recipeId}`);
 
     // 2) Fetch it as Blob (web) or local path (native)
@@ -60,7 +69,7 @@ export async function persistRecipeImage({
     return uploaded.publicUrl ?? preSignedImageUrl;
   } catch (error) {
     console.error('🖼️ Error in persistRecipeImage:', error);
-    // Fallback to generating a new image URL
-    return await generateRecipeImage(recipeTitle);
+    // Return default fallback image instead of trying to regenerate
+    return DEFAULT_RECIPE_IMAGE;
   }
 }
