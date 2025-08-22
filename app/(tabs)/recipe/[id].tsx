@@ -13,7 +13,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useRecipes } from '@/contexts/RecipesContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getStorageImageUrl } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { ArrowLeft, Clock, Users, ChefHat } from 'lucide-react-native';
 
 const DEFAULT_IMAGE_URL = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
@@ -56,10 +56,13 @@ export default function RecipeDetailScreen() {
   // Get the image URL - either from Supabase storage or fallback
   const getImageUrl = () => {
     if (recipe?.image) {
-      // Get from Supabase storage using recipe_id/filename structure
-      if (recipe.id) {
-        const storageUrl = getStorageImageUrl(recipe.id, recipe.image);
-        return storageUrl;
+      // Get from Supabase storage using user_id/recipe_id/filename structure
+      if (recipe.id && user?.id) {
+        const filePath = `${user.id}/${recipe.id}/${recipe.image}`;
+        const { data } = supabase.storage
+          .from('recipe-images')
+          .getPublicUrl(filePath);
+        return data?.publicUrl;
       }
     }
     // Fallback to default image
