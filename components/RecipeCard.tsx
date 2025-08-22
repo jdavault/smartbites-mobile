@@ -228,7 +228,7 @@ export default function RecipeCard({
           <View style={styles.tags}>
             {recipe.tags.slice(0, 3).map((tag, index) => (
               <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
+                <Text style={styles.previewTagText}>{tag}</Text>
               </View>
             ))}
           </View>
@@ -437,6 +437,6 @@ const getStyles = (colors: ThemeColors) =>
     previewTagText: {
       fontSize: 13,
       fontFamily: 'Inter-Medium',
-      color: colors.textWhite,
+      color: colors.textPrimary,
     },
   });
