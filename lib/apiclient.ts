@@ -11,6 +11,7 @@ export async function fetchImageBlob(url: string): Promise<Blob | string> {
         timeout: 15000,
         headers: {
           'Accept': 'image/*',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         },
       });
       return response.data;
@@ -23,7 +24,9 @@ export async function fetchImageBlob(url: string): Promise<Blob | string> {
     try {
       const res = await RNBlobUtil.config({
         fileCache: true,
-      }).fetch('GET', url);
+      }).fetch('GET', url, {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      });
 
       console.log('✅ Native file saved at:', res.path());
       return res.path();
