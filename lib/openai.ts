@@ -104,6 +104,9 @@ export async function generateRecipe(
         - Title can/should also highlight saving time - 10-minute salad, no-bake trail mix
         - Title can/should reflect ingredients or health focus - Gluten-Free Mac n Cheese, Vegan Chocolate Chip Cookies
         - Add "Rise Time" to recipes as needed. Ie hamburger buns, breads, pizza dough, etc.
+        - Tags are not allergens or dietary preferences .. they are additional descriptors, categories or conveniences for the recipe, such as no-bake, quick, easy, or one-pot.
+        - allergens should list any of the following for which the recipe is free of: Milk, Eggs, Fish, Shellfish, Tree Nuts, Soybeans, Tree Nuts, Peanuts, Wheat (Gluten), Soy, Sesame,
+        - dietaryPrefs should list any of the following the recipe is suitable for: Vegetarian, Vegan, Gluten-Free, Dairy-Free, Keto, Paleo, Low-Carb, High-Protein
         
       Return ONLY a valid JSON object in the following exact structure:
       {
