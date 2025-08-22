@@ -513,6 +513,7 @@ export default function SearchScreen() {
                 title="🌟 Featured Recipes"
                 recipes={featuredRecipes}
                 onToggleFavorite={toggleFavorite}
+                onDelete={undefined}
                 horizontal={true}
               />
             )}
