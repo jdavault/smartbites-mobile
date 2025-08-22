@@ -115,9 +115,9 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         createdAt: item.recipes.created_at,
       })) || [];
 
-      console.log('📊 Fetched recipes with relationships:', formattedRecipes.length);
-      console.log('🔍 Sample recipe allergens:', formattedRecipes[0]?.allergens);
-      console.log('🔍 Sample recipe dietary prefs:', formattedRecipes[0]?.dietaryPrefs);
+      // console.log('📊 Fetched recipes with relationships:', formattedRecipes.length);
+      // console.log('🔍 Sample recipe allergens:', formattedRecipes[0]?.allergens);
+      // console.log('🔍 Sample recipe dietary prefs:', formattedRecipes[0]?.dietaryPrefs);
 
       setSavedRecipes(formattedRecipes);
     } catch (error) {
@@ -147,7 +147,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   const loadRandomFeaturedRecipes = async () => {
     if (!user) return;
     
-    console.log('🔍 Loading featured recipes for user:', user.id);
+    // console.log('🔍 Loading featured recipes for user:', user.id);
 
     try {
       // Get allergen and dietary preference IDs from the lookup tables
@@ -157,8 +157,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       let allergenIds: string[] = [];
       let dietaryIds: string[] = [];
       
-      console.log('👤 User allergens:', userAllergenNames);
-      console.log('👤 User dietary prefs:', userDietaryNames);
+      // console.log('👤 User allergens:', userAllergenNames);
+      // console.log('👤 User dietary prefs:', userDietaryNames);
       
       if (userAllergenNames.length > 0) {
         const { data: allergenData, error: allergenError } = await supabase
@@ -168,7 +168,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         
         if (allergenError) throw allergenError;
         allergenIds = allergenData?.map(a => a.id) || [];
-        console.log('🚫 Allergen IDs to avoid:', allergenIds);
+        // console.log('🚫 Allergen IDs to avoid:', allergenIds);
       }
       
       if (userDietaryNames.length > 0) {
@@ -179,7 +179,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         
         if (dietaryError) throw dietaryError;
         dietaryIds = dietaryData?.map(d => d.id) || [];
-        console.log('🌱 Dietary IDs to include:', dietaryIds);
+        // console.log('🌱 Dietary IDs to include:', dietaryIds);
       }
 
       // Get recipes with their allergens and dietary preferences using joins
@@ -199,7 +199,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       
-      console.log('📊 Total recipes found:', data?.length || 0);
+      // console.log('📊 Total recipes found:', data?.length || 0);
 
       let filteredRecipes = data || [];
 
@@ -210,8 +210,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           return !recipeAllergenIds.some((allergenId: string) => allergenIds.includes(allergenId));
         });
         
-        console.log('🚫 After allergen filtering:', filteredRecipes.length, 'recipes remain');
-        console.log('🔍 Sample recipe allergens:', filteredRecipes[0]?.recipe_allergens);
+        // console.log('🚫 After allergen filtering:', filteredRecipes.length, 'recipes remain');
+        // console.log('🔍 Sample recipe allergens:', filteredRecipes[0]?.recipe_allergens);
       }
 
       // Filter by dietary preferences if user has any
@@ -221,8 +221,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           return dietaryIds.some(userPrefId => recipeDietaryIds.includes(userPrefId));
         });
         
-        console.log('🌱 After dietary filtering:', filteredRecipes.length, 'recipes remain');
-        console.log('🔍 Sample recipe dietary prefs:', filteredRecipes[0]?.recipe_dietary_prefs);
+        // console.log('🌱 After dietary filtering:', filteredRecipes.length, 'recipes remain');
+        // console.log('🔍 Sample recipe dietary prefs:', filteredRecipes[0]?.recipe_dietary_prefs);
       }
 
       // Randomize and take 5
@@ -230,7 +230,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       const selectedRecipes = shuffled.slice(0, 5);
 
       // Get allergen and dietary preference names for display
-      console.log('🎯 Selected recipes for featured:', selectedRecipes.length);
+      // console.log('🎯 Selected recipes for featured:', selectedRecipes.length);
       
       const { data: allAllergens } = await supabase
         .from('allergens')
@@ -266,12 +266,12 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         createdAt: recipe.created_at,
       }));
 
-      console.log('✅ Final featured recipes:', formattedRecipes.length);
+      // console.log('✅ Final featured recipes:', formattedRecipes.length);
       setFeaturedRecipes(formattedRecipes);
     } catch (error) {
       console.error('Error loading featured recipes:', error);
       // Fallback to empty array if there's an error
-      console.log('❌ Featured recipes failed, setting empty array');
+      // console.log('❌ Featured recipes failed, setting empty array');
       setFeaturedRecipes([]);
     }
   };
@@ -324,7 +324,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (recipeError) throw recipeError;
-      console.log('Recipe inserted:', recipeData);
+      // console.log('Recipe inserted:', recipeData);
 
       // Now persist the image using the same pattern as AppWrite
       try {
@@ -336,9 +336,9 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           recipeId: recipeData.id,
           userId: user.id,
         });
-        console.log('🖼️ ✅ Image persisted successfully:', persistedImageUrl);
+        // console.log('🖼️ ✅ Image persisted successfully:', persistedImageUrl);
       } catch (imageError) {
-        console.error('🖼️ Error persisting image:', imageError);
+        // console.error('🖼️ Error persisting image:', imageError);
       }
 
       // Insert allergen relationships based on user's selected allergens
@@ -473,7 +473,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
         if (recipeError) throw recipeError;
         recipeId = recipeData.id;
-        console.log('New recipe created for favorite:', recipeId);
+        // console.log('New recipe created for favorite:', recipeId);
 
         // Now persist the image using the same pattern as AppWrite
         try {
@@ -485,9 +485,9 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
             recipeId: recipeId,
             userId: user.id,
           });
-          console.log('🖼️ ✅ Favorite image persisted successfully');
+          // console.log('🖼️ ✅ Favorite image persisted successfully');
         } catch (imageError) {
-          console.error('🖼️ Error persisting favorite image:', imageError);
+          // console.error('🖼️ Error persisting favorite image:', imageError);
         }
 
         // Insert allergen relationships based on user's selected allergens for new recipe

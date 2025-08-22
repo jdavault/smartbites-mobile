@@ -21,26 +21,26 @@ export async function persistRecipeImage({
   userId: string;
 }): Promise<string> {
   try {
-    console.log('🖼️ Starting image generation for:', recipeTitle);
+    // console.log('🖼️ Starting image generation for:', recipeTitle);
     
-    // Step 1: Generate image with OpenAI and get presigned URL
+    // console.log('🖼️ Using default image for recipe:', recipeTitle);
     const preSignedImageUrl = await generateRecipeImage(recipeTitle);
-    console.log('🖼️ Got presigned URL from OpenAI:', preSignedImageUrl);
+    // console.log('🖼️ Got presigned URL from OpenAI:', preSignedImageUrl);
     
     // If we got the default fallback, just return it
     if (preSignedImageUrl === DEFAULT_RECIPE_IMAGE) {
-      console.log('🖼️ Using fallback image');
+      // console.log('🖼️ Using fallback image');
       return DEFAULT_RECIPE_IMAGE;
     }
     
     // Step 2: Fetch the image blob from OpenAI's presigned URL
-    console.log('🖼️ Fetching image blob from OpenAI...');
+    // console.log('🖼️ Fetching image blob from OpenAI...');
     const blob = await fetchImageBlob(preSignedImageUrl);
-    console.log('🖼️ Successfully fetched blob');
+    // console.log('🖼️ Successfully fetched blob');
     
     // Step 3: Generate filename and upload to Supabase
     const fileName = formatImageName(searchQuery, allergenNames, 'png');
-    console.log('🖼️ Uploading to Supabase with filename:', fileName);
+    // console.log('🖼️ Uploading to Supabase with filename:', fileName);
     
     const uploaded = await uploadImageToSupabaseStorage(
       blob,
@@ -50,7 +50,7 @@ export async function persistRecipeImage({
       'recipe-images'
     );
     
-    console.log('🖼️ ✅ Upload successful:', uploaded.publicUrl);
+    // console.log('🖼️ ✅ Upload successful:', uploaded.publicUrl);
     
     // Step 4: Update the recipe record with the image filename
     const { error: updateError } = await supabase
@@ -65,8 +65,8 @@ export async function persistRecipeImage({
     return uploaded.publicUrl || DEFAULT_RECIPE_IMAGE;
     
   } catch (error) {
-    console.error('🖼️ Error in persistRecipeImage:', error);
+    // console.error('🖼️ Error in persistRecipeImage:', error);
     // Return default fallback image instead of failing
     return DEFAULT_RECIPE_IMAGE;
   }
-}
+    // console.error('🖼️ Error in persistRecipeImage:', error);
