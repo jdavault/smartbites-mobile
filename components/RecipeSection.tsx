@@ -32,26 +32,19 @@ export default function RecipeSection({ title, recipes, onToggleFavorite, onDele
   const availableWidth = width - (horizontalPadding * 2);
   const cardsPerRow = Math.floor((availableWidth + cardGap) / (cardWidth + cardGap));
   
-  // Smooth responsive scaling for Recently Added cards
+  // Specific breakpoints for Recently Added cards
   let verticalCardWidth;
   if (width < 360) {
-    // Very small devices: scale from 320px to single card width
-    const progress = (width - 320) / (360 - 320);
-    verticalCardWidth = Math.max(320, 320 + (progress * (cardWidth - 320)));
+    // Very small devices: full available width
+    verticalCardWidth = Math.min(availableWidth, 320);
   } else if (width < 690) {
-    // 360px - 690px: scale from single card to two cards width
-    const progress = (width - 360) / (690 - 360);
-    const singleCardWidth = cardWidth;
-    const twoCardWidth = (cardWidth * 2) + cardGap;
-    verticalCardWidth = singleCardWidth + (progress * (twoCardWidth - singleCardWidth));
+    // 360px+: same size as horizontal cards (single card width)
+    verticalCardWidth = cardWidth;
   } else if (width < 1024) {
-    // 690px - 1024px: scale from two cards to three cards width
-    const progress = (width - 690) / (1024 - 690);
-    const twoCardWidth = (cardWidth * 2) + cardGap;
-    const threeCardWidth = (cardWidth * 3) + (cardGap * 2);
-    verticalCardWidth = twoCardWidth + (progress * (threeCardWidth - twoCardWidth));
+    // 690px+: size of two cards (roughly 680px)
+    verticalCardWidth = Math.min(680, (cardWidth * 2) + cardGap);
   } else {
-    // 1024px+: cap at three cards width
+    // 1024px+: size of three cards (roughly 1024px)
     verticalCardWidth = Math.min(1024, (cardWidth * 3) + (cardGap * 2));
   }
     
