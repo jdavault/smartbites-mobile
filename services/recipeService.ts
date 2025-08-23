@@ -75,7 +75,14 @@ export async function persistRecipeImage({
   try {
     console.log('🖼️ Start image generation:', recipeTitle);
 
-    const preSignedImageUrl = await generateRecipeImage(recipeTitle);
+    let preSignedImageUrl: string;
+    try {
+      preSignedImageUrl = await generateRecipeImage(recipeTitle);
+    } catch (imageGenError) {
+      console.error('🖼️ Image generation failed:', imageGenError);
+      return DEFAULT_RECIPE_IMAGE;
+    }
+
     console.log('🖼️ Presigned URL:', preSignedImageUrl);
 
     if (preSignedImageUrl === DEFAULT_RECIPE_IMAGE) {
@@ -85,14 +92,27 @@ export async function persistRecipeImage({
     const fileName = formatImageName(searchQuery, allergenNames, 'png');
 
     // Get uploadable (Blob on web; {uri,name,type} on RN)
-    const uploadable = await fetchImageUploadable(
-      preSignedImageUrl,
-      fileName,
-      'image/png'
-    );
+    let uploadable: UploadableImage;
+    try {
+      uploadable = await fetchImageUploadable(
+        preSignedImageUrl,
+        fileName,
+        'image/png'
+      );
+    } catch (fetchError) {
+      console.error('🖼️ Image fetch failed:', fetchError);
+      return DEFAULT_RECIPE_IMAGE;
+    }
 
     // Convert to raw bytes in a RN-safe way
-    const bytes = await bytesFromUploadable(uploadable);
+    let bytes: Uint8Array;
+    try {
+      bytes = await bytesFromUploadable(uploadable);
+    } catch (bytesError) {
+      console.error('🖼️ Bytes conversion failed:', bytesError);
+      return DEFAULT_RECIPE_IMAGE;
+    }
+
     console.log('🖼️ Bytes length:', bytes.byteLength);
 
     // Basic guardrail
@@ -102,36 +122,72 @@ export async function persistRecipeImage({
     }
 
     const filePath = `${recipeId}/${fileName}`;
-    const { error: uploadError } = await supabase.storage
-      .from('recipe-images')
-      .upload(filePath, bytes, {
-        contentType: 'image/png',
-        cacheControl: '3600',
-        upsert: true,
-      });
+    
+    let uploadError: any;
+    try {
+      const uploadResult = await supabase.storage
+        .from('recipe-images')
+        .upload(filePath, bytes, {
+          contentType: 'image/png',
+          cacheControl: '3600',
+          upsert: true,
+        });
+      uploadError = uploadResult.error;
+    } catch (storageError) {
+      console.error('🖼️ Storage upload exception:', storageError);
+      return DEFAULT_RECIPE_IMAGE;
+    }
 
     if (uploadError) {
       console.error('🖼️ Upload failed:', uploadError);
+      console.error('🖼️ Upload error details:', {
+        message: uploadError.message,
+        statusCode: uploadError.statusCode,
+        error: uploadError.error
+      });
       return DEFAULT_RECIPE_IMAGE;
     }
 
     // Public URL
-    const { data: pub } = supabase.storage
-      .from('recipe-images')
-      .getPublicUrl(filePath);
-    const publicUrl = pub?.publicUrl ?? DEFAULT_RECIPE_IMAGE;
+    let publicUrl: string;
+    try {
+      const { data: pub } = supabase.storage
+        .from('recipe-images')
+        .getPublicUrl(filePath);
+      publicUrl = pub?.publicUrl ?? DEFAULT_RECIPE_IMAGE;
+    } catch (urlError) {
+      console.error('🖼️ Public URL generation failed:', urlError);
+      return DEFAULT_RECIPE_IMAGE;
+    }
+
     console.log('🖼️ ✅ Upload successful:', publicUrl);
 
     // Optional: persist filename in DB
-    const { error: updateError } = await supabase
-      .from('recipes')
-      .update({ image: fileName })
-      .eq('id', recipeId);
-    if (updateError) console.error('🖼️ DB update error:', updateError);
+    try {
+      const { error: updateError } = await supabase
+        .from('recipes')
+        .update({ image: fileName })
+        .eq('id', recipeId);
+      if (updateError) {
+        console.error('🖼️ DB update error:', updateError);
+        console.error('🖼️ DB update error details:', {
+          message: updateError.message,
+          code: updateError.code,
+          details: updateError.details
+        });
+      }
+    } catch (dbError) {
+      console.error('🖼️ DB update exception:', dbError);
+    }
 
     return publicUrl;
   } catch (err) {
     console.error('🖼️ Error in persistRecipeImage:', err);
+    console.error('🖼️ Full error details:', {
+      name: err instanceof Error ? err.name : 'Unknown',
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined
+    });
     return DEFAULT_RECIPE_IMAGE;
   }
 }
