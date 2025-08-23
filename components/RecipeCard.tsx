@@ -432,7 +432,7 @@ const getStyles = (colors: ThemeColors) =>
     tagText: {
       fontSize: 12,
       fontFamily: 'Inter-Medium',
-      color: colors.textPrimary,
+      color: colors.textWhite,
     },
     previewTagText: {
       fontSize: 13,
