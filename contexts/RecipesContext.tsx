@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getStorageImageUrl } from '@/lib/supabase';
+import { persistRecipeImage } from '@/services/recipeService';
+import { buildSearchKey } from '@/utils/recipeKeys';
 import { useAuth } from './AuthContext';
 import { useAllergens } from './AllergensContext';
 import { useDietary } from './DietaryContext';
@@ -53,7 +56,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   const { userDietaryPrefs } = useDietary();
 
   const favoriteRecipes = savedRecipes.filter(recipe => recipe.isFavorite);
-  const recentRecipes = savedRecipes.slice(0, 5);
+  const recentRecipes = savedRecipes.filter(recipe => !recipe.isFavorite).slice(0, 5);
 
   const fetchRecipes = async () => {
     if (!user) return;
@@ -64,7 +67,17 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         .from('user_recipes')
         .select(`
           *,
-          recipes (*)
+          recipes (
+            *,
+            recipe_allergens (
+              allergen_id,
+              allergens (name)
+            ),
+            recipe_dietary_prefs (
+              dietary_pref_id,
+              dietary_prefs (name)
+            )
+          )
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false, foreignTable: 'recipes' });
@@ -93,8 +106,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         tags: item.recipes.tags || [],
         searchQuery: item.recipes.search_query || '',
         searchKey: item.recipes.search_key || '',
-        allergens: item.recipes.allergens || [],
-        dietaryPrefs: item.recipes.dietary_prefs || [],
+        allergens: item.recipes.recipe_allergens?.map((ra: any) => ra.allergens?.name).filter(Boolean) || [],
+        dietaryPrefs: item.recipes.recipe_dietary_prefs?.map((rd: any) => rd.dietary_prefs?.name).filter(Boolean) || [],
         notes: item.recipes.notes || '',
         nutritionInfo: item.recipes.nutrition_info || '',
         image: item.recipes.image,
@@ -102,6 +115,10 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         actions: item.actions || [],
         createdAt: item.recipes.created_at,
       })) || [];
+
+      // console.log('📊 Fetched recipes with relationships:', formattedRecipes.length);
+      // console.log('🔍 Sample recipe allergens:', formattedRecipes[0]?.allergens);
+      // console.log('🔍 Sample recipe dietary prefs:', formattedRecipes[0]?.dietaryPrefs);
 
       setSavedRecipes(formattedRecipes);
     } catch (error) {
@@ -114,7 +131,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user) {
       fetchRecipes();
-      loadFeaturedRecipes();
+      // Don't load static featured recipes, only database recipes
+      loadRandomFeaturedRecipes();
     } else {
       setSavedRecipes([]);
       setFeaturedRecipes([]);
@@ -122,75 +140,147 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const loadFeaturedRecipes = () => {
-    // Load static featured recipes
-    const staticFeaturedRecipes: Recipe[] = [
-      {
-        id: 'featured-1',
-        title: 'Mediterranean Quinoa Bowl',
-        headNote: 'A nutritious and colorful bowl packed with Mediterranean flavors',
-        description: 'Fresh quinoa topped with roasted vegetables, olives, and a tangy lemon dressing',
-        ingredients: [],
-        instructions: [],
-        prepTime: '',
-        cookTime: '',
-        servings: 4,
-        difficulty: 'easy',
-        tags: [],
-        searchQuery: '',
-        searchKey: '',
-        allergens: [],
-        dietaryPrefs: [],
-        notes: '',
-        nutritionInfo: '',
-      }
-    ];
-    setFeaturedRecipes(staticFeaturedRecipes);
+    // Don't load any static recipes - only load from database
+    setFeaturedRecipes([]);
   };
 
   // Load 5 random recipes that match user's allergens and dietary preferences
   const loadRandomFeaturedRecipes = async () => {
     if (!user) return;
+    
+    console.log('🔍 Loading featured recipes for user:', user.id);
+    console.log('🔍 User allergens count:', userAllergens.length);
+    console.log('🔍 User dietary prefs count:', userDietaryPrefs.length);
 
     try {
+      // First, get the user's saved recipe IDs to exclude them
+      const { data: userRecipeData, error: userRecipeError } = await supabase
+        .from('user_recipes')
+        .select('recipe_id')
+        .eq('user_id', user.id);
+
+      if (userRecipeError) throw userRecipeError;
+      
+      const savedRecipeIds = userRecipeData?.map(ur => ur.recipe_id) || [];
+      // console.log('📚 User already has these recipes:', savedRecipeIds);
+
+      // Get allergen and dietary preference IDs from the lookup tables
       const userAllergenNames = userAllergens.map(a => a.name);
       const userDietaryNames = userDietaryPrefs.map(d => d.name);
-
-      // Build the query to find recipes that:
-      // 1. DON'T contain user's allergens
-      // 2. DO contain user's dietary preferences (if any)
-      let query = supabase
-        .from('recipes')
-        .select('*');
-
-      // If user has allergens, exclude recipes that contain them
+      
+      let allergenIds: string[] = [];
+      let dietaryIds: string[] = [];
+      
+      // console.log('👤 User allergens:', userAllergenNames);
+      // console.log('👤 User dietary prefs:', userDietaryNames);
+      
       if (userAllergenNames.length > 0) {
-        // Use NOT to exclude recipes that have any of the user's allergens
-        userAllergenNames.forEach(allergen => {
-          query = query.not('allergens', 'cs', `["${allergen}"]`);
-        });
+        const { data: allergenData, error: allergenError } = await supabase
+          .from('allergens')
+          .select('id')
+          .in('name', userAllergenNames);
+        
+        if (allergenError) throw allergenError;
+        allergenIds = allergenData?.map(a => a.id) || [];
+        // console.log('🚫 Allergen IDs to avoid:', allergenIds);
+      }
+      
+      if (userDietaryNames.length > 0) {
+        const { data: dietaryData, error: dietaryError } = await supabase
+          .from('dietary_prefs')
+          .select('id')
+          .in('name', userDietaryNames);
+        
+        if (dietaryError) throw dietaryError;
+        dietaryIds = dietaryData?.map(d => d.id) || [];
+        // console.log('🌱 Dietary IDs to include:', dietaryIds);
       }
 
-      const { data, error } = await query
+      // Get recipes with their allergens and dietary preferences using joins, excluding user's saved recipes
+      let query = supabase
+        .from('recipes')
+        .select(`
+          *,
+          recipe_allergens (
+            allergen_id
+          ),
+          recipe_dietary_prefs (
+            dietary_pref_id
+          )
+        `)
         .limit(20) // Get more than 5 to randomize from
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-
-      let filteredRecipes = data || [];
-
-      // Further filter by dietary preferences if user has any
-      if (userDietaryNames.length > 0) {
-        filteredRecipes = filteredRecipes.filter(recipe => {
-          const recipeDietaryPrefs = recipe.dietary_prefs || [];
-          return userDietaryNames.some(userPref => 
-            recipeDietaryPrefs.includes(userPref)
-          );
-        });
+      // Exclude recipes the user already has
+      if (savedRecipeIds.length > 0) {
+        query = query.not('id', 'in', `(${savedRecipeIds.join(',')})`);
       }
 
+      const { data, error } = await query;
+
+      if (error) throw error;
+      
+      // console.log('📊 Total recipes found:', data?.length || 0);
+
+      // Handle empty database case
+      if (!data || data.length === 0) {
+        console.log('📊 No recipes found in database, setting empty featured recipes');
+        setFeaturedRecipes([]);
+        return;
+      }
+      let filteredRecipes = data || [];
+
+      // Filter out recipes that contain user's allergens
+      if (allergenIds.length > 0) {
+        filteredRecipes = filteredRecipes.filter(recipe => {
+          const recipeAllergenIds = recipe.recipe_allergens?.map((ra: any) => ra.allergen_id) || [];
+          return !recipeAllergenIds.some((allergenId: string) => allergenIds.includes(allergenId));
+        });
+        
+        // console.log('🚫 After allergen filtering:', filteredRecipes.length, 'recipes remain');
+        // console.log('🔍 Sample recipe allergens:', filteredRecipes[0]?.recipe_allergens);
+      }
+
+      // Filter by dietary preferences if user has any
+      if (dietaryIds.length > 0) {
+        filteredRecipes = filteredRecipes.filter(recipe => {
+          const recipeDietaryIds = recipe.recipe_dietary_prefs?.map((rd: any) => rd.dietary_pref_id) || [];
+          return dietaryIds.some(userPrefId => recipeDietaryIds.includes(userPrefId));
+        });
+        
+        // console.log('🌱 After dietary filtering:', filteredRecipes.length, 'recipes remain');
+        // console.log('🔍 Sample recipe dietary prefs:', filteredRecipes[0]?.recipe_dietary_prefs);
+      }
+
+      // Handle case where filtering results in no recipes
+      if (filteredRecipes.length === 0) {
+        console.log('📊 No recipes match user preferences, setting empty featured recipes');
+        setFeaturedRecipes([]);
+        return;
+      }
       // Randomize and take 5
       const shuffled = filteredRecipes.sort(() => 0.5 - Math.random());
       const selectedRecipes = shuffled.slice(0, 5);
+
+      // Get allergen and dietary preference names for display
+      // console.log('🎯 Selected recipes for featured:', selectedRecipes.length);
+      
+      const { data: allAllergens } = await supabase
+        .from('allergens')
+        .select('id, name');
+      
+      const { data: allDietaryPrefs } = await supabase
+        .from('dietary_prefs')
+        .select('id, name');
+      
+      // Handle case where lookup tables are empty
+      if (!allAllergens || !allDietaryPrefs) {
+        console.log('📊 Lookup tables not populated, setting empty featured recipes');
+        setFeaturedRecipes([]);
+        return;
+      }
+      const allergenMap = new Map(allAllergens?.map(a => [a.id, a.name]) || []);
+      const dietaryMap = new Map(allDietaryPrefs?.map(d => [d.id, d.name]) || []);
 
       const formattedRecipes: Recipe[] = selectedRecipes.map(recipe => ({
         id: recipe.id,
@@ -206,8 +296,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         tags: recipe.tags || [],
         searchQuery: recipe.search_query || '',
         searchKey: recipe.search_key || '',
-        allergens: recipe.allergens || [],
-        dietaryPrefs: recipe.dietary_prefs || [],
+        allergens: recipe.recipe_allergens?.map((ra: any) => allergenMap.get(ra.allergen_id)).filter(Boolean) || [],
+        dietaryPrefs: recipe.recipe_dietary_prefs?.map((rd: any) => dietaryMap.get(rd.dietary_pref_id)).filter(Boolean) || [],
         notes: recipe.notes || '',
         nutritionInfo: recipe.nutrition_info || '',
         image: recipe.image,
@@ -215,20 +305,23 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         createdAt: recipe.created_at,
       }));
 
+      // console.log('✅ Final featured recipes:', formattedRecipes.length);
       setFeaturedRecipes(formattedRecipes);
     } catch (error) {
       console.error('Error loading featured recipes:', error);
       // Fallback to empty array if there's an error
+      // console.log('❌ Featured recipes failed, setting empty array');
       setFeaturedRecipes([]);
     }
   };
 
   // Reload featured recipes when user's allergens or dietary preferences change
   useEffect(() => {
-    if (user && userAllergens && userDietaryPrefs) {
+    if (user?.id && (userAllergens.length > 0 || userDietaryPrefs.length > 0)) {
+      console.log('🔄 Loading featured recipes due to preference change');
       loadRandomFeaturedRecipes();
     }
-  }, [user, userAllergens, userDietaryPrefs]);
+  }, [user?.id, JSON.stringify(userAllergens.map(a => a.$id)), JSON.stringify(userDietaryPrefs.map(d => d.$id))]);
 
   const generateFeaturedRecipes = async () => {
     await loadRandomFeaturedRecipes();
@@ -239,10 +332,43 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
     console.log('Saving recipe:', recipe.title);
     try {
-      const searchKey = recipe.searchQuery
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+      const userAllergenNames = userAllergens.map(a => a.name);
+      const userDietaryNames = userDietaryPrefs.map(d => d.name);
+      
+      const searchKey = buildSearchKey({
+        searchQuery: recipe.searchQuery,
+        userAllergens: userAllergenNames,
+        userDietaryPrefs: userDietaryNames,
+        title: recipe.title,
+        headNote: recipe.headNote,
+        description: recipe.description,
+      });
+
+      // Check if a recipe with this search key already exists
+      const { data: existingRecipe, error: checkError } = await supabase
+        .from('recipes')
+        .select('id')
+        .eq('search_key', searchKey)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingRecipe) {
+        // Recipe already exists, just create user association
+        const { error: userRecipeError } = await supabase
+          .from('user_recipes')
+          .insert([{
+            user_id: user.id,
+            recipe_id: existingRecipe.id,
+            actions: [],
+          }]);
+
+        if (userRecipeError) throw userRecipeError;
+        
+        // Fetch the existing recipe to add to local state
+        await fetchRecipes();
+        return;
+      }
 
       // First, insert the recipe
       const { data: recipeData, error: recipeError } = await supabase
@@ -260,18 +386,98 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           tags: recipe.tags,
           search_query: recipe.searchQuery,
           search_key: searchKey,
-          allergens: recipe.allergens,
-          dietary_prefs: recipe.dietaryPrefs,
           notes: recipe.notes,
           nutrition_info: recipe.nutritionInfo,
-          image: recipe.image,
+          image: null, // Will be updated by persistRecipeImage
         }])
         .select()
         .single();
 
       if (recipeError) throw recipeError;
-      console.log('Recipe inserted:', recipeData);
 
+      // Generate and persist the image
+      let finalImageFilename = null;
+      try {
+        const userAllergenNames = userAllergens.map(a => a.name);
+        await persistRecipeImage({
+          recipeTitle: recipe.title,
+          searchQuery: recipe.searchQuery,
+          allergenNames: userAllergenNames,
+          recipeId: recipeData.id,
+          userId: user.id,
+        });
+        
+        // Wait for image to be processed and get the filename
+        let attempts = 0;
+        const maxAttempts = 10;
+        while (attempts < maxAttempts) {
+          const { data: updatedRecipe, error } = await supabase
+            .from('recipes')
+            .select('image')
+            .eq('id', recipeData.id)
+            .single();
+
+          if (!error && updatedRecipe?.image) {
+            finalImageFilename = updatedRecipe.image;
+            break;
+          }
+          
+          // Wait 1 second before checking again
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          attempts++;
+        }
+      } catch (imageError) {
+        console.error('🖼️ Error persisting image:', imageError);
+      }
+
+      // Insert allergen relationships based on user's selected allergens
+      // Insert allergen relationships based on what OpenAI returned for this recipe
+      if (recipe.allergens.length > 0) {
+        // Get allergen IDs by name
+        const { data: allergenData, error: allergenError } = await supabase
+          .from('allergens')
+          .select('id, name')
+          .in('name', recipe.allergens);
+
+        if (allergenError) throw allergenError;
+
+        if (allergenData && allergenData.length > 0) {
+          const allergenRelationships = allergenData.map(allergen => ({
+            recipe_id: recipeData.id,
+            allergen_id: allergen.id,
+          }));
+
+          const { error: allergenRelError } = await supabase
+            .from('recipe_allergens')
+            .insert(allergenRelationships);
+
+          if (allergenRelError) throw allergenRelError;
+        }
+      }
+
+      // Insert dietary preference relationships based on what OpenAI returned for this recipe
+      if (recipe.dietaryPrefs.length > 0) {
+        // Get dietary preference IDs by name
+        const { data: dietaryData, error: dietaryError } = await supabase
+          .from('dietary_prefs')
+          .select('id, name')
+          .in('name', recipe.dietaryPrefs);
+
+        if (dietaryError) throw dietaryError;
+
+        if (dietaryData && dietaryData.length > 0) {
+          const dietaryRelationships = dietaryData.map(dietary => ({
+            recipe_id: recipeData.id,
+            dietary_pref_id: dietary.id,
+          }));
+
+          const { error: dietaryRelError } = await supabase
+            .from('recipe_dietary_prefs')
+            .insert(dietaryRelationships);
+
+          if (dietaryRelError) throw dietaryRelError;
+        }
+      }
       // Then, create the user-recipe relationship
       const { error: userRecipeError } = await supabase
         .from('user_recipes')
@@ -282,13 +488,13 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         }]);
 
       if (userRecipeError) throw userRecipeError;
-      console.log('User-recipe relationship created');
       
       // Add to local state
       const newRecipe = {
         ...recipe,
         id: recipeData.id,
         searchKey,
+        image: finalImageFilename, // Use the processed image filename
         isFavorite: false,
         actions: [],
         createdAt: recipeData.created_at,
@@ -306,28 +512,41 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
     console.log('Saving and favoriting recipe:', recipe.title);
     try {
-      const searchKey = recipe.searchQuery
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+      const userAllergenNames = userAllergens.map(a => a.name);
+      const userDietaryNames = userDietaryPrefs.map(d => d.name);
+      
+      const searchKey = buildSearchKey({
+        searchQuery: recipe.searchQuery,
+        userAllergens: userAllergenNames,
+        userDietaryPrefs: userDietaryNames,
+        title: recipe.title,
+        headNote: recipe.headNote,
+        description: recipe.description,
+      });
 
-      // First, check if a recipe with matching criteria already exists
+      // Check if a recipe with this search key already exists
       const { data: existingRecipes, error: searchError } = await supabase
         .from('recipes')
         .select('id')
-        .eq('title', recipe.title)
-        .eq('search_key', searchKey)
-        .eq('allergens', JSON.stringify(recipe.allergens))
-        .eq('dietary_prefs', JSON.stringify(recipe.dietaryPrefs));
+        .eq('search_key', searchKey);
 
       if (searchError) throw searchError;
 
       let recipeId: string;
+      let finalImageFilename = null;
 
       if (existingRecipes && existingRecipes.length > 0) {
         // Recipe already exists, use the existing one
         recipeId = existingRecipes[0].id;
         console.log('Using existing recipe for favorite:', recipeId);
+        
+        // Get the existing image filename
+        const { data: existingRecipe } = await supabase
+          .from('recipes')
+          .select('image')
+          .eq('id', recipeId)
+          .single();
+        finalImageFilename = existingRecipe?.image;
       } else {
         // Recipe doesn't exist, create a new one
         const { data: recipeData, error: recipeError } = await supabase
@@ -345,19 +564,96 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
             tags: recipe.tags,
             search_query: recipe.searchQuery,
             search_key: searchKey,
-            allergens: recipe.allergens,
-            dietary_prefs: recipe.dietaryPrefs,
             notes: recipe.notes,
             nutrition_info: recipe.nutritionInfo,
-            image: recipe.image,
+            image: null, // Will be updated by persistRecipeImage
           }])
           .select()
           .single();
 
         if (recipeError) throw recipeError;
+
         recipeId = recipeData.id;
-        console.log('New recipe created for favorite:', recipeId);
+
+        // Generate and persist the image
+        try {
+          await persistRecipeImage({
+            recipeTitle: recipe.title,
+            searchQuery: recipe.searchQuery,
+            allergenNames: userAllergens.map(a => a.name),
+            recipeId,
+            userId: user.id,
+          });
+
+          // Wait for image to be processed and get the filename
+          let attempts = 0;
+          const maxAttempts = 10;
+          while (attempts < maxAttempts) {
+            const { data: updatedRecipe, error } = await supabase
+              .from('recipes')
+              .select('image')
+              .eq('id', recipeId)
+              .single();
+
+            searchQuery: recipe.searchQuery,
+
+            // Wait 1 second before checking again
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            attempts++;
+          }
+        } catch (imageError) {
+          console.error('🖼️ Error persisting favorite image:', imageError);
+        }
+
+        // Insert allergen relationships based on what OpenAI returned for this recipe
+        if (recipe.allergens.length > 0) {
+          // Get allergen IDs by name
+          const { data: allergenData, error: allergenError } = await supabase
+            .from('allergens')
+            .select('id, name')
+            .in('name', recipe.allergens);
+
+          if (allergenError) throw allergenError;
+
+          if (allergenData && allergenData.length > 0) {
+            const allergenRelationships = allergenData.map(allergen => ({
+              recipe_id: recipeId,
+              allergen_id: allergen.id,
+            }));
+
+            const { error: allergenRelError } = await supabase
+              .from('recipe_allergens')
+              .insert(allergenRelationships);
+
+            if (allergenRelError) throw allergenRelError;
+          }
+        }
+
+        // Insert dietary preference relationships based on what OpenAI returned for this recipe
+        if (recipe.dietaryPrefs.length > 0) {
+          // Get dietary preference IDs by name
+          const { data: dietaryData, error: dietaryError } = await supabase
+            .from('dietary_prefs')
+            .select('id, name')
+            .in('name', recipe.dietaryPrefs);
+
+          if (dietaryError) throw dietaryError;
+
+          if (dietaryData && dietaryData.length > 0) {
+            const dietaryRelationships = dietaryData.map(dietary => ({
+              recipe_id: recipeId,
+              dietary_pref_id: dietary.id,
+            }));
+
+            const { error: dietaryRelError } = await supabase
+              .from('recipe_dietary_prefs')
+              .insert(dietaryRelationships);
+
+            if (dietaryRelError) throw dietaryRelError;
+          }
+        }
       }
+
       // Then, create the user-recipe relationship with favorite action
       const { error: userRecipeError } = await supabase
         .from('user_recipes')
@@ -368,13 +664,13 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         }]);
 
       if (userRecipeError) throw userRecipeError;
-      console.log('User-recipe relationship created with favorite for recipe:', recipeId);
       
       // Add to local state
       const newRecipe = {
         ...recipe,
         id: recipeId,
         searchKey,
+        image: finalImageFilename,
         isFavorite: true,
         actions: ['favorite'],
       };

@@ -131,7 +131,7 @@ export const ColorScheme = {
     error: Colors.error,
     success: Colors.success,
     warning: Colors.warning,
-    dietary: '#073c51',
+    dietary: Colors.cerulean[600],
   },
   dark: {
     // Background
@@ -156,12 +156,12 @@ export const ColorScheme = {
     text: Colors.rice[500],
     textSecondary: Colors.rice[300],
     textTertiary: Colors.rice[200],
-    textWhite: Colors.white,
+    textWhite: Colors.rice[200],
     textRice: Colors.rice[500],
 
     // Surfaces (and old 'card' alias)
     surface: Colors.ironBlack[600],
-    card: Colors.ironBlack[600],
+    card: Colors.rice[200],
     cardLight: Colors.ironBlack[500],
 
     // Secondary

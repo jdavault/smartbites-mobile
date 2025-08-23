@@ -76,7 +76,7 @@ export default function SplashScreen() {
 
             {/* Middle: app-store block on web, native CTAs on devices */}
             <View style={styles.middleGroup}>
-              {Platform.OS === 'webTemp' && (
+              {Platform.OS === 'web' && (
                 <Animated.View
                   style={[styles.appStoreContainer, { opacity: buttonsAnim }]}
                 >
@@ -136,30 +136,28 @@ export default function SplashScreen() {
                           { color: colors.textPrimary },
                         ]}
                       >
-                        🤖 Download for Android
+                        🤖 Android (coming Sep 2025)
                       </Text>
                     </TouchableOpacity>
                   </View>
                 </Animated.View>
               )}
 
-              {Platform.OS !== 'webTemp' && (
-                <View style={styles.buttonContainer}>
-                  <Link href="/(auth)/login" asChild>
-                    <TouchableOpacity style={styles.primaryButton}>
-                      <Text style={styles.primaryButtonText}>Sign In</Text>
-                    </TouchableOpacity>
-                  </Link>
+              <View style={styles.buttonContainer}>
+                <Link href="/(auth)/login" asChild>
+                  <TouchableOpacity style={styles.primaryButton}>
+                    <Text style={styles.primaryButtonText}>Sign In</Text>
+                  </TouchableOpacity>
+                </Link>
 
-                  <Link href="/(auth)/register" asChild>
-                    <TouchableOpacity style={styles.secondaryButton}>
-                      <Text style={styles.secondaryButtonText}>
-                        Create Account
-                      </Text>
-                    </TouchableOpacity>
-                  </Link>
-                </View>
-              )}
+                <Link href="/(auth)/register" asChild>
+                  <TouchableOpacity style={styles.secondaryButton}>
+                    <Text style={styles.secondaryButtonText}>
+                      Create Account
+                    </Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
             </View>
 
             {/* Bottom: footer links (column uses space-between to push this down) */}
@@ -202,6 +200,8 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
       width: '100%',
       justifyContent: 'space-between',
       alignItems: 'center',
+      maxWidth: 768,
+      alignSelf: 'center',
     },
 
     // Top group (logo + subtitle close together)
@@ -275,6 +275,11 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
 
     // Native CTA buttons (Sign In / Create Account)
     buttonContainer: { width: '100%', gap: 16 },
+    responsiveContainer: {
+      width: '100%',
+      maxWidth: 400,
+      alignSelf: 'center',
+    },
     primaryButton: {
       backgroundColor: colors.primary,
       paddingVertical: 16,

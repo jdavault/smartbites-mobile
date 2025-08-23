@@ -97,6 +97,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (error) {
           console.error('getSession error:', error);
+          // Clear invalid refresh tokens
+          if (error.message?.includes('refresh_token_not_found') || 
+              error.message?.includes('Invalid Refresh Token')) {
+            await supabase.auth.signOut();
+          }
           setUser(null);
           setSession(null);
         } else {

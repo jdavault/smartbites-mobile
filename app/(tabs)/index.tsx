@@ -7,10 +7,12 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Alert,
   RefreshControl,
   Image,
   ActivityIndicator,
+  Modal,
+  TouchableWithoutFeedback,
+  useWindowDimensions,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -18,12 +20,22 @@ import { useRecipes } from '@/contexts/RecipesContext';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useAllergens } from '@/contexts/AllergensContext';
 import { useDietary } from '@/contexts/DietaryContext';
+import { ALLERGENS } from '@/contexts/AllergensContext';
+import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 import { generateRecipes } from '@/lib/openai';
+import { validateFoodQuery } from '@/utils/validation';
 import { Search, RefreshCw } from 'lucide-react-native';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeSection from '@/components/RecipeSection';
 import AllergenFilter from '@/components/AllergenFilter';
 import DietaryFilter from '@/components/DietaryFilter';
+
+type ModalInfo = {
+  visible: boolean;
+  title: string;
+  subtitle?: string;
+  emoji?: string;
+};
 
 export default function SearchScreen() {
   const { user } = useAuth();
@@ -37,22 +49,40 @@ export default function SearchScreen() {
     saveRecipe,
     saveAndFavoriteRecipe,
     toggleFavorite,
+    deleteRecipe,
     generateFeaturedRecipes,
     loading: recipesLoading,
   } = useRecipes();
-  const { userAllergens } = useAllergens();
-  const { userDietaryPrefs } = useDietary();
+  const { userAllergens, toggleAllergen } = useAllergens();
+  const { userDietaryPrefs, toggleDietaryPref } = useDietary();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [savingRecipeId, setSavingRecipeId] = useState<string | null>(null);
+  const [favoritingRecipeId, setFavoritingRecipeId] = useState<string | null>(
+    null
+  );
+  const [showSaveModal, setShowSaveModal] = useState(false);
   const [selectedAllergens, setSelectedAllergens] = useState<
     { $id: string; name: string }[]
   >([]);
   const [selectedDietary, setSelectedDietary] = useState<
     { $id: string; name: string }[]
   >([]);
+  const [modalInfo, setModalInfo] = useState<ModalInfo>({
+    visible: false,
+    title: '',
+  });
+
+  const { width } = useWindowDimensions();
+  const containerMax = 1024;
+  const padX = width <= 360 ? 16 : width <= 690 ? 20 : 24; // matches your section spacing scale
+
+  const openModal = (info: Omit<ModalInfo, 'visible'>) =>
+    setModalInfo({ ...info, visible: true });
+  const closeModal = () => setModalInfo((m) => ({ ...m, visible: false }));
 
   // Initialize filters with user's preferences
   useEffect(() => {
@@ -62,10 +92,24 @@ export default function SearchScreen() {
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      Alert.alert(
-        'Search Required',
-        'Please enter a recipe or ingredient to search for.'
-      );
+      openModal({
+        title: 'Search Required',
+        subtitle: 'Please enter a recipe or ingredient to search for.',
+        emoji: '🔍',
+      });
+      return;
+    }
+
+    // Validate food query BEFORE showing loading modal
+    const validation = validateFoodQuery(searchQuery);
+    if (!validation.isValid) {
+      openModal({
+        title: 'Food Items Only',
+        subtitle: `Please search for food or recipes only. ${
+          validation.suggestion || ''
+        }`,
+        emoji: '🍽️',
+      });
       return;
     }
 
@@ -82,10 +126,32 @@ export default function SearchScreen() {
       setSearchResults(recipes);
     } catch (error) {
       console.error('Search error:', error);
-      Alert.alert(
-        'Search Error',
-        'Failed to search for recipes. Please try again.'
-      );
+
+      // Handle different types of errors with appropriate messages and emojis
+      if (error instanceof Error) {
+        if (error.message.includes('OpenAI API key')) {
+          openModal({
+            title: 'API Key Required',
+            subtitle:
+              'OpenAI API key is required for recipe generation. Please configure your API key.',
+            emoji: '🔑',
+          });
+        } else {
+          openModal({
+            title: 'Search Error',
+            subtitle:
+              error.message ||
+              'Failed to search for recipes. Please try again.',
+            emoji: '❌',
+          });
+        }
+      } else {
+        openModal({
+          title: 'Search Error',
+          subtitle: 'Failed to search for recipes. Please try again.',
+          emoji: '❌',
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -93,66 +159,82 @@ export default function SearchScreen() {
 
   const handleSaveRecipe = async (recipe: any) => {
     try {
-      setLoading(true);
+      setShowSaveModal(true);
+      setSavingRecipeId(recipe.title);
       await saveRecipe(recipe);
-      Alert.alert('Success', 'Recipe saved to your collection!');
       setSearchResults([]);
       setSearchQuery('');
     } catch (error) {
       console.error('Save recipe error:', error);
-      Alert.alert('Error', 'Failed to save recipe. Please try again.');
+      openModal({
+        title: 'Save Failed',
+        subtitle: 'Failed to save recipe. Please try again.',
+        emoji: '❌',
+      });
     } finally {
-      setLoading(false);
+      setSavingRecipeId(null);
+      setShowSaveModal(false);
     }
   };
 
   const handleSaveAndFavoriteRecipe = async (recipe: any) => {
     try {
-      setLoading(true);
+      setShowSaveModal(true);
+      setFavoritingRecipeId(recipe.title);
       await saveAndFavoriteRecipe(recipe);
-      Alert.alert('Success', 'Recipe saved and added to favorites!');
       setSearchResults([]);
       setSearchQuery('');
     } catch (error) {
       console.error('Save and favorite recipe error:', error);
-      Alert.alert('Error', 'Failed to save recipe. Please try again.');
+      openModal({
+        title: 'Save Failed',
+        subtitle: 'Failed to save recipe. Please try again.',
+        emoji: '❌',
+      });
     } finally {
-      setLoading(false);
+      setFavoritingRecipeId(null);
+      setShowSaveModal(false);
     }
   };
 
   const handleToggleAllergenFilter = (allergenName: string) => {
-    const allergen = {
-      $id: allergenName.toLowerCase().replace(/\s+/g, '-'),
-      name: allergenName,
-    };
-    setSelectedAllergens((prev) => {
-      const exists = prev.some((a) => a.name === allergenName);
-      return exists
-        ? prev.filter((a) => a.name !== allergenName)
-        : [...prev, allergen];
-    });
+    // Find the allergen object from the ALLERGENS constant
+    const allergen = ALLERGENS.find((a) => a.name === allergenName);
+    if (allergen) {
+      // Use the context method to toggle the allergen (this updates the database)
+      toggleAllergen(allergen);
+    }
   };
 
   const handleToggleDietaryFilter = (dietaryName: string) => {
-    const dietary = {
-      $id: dietaryName.toLowerCase().replace(/\s+/g, '-'),
-      name: dietaryName,
-    };
-    setSelectedDietary((prev) => {
-      const exists = prev.some((d) => d.name === dietaryName);
-      return exists
-        ? prev.filter((d) => d.name !== dietaryName)
-        : [...prev, dietary];
-    });
+    // Find the dietary preference object from the DIETARY_PREFERENCES constant
+    const dietary = DIETARY_PREFERENCES.find((d) => d.name === dietaryName);
+    if (dietary) {
+      // Use the context method to toggle the dietary preference (this updates the database)
+      toggleDietaryPref(dietary);
+    }
   };
 
   const handleClearAllergenFilters = () => {
-    setSelectedAllergens([]);
+    // Clear all allergens by toggling off each selected one
+    selectedAllergens.forEach((allergen) => {
+      const allergenObj = ALLERGENS.find((a) => a.name === allergen.name);
+      if (allergenObj) {
+        toggleAllergen(allergenObj);
+      }
+    });
   };
 
   const handleClearDietaryFilters = () => {
-    setSelectedDietary([]);
+    // Clear all dietary preferences by toggling off each selected one
+    selectedDietary.forEach((dietary) => {
+      const dietaryObj = DIETARY_PREFERENCES.find(
+        (d) => d.name === dietary.name
+      );
+      if (dietaryObj) {
+        toggleDietaryPref(dietaryObj);
+      }
+    });
   };
 
   const onRefresh = async () => {
@@ -171,6 +253,12 @@ export default function SearchScreen() {
       flex: 1,
       backgroundColor: colors.background,
     },
+    responsiveShell: {
+      width: '100%',
+      maxWidth: 1034, // same cap as your sections
+      alignSelf: 'center',
+      paddingHorizontal: 24, // 👈 force match card layout
+    },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -178,7 +266,7 @@ export default function SearchScreen() {
       paddingHorizontal: 24,
       paddingTop: 8,
       paddingBottom: 8,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.surface,
       marginBottom: 12,
     },
     headerContent: {
@@ -201,13 +289,13 @@ export default function SearchScreen() {
       color: colors.textSecondary,
     },
     searchContainer: {
-      paddingHorizontal: 24,
+      //paddingHorizontal: 24,
       marginBottom: 16,
     },
     searchInputContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.textWhite,
+      backgroundColor: colors.surface,
       borderRadius: 12,
       paddingHorizontal: 16,
       paddingVertical: 12,
@@ -239,27 +327,34 @@ export default function SearchScreen() {
     content: {
       flex: 1,
     },
-    searchResults: {
-      paddingHorizontal: 24,
-      marginBottom: 32,
+    contentContainer: {
+      maxWidth: 1024,
+      alignSelf: 'center',
+      width: '100%',
+    },
+    searchResultsHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
     },
     searchResultsTitle: {
       fontSize: 20,
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
-      marginBottom: 16,
     },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: 40,
+    dismissButton: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
     },
-    loadingText: {
-      fontSize: 16,
-      fontFamily: 'Inter-Regular',
+    dismissButtonText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
       color: colors.textSecondary,
-      marginTop: 12,
     },
     emptyState: {
       flex: 1,
@@ -285,15 +380,125 @@ export default function SearchScreen() {
       textAlign: 'center',
       lineHeight: 24,
     },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: colors.surface,
+      padding: 24,
+      borderRadius: 12,
+      width: '80%',
+      maxWidth: 420,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 5,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.text,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    modalSubtitle: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+    modalEmoji: {
+      fontSize: 40,
+      marginBottom: 12,
+    },
+
+    saveModalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    saveModalContent: {
+      backgroundColor: colors.surface,
+      padding: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 5,
+      borderWidth: 1,
+      borderColor: colors.border,
+      minWidth: 280,
+    },
+
+    saveModalText: {
+      fontSize: 16,
+      fontFamily: 'Inter-Medium',
+      color: colors.text,
+      textAlign: 'center',
+      marginTop: 4, // small spacing between lines
+    },
   });
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Full Screen Save Modal */}
+      {showSaveModal && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={showSaveModal}
+          onRequestClose={() => {}}
+        >
+          <View style={styles.saveModalOverlay}>
+            <View style={styles.saveModalContent}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[styles.saveModalText, styles.modalEmoji]}>🧠</Text>
+              <Text style={styles.saveModalText}>Generating image</Text>
+              <Text style={styles.saveModalText}>Saving Recipe</Text>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {/* Success/Error Modal */}
+      {modalInfo.visible && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={modalInfo.visible}
+          onRequestClose={closeModal}
+        >
+          <TouchableWithoutFeedback onPress={closeModal}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                {modalInfo.emoji && (
+                  <Text style={styles.modalEmoji}>{modalInfo.emoji}</Text>
+                )}
+                <Text style={styles.modalTitle}>{modalInfo.title}</Text>
+                {!!modalInfo.subtitle && (
+                  <Text style={styles.modalSubtitle}>{modalInfo.subtitle}</Text>
+                )}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
+
+      {/* Static full-width header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.title}>
-            Hi, {profile?.firstName || 'there'}!
-          </Text>
+          <Text style={styles.title}>Hi, {profile?.firstName || 'there'}!</Text>
           <Text style={styles.subtitle}>
             What would you like to cook today?
           </Text>
@@ -305,36 +510,39 @@ export default function SearchScreen() {
         />
       </View>
 
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
-          <Search
-            size={20}
-            color={colors.textSecondary}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search for recipes or ingredients..."
-            placeholderTextColor={colors.textSecondary}
-            onSubmitEditing={handleSearch}
-            returnKeyType="search"
-          />
+      {/* Responsive shell for search + filters */}
+      <View style={[styles.responsiveShell, { paddingHorizontal: padX }]}>
+        <View style={styles.searchContainer}>
+          <View style={styles.searchInputContainer}>
+            <Search
+              size={20}
+              color={colors.textSecondary}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search for recipes or ingredients..."
+              placeholderTextColor={colors.textSecondary}
+              onSubmitEditing={handleSearch}
+              returnKeyType="search"
+            />
+          </View>
         </View>
+
+        <AllergenFilter
+          selectedAllergens={selectedAllergens}
+          onToggleFilter={handleToggleAllergenFilter}
+          onClearFilters={handleClearAllergenFilters}
+        />
+
+        <DietaryFilter
+          selectedDietary={selectedDietary}
+          onToggleFilter={handleToggleDietaryFilter}
+          onClearFilters={handleClearDietaryFilters}
+        />
       </View>
-
-      <AllergenFilter
-        selectedAllergens={selectedAllergens}
-        onToggleFilter={handleToggleAllergenFilter}
-        onClearFilters={handleClearAllergenFilters}
-      />
-
-      <DietaryFilter
-        selectedDietary={selectedDietary}
-        onToggleFilter={handleToggleDietaryFilter}
-        onClearFilters={handleClearDietaryFilters}
-      />
 
       <ScrollView
         style={styles.content}
@@ -344,74 +552,108 @@ export default function SearchScreen() {
         }
       >
         {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>Generating recipes...</Text>
-          </View>
+          <Modal
+            transparent
+            animationType="fade"
+            visible={loading}
+            onRequestClose={() => {}}
+          >
+            <View style={styles.saveModalOverlay}>
+              <View style={styles.saveModalContent}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={[styles.saveModalText, styles.modalEmoji]}>
+                  🍳
+                </Text>
+                <Text style={styles.saveModalText}>Cooking up something</Text>
+                <Text style={styles.saveModalText}>
+                  special just for you...
+                </Text>
+              </View>
+            </View>
+          </Modal>
         )}
 
-        {searchResults.length > 0 && (
-          <View style={styles.searchResults}>
-            <Text style={styles.searchResultsTitle}>Search Results</Text>
-            {searchResults.map((recipe, index) => (
-              <RecipeCard
-                key={index}
-                recipe={recipe}
-                onSave={() => handleSaveRecipe(recipe)}
-                onSaveAndFavorite={() => handleSaveAndFavoriteRecipe(recipe)}
-                showSaveButton={true}
-              />
-            ))}
-          </View>
-        )}
+        <View style={styles.contentContainer}>
+          {searchResults.length > 0 && (
+            <View style={[styles.responsiveShell, { paddingHorizontal: padX }]}>
+              <View style={styles.searchResultsHeader}>
+                <Text style={styles.searchResultsTitle}>Search Results</Text>
+                <TouchableOpacity
+                  style={styles.dismissButton}
+                  onPress={() => {
+                    setSearchResults([]);
+                    setSearchQuery('');
+                  }}
+                >
+                  <Text style={styles.dismissButtonText}>Dismiss</Text>
+                </TouchableOpacity>
+              </View>
+              {searchResults.map((recipe, index) => (
+                <RecipeCard
+                  key={index}
+                  recipe={recipe}
+                  onSave={() => handleSaveRecipe(recipe)}
+                  onSaveAndFavorite={() => handleSaveAndFavoriteRecipe(recipe)}
+                  showSaveButton={true}
+                  selectedAllergens={selectedAllergens}
+                  isSaving={savingRecipeId === recipe.title}
+                  isFavoriting={favoritingRecipeId === recipe.title}
+                />
+              ))}
+            </View>
+          )}
 
-        {!loading && searchResults.length === 0 && (
-          <>
-            {featuredRecipes.length > 0 && (
-              <RecipeSection
-                title="🌟 Featured Recipes"
-                recipes={featuredRecipes}
-                onToggleFavorite={toggleFavorite}
-                horizontal={true}
-              />
-            )}
-
-            {favoriteRecipes.length > 0 && (
-              <RecipeSection
-                title="❤️ Your Favorites"
-                recipes={favoriteRecipes}
-                onToggleFavorite={toggleFavorite}
-                horizontal={true}
-              />
-            )}
-
-            {recentRecipes.length > 0 && (
-              <RecipeSection
-                title="🕑 Recently Added"
-                recipes={recentRecipes}
-                onToggleFavorite={toggleFavorite}
-                horizontal={false}
-              />
-            )}
-
-            {savedRecipes.length === 0 &&
-              featuredRecipes.length === 0 &&
-              recentRecipes.length === 0 && (
-                <View style={styles.emptyState}>
-                  <View style={styles.emptyStateIcon}>
-                    <Search size={48} color={colors.textSecondary} />
-                  </View>
-                  <Text style={styles.emptyStateTitle}>
-                    Start Your Culinary Journey
-                  </Text>
-                  <Text style={styles.emptyStateText}>
-                    Search for recipes above to discover delicious meals
-                    tailored to your dietary needs and preferences.
-                  </Text>
-                </View>
+          {!loading && searchResults.length === 0 && (
+            <>
+              {featuredRecipes.length > 0 && (
+                <RecipeSection
+                  title="🌟 Featured Recipes"
+                  recipes={featuredRecipes}
+                  onToggleFavorite={toggleFavorite}
+                  onDelete={undefined}
+                  horizontal={true}
+                />
               )}
-          </>
-        )}
+
+              {favoriteRecipes.length > 0 && (
+                <RecipeSection
+                  title="❤️ Your Favorites"
+                  recipes={favoriteRecipes}
+                  onToggleFavorite={toggleFavorite}
+                  onDelete={deleteRecipe}
+                  horizontal={true}
+                />
+              )}
+
+              {recentRecipes.length > 0 && (
+                <RecipeSection
+                  title="🕑 Recently Added"
+                  recipes={recentRecipes}
+                  onToggleFavorite={toggleFavorite}
+                  onDelete={deleteRecipe}
+                  horizontal={false}
+                />
+              )}
+
+              {savedRecipes.length === 0 &&
+                featuredRecipes.length === 0 &&
+                recentRecipes.length === 0 && (
+                  <View style={styles.emptyState}>
+                    <View style={styles.emptyStateIcon}>
+                      <Search size={48} color={colors.textSecondary} />
+                    </View>
+                    <Text style={styles.emptyStateTitle}>
+                      Start Your Culinary Journey
+                    </Text>
+                    <Text style={styles.emptyStateText}>
+                      Search for recipes above to discover delicious meals
+                      tailored to your dietary needs and preferences.
+                    </Text>
+                  </View>
+                )}
+            </>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

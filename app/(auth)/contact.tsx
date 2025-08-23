@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'; // <-- use this one
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
-import { useTheme } from '@/contexts/ThemeContext';
+import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import { ArrowLeft, Mail, MapPin } from 'lucide-react-native';
 
 const CONTACT_EMAIL =
@@ -58,46 +58,48 @@ export default function ContactScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.paragraph}>
-              We&apos;d love to hear from you. Whether you have questions about
-              billing, employment, partnerships, or general inquiries — reach
-              out!
-            </Text>
+            <View style={styles.contentContainer}>
+              <Text style={styles.paragraph}>
+                We&apos;d love to hear from you. Whether you have questions about
+                billing, employment, partnerships, or general inquiries — reach
+                out!
+              </Text>
 
-            <View style={styles.contactItem}>
-              <View style={styles.contactIcon}>
-                <Mail size={24} color={colors.primary} />
+              <View style={styles.contactItem}>
+                <View style={styles.contactIcon}>
+                  <Mail size={24} color={colors.primary} />
+                </View>
+                <View style={styles.contactContent}>
+                  <Text style={styles.contactTitle}>General Email</Text>
+                  <TouchableOpacity
+                    onPress={() => Linking.openURL(`mailto:${CONTACT_EMAIL}`)}
+                  >
+                    <Text style={styles.contactLink}>{CONTACT_EMAIL}</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-              <View style={styles.contactContent}>
-                <Text style={styles.contactTitle}>General Email</Text>
-                <TouchableOpacity
-                  onPress={() => Linking.openURL(`mailto:${CONTACT_EMAIL}`)}
-                >
-                  <Text style={styles.contactLink}>{CONTACT_EMAIL}</Text>
+
+              <View style={styles.contactItem}>
+                <View style={styles.contactIcon}>
+                  <MapPin size={24} color={colors.secondary} />
+                </View>
+                <View style={styles.contactContent}>
+                  <Text style={styles.contactTitle}>Mailing Address</Text>
+                  <Text style={styles.contactText}>
+                    SmartBites, Inc.{'\n'}
+                    2101 E Donald Dr.{'\n'}
+                    Phoenix, AZ 85024{'\n'}
+                    623-220-9724
+                  </Text>
+                </View>
+              </View>
+
+              <Link href="/(auth)" asChild>
+                <TouchableOpacity>
+                  <Text style={styles.backLink}>Back Home</Text>
                 </TouchableOpacity>
-              </View>
+              </Link>
             </View>
-
-            <View style={styles.contactItem}>
-              <View style={styles.contactIcon}>
-                <MapPin size={24} color={colors.secondary} />
-              </View>
-              <View style={styles.contactContent}>
-                <Text style={styles.contactTitle}>Mailing Address</Text>
-                <Text style={styles.contactText}>
-                  SmartBites, Inc.{'\n'}
-                  2101 E Donald Dr.{'\n'}
-                  Phoenix, AZ 85024{'\n'}
-                  623-220-9724
-                </Text>
-              </View>
-            </View>
-
-            <Link href="/(auth)" asChild>
-              <TouchableOpacity>
-                <Text style={styles.backLink}>Back Home</Text>
-              </TouchableOpacity>
-            </Link>
           </ScrollView>
         </View>
       </SafeAreaView>
@@ -105,7 +107,7 @@ export default function ContactScreen() {
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     // Replaces container background; we put padding here now
     content: {
@@ -145,6 +147,13 @@ const getStyles = (colors: any) =>
     // Scroll content padding; add some bottom space so it’s not flush with the home indicator
     scrollInner: {
       paddingBottom: 24,
+      alignItems: 'center',
+    },
+
+    contentContainer: {
+      width: '100%',
+      maxWidth: 768,
+      alignSelf: 'center',
     },
 
     paragraph: {

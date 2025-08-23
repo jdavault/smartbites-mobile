@@ -64,6 +64,10 @@ export default function TabLayout() {
           ),
         }}
       />
+     <Tabs.Screen
+        name="recipe/[id]"
+       options={{ href: null }}
+     />
     </Tabs>
   );
 }

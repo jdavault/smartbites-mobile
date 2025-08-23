@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
-import { useTheme } from '@/contexts/ThemeContext';
+import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import {
   ArrowLeft,
   Utensils,
@@ -60,79 +60,81 @@ export default function AboutScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.paragraph}>
-              Welcome to <Text style={styles.brandName}>SmartBites</Text>
-              <Text style={styles.trademark}>™</Text> — a mobile app built for
-              people and families managing food allergies and dietary
-              restrictions.
-            </Text>
+            <View style={styles.contentContainer}>
+              <Text style={styles.paragraph}>
+                Welcome to <Text style={styles.brandName}>SmartBites</Text>
+                <Text style={styles.trademark}>™</Text> — a mobile app built for
+                people and families managing food allergies and dietary
+                restrictions.
+              </Text>
 
-            <View style={styles.featureCard}>
-              <View style={styles.featureIcon}>
-                <Utensils size={24} color={colors.primary} />
+              <View style={styles.featureCard}>
+                <View style={styles.featureIcon}>
+                  <Utensils size={24} color={colors.primary} />
+                </View>
+                <View style={styles.featureContent}>
+                  <Text style={styles.featureTitle}>Smart Recipe Search</Text>
+                  <Text style={styles.featureText}>
+                    Search for and customize recipes that avoid common allergens
+                    like wheat (gluten), milk, eggs, and more. Refine, edit, and
+                    save your favorite recipes to your personal list for easy
+                    access at home.
+                  </Text>
+                </View>
               </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>Smart Recipe Search</Text>
-                <Text style={styles.featureText}>
-                  Search for and customize recipes that avoid common allergens
-                  like wheat (gluten), milk, eggs, and more. Refine, edit, and
-                  save your favorite recipes to your personal list for easy
-                  access at home.
-                </Text>
+
+              <View style={styles.featureCard}>
+                <View style={styles.featureIcon}>
+                  <Shield size={24} color={colors.secondary} />
+                </View>
+                <View style={styles.featureContent}>
+                  <Text style={styles.featureTitle}>Allergy-Safe Cooking</Text>
+                  <Text style={styles.featureText}>
+                    We currently focus on helping you cook safely at home. Future
+                    versions of SmartBites will go further — helping you find
+                    allergy-friendly restaurants and safe menu items while dining
+                    out.
+                  </Text>
+                </View>
               </View>
+
+              <View style={styles.featureCard}>
+                <View style={styles.featureIcon}>
+                  <ChefHat size={24} color={colors.accent} />
+                </View>
+                <View style={styles.featureContent}>
+                  <Text style={styles.featureTitle}>
+                    Coming Soon: Menu Search
+                  </Text>
+                  <Text style={styles.featureText}>
+                    Search restaurant menus for allergy-aware and diet-friendly
+                    items. Filter by specific allergens and dietary preferences to
+                    quickly spot safer dishes when dining out. Pilot locations
+                    first, then broader rollout.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.featureCard}>
+                <View style={styles.featureIcon}>
+                  <Users size={24} color={colors.accent} />
+                </View>
+                <View style={styles.featureContent}>
+                  <Text style={styles.featureTitle}>For Everyone</Text>
+                  <Text style={styles.featureText}>
+                    Whether you're newly diagnosed or have been navigating
+                    allergies for years, SmartBites is here to simplify your food
+                    choices and bring confidence back to your kitchen.
+                  </Text>
+                </View>
+              </View>
+
+              <Link href="/(auth)" asChild>
+                <TouchableOpacity>
+                  <Text style={styles.backLink}>Back Home</Text>
+                </TouchableOpacity>
+              </Link>
             </View>
-
-            <View style={styles.featureCard}>
-              <View style={styles.featureIcon}>
-                <Shield size={24} color={colors.secondary} />
-              </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>Allergy-Safe Cooking</Text>
-                <Text style={styles.featureText}>
-                  We currently focus on helping you cook safely at home. Future
-                  versions of SmartBites will go further — helping you find
-                  allergy-friendly restaurants and safe menu items while dining
-                  out.
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.featureCard}>
-              <View style={styles.featureIcon}>
-                <ChefHat size={24} color={colors.accent} />
-              </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>
-                  Coming Soon: Menu Search
-                </Text>
-                <Text style={styles.featureText}>
-                  Search restaurant menus for allergy-aware and diet-friendly
-                  items. Filter by specific allergens and dietary preferences to
-                  quickly spot safer dishes when dining out. Pilot locations
-                  first, then broader rollout.
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.featureCard}>
-              <View style={styles.featureIcon}>
-                <Users size={24} color={colors.accent} />
-              </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>For Everyone</Text>
-                <Text style={styles.featureText}>
-                  Whether you're newly diagnosed or have been navigating
-                  allergies for years, SmartBites is here to simplify your food
-                  choices and bring confidence back to your kitchen.
-                </Text>
-              </View>
-            </View>
-
-            <Link href="/(auth)" asChild>
-              <TouchableOpacity>
-                <Text style={styles.backLink}>Back Home</Text>
-              </TouchableOpacity>
-            </Link>
           </ScrollView>
         </View>
       </SafeAreaView>
@@ -140,7 +142,7 @@ export default function AboutScreen() {
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     // Replaces container background; we put padding here now
     content: {
@@ -178,6 +180,13 @@ const getStyles = (colors: any) =>
     // Scroll content padding; add bottom space so it’s not flush with the home indicator
     scrollInner: {
       paddingBottom: 32,
+      alignItems: 'center',
+    },
+
+    contentContainer: {
+      width: '100%',
+      maxWidth: 768,
+      alignSelf: 'center',
     },
 
     paragraph: {
