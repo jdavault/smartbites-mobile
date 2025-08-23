@@ -57,6 +57,7 @@ async function callOpenAI(messages: any[], options: any = {}) {
       'Content-Type': 'application/json',
       // Include auth token if you want to require logged-in users
       ...(session?.access_token && {
+      type: 'image',
         'Authorization': `Bearer ${session.access_token}`
       }),
     },
