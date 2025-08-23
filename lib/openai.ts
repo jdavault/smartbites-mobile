@@ -27,43 +27,171 @@ const getEdgeFunctionUrl = () => {
   return `${supabaseUrl}/functions/v1/generate-recipes`;
 };
 
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  maxRetries = 3
+): Promise<T> => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.pow(2, i) * 1000)
+      );
+    }
+  }
+  throw new Error('Max retries exceeded');
+};
+
+// Secure OpenAI API call through edge function
+async function callOpenAI(messages: any[], options: any = {}) {
+  const edgeUrl = getEdgeFunctionUrl();
+  
+  // Get current session for authorization (optional)
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  const response = await fetch(edgeUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      // Include auth token if you want to require logged-in users
+      ...(session?.access_token && {
+        'Authorization': `Bearer ${session.access_token}`
+      }),
+    },
+    body: JSON.stringify({ 
+      messages,
+      ...options
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error || `Edge function error: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
 export async function generateRecipes(
   query: string,
   allergens: string[] = [],
   dietaryPrefs: string[] = []
 ): Promise<GeneratedRecipe[]> {
   try {
-    const edgeUrl = getEdgeFunctionUrl();
-    
-    // Get current session for authorization (optional)
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    const response = await fetch(edgeUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Include auth token if you want to require logged-in users
-        ...(session?.access_token && {
-          'Authorization': `Bearer ${session.access_token}`
-        }),
-      },
-      body: JSON.stringify({ 
-        query, 
-        allergens, 
-        dietaryPrefs 
-      }),
-    });
+    // Build constraint blocks
+    const allergensBlock = allergens.length
+      ? [
+          `- Avoid these allergens: ${allergens.join(', ')}.`,
+          `- Do not include any ingredients or instructions that contain the allergens above.`,
+          `- In "allergens", list any and all allergens (including those provided) that are avoided in the final recipe per this list:`,
+          `  Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)`,
+        ].join('\n')
+      : '';
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData?.error || `Edge function error: ${response.status}`);
+    const dietBlock = dietaryPrefs.length
+      ? [
+          `- Follow these dietary preferences: ${dietaryPrefs.join(', ')}.`,
+          `- In "dietaryPrefs", list any and all dietary preferences (including those provided) that would be covered by or apply to this recipe, per this list:`,
+          `  Vegetarian, Vegan, Gluten-Free, Dairy-Free, Keto, Paleo, Low-Carb, High-Protein`,
+        ].join('\n')
+      : '';
+
+    const system = `You are a professional culinary recipe writer. Create ONLY food recipes - never respond to non-food requests. Create a detailed, well-structured recipe. Output ONLY valid JSON (no prose).
+      Contract:
+      {
+        "recipes":[
+          {
+            "title": string,
+            "headNote": string,        // <=160 chars
+            "description": string,
+            "ingredients": string[],   // <=12
+            "instructions": string[],  // <=8
+            "prepTime": string,        // e.g. "15 minutes"
+            "cookTime": string,        // e.g. "15 minutes"
+            "servings": integer,
+            "difficulty": "easy"|"medium"|"hard",
+            "tags": string[],          // <=6 (e.g., quick, no-bake, one-pot)
+            "searchQuery": string,
+            "allergens": string[],     // from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)
+            "dietaryPrefs": string[],  // from: Vegetarian, Vegan, Gluten-Free, Dairy-Free, Keto, Paleo, Low-Carb, High-Protein
+            "notes": string,
+            "nutritionInfo": string
+          }
+        ]
+      }
+
+      Final Recipe Rules:
+        Title Rules
+          - Use a direct, descriptive title that is clear, accurate, and searchable. Avoid ambiguity or mystery (what is loaded cauliflower casserole?).
+          - Capitalize all words except articles, conjunctions, and prepositions (e.g., Pigs in a Blanket, Patty Melt with Cabbage on Rye).
+          - Titles should highlight:
+            - Cooking method (Roast Cauliflower, Grilled Sea Bass).
+            - Time savings (10-Minute Salad, No-Bake Trail Mix).
+            - Region or style (New England Johnny Cakes, Persian Rice).
+            - Key ingredients or health focus (Gluten-Free Mac n Cheese, Vegan Chocolate Chip Cookies).
+        Ingredients & Measurements
+          - Use consistent, standard culinary terms.
+          - Be specific with ingredient quantities, units, and forms (e.g., 1 cup chopped fresh parsley).
+        Times
+          - Include realistic prep and cook times in minutes (e.g., 15 minutes).
+          - Add Rise Time when applicable (e.g., breads, pizza dough, hamburger buns).
+        Instructions
+          - Write clear, step-by-step directions that guide any home cook to succeed.
+          - Explain what to do, what to watch for, and how to fix common issues when possible.
+        Tags
+          - Tags are not allergens or dietary preferences — they are convenience/descriptor tags (e.g., BBQ, easy, quick, no-bake, one-pot).
+        Formatting & Output
+          - Keep JSON syntactically valid (no trailing commas, no commentary).
+          - Return only a valid JSON object in the exact required structure.
+    `;
+
+    const user = [
+      `Generate 3 recipes for: "${query}"`,
+      allergensBlock,
+      dietBlock,
+      `Return exactly 3 items in "recipes". Set "searchQuery" to "${query}" on each.`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const messages = [
+      { role: 'system', content: system.trim() },
+      { role: 'user', content: user.trim() },
+    ];
+
+    const data = await retryWithBackoff(() =>
+      callOpenAI(messages, {
+        model: 'gpt-4o-mini',
+        temperature: 0.3,
+        max_tokens: 1400,
+        seed: 7,
+        response_format: { type: 'json_object' },
+      })
+    );
+
+    const raw = data.choices?.[0]?.message?.content ?? '{"recipes": []}';
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = { recipes: [] };
     }
 
-    const result = await response.json();
-    return result.data || [];
+    const recipes: GeneratedRecipe[] = Array.isArray(parsed.recipes)
+      ? parsed.recipes
+      : [];
+
+    const result = recipes
+      .slice(0, 3)
+      .map((r) => ({ ...r, searchQuery: query }));
+
+    return result.length ? result : [generateMockRecipe(query, allergens, dietaryPrefs)];
 
   } catch (error) {
-    console.error('Error calling edge function:', error);
+    console.error('Error generating recipes:', error);
     
     // Fallback to mock recipe
     return [generateMockRecipe(query, allergens, dietaryPrefs)];
