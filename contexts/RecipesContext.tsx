@@ -404,6 +404,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           await persistRecipeImage({
             recipeTitle: recipe.title,
             searchQuery: recipe.searchQuery,
+          }
+          )
           allergenNames: userAllergenNames,
           recipeId: recipeData.id,
           userId: user.id,
