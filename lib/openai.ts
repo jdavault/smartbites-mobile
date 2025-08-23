@@ -417,7 +417,8 @@ export async function generateRecipes(
   } catch (error) {
     if (error instanceof Error && error.message.includes('401')) {
       console.warn(
-        'OpenAI API key invalid/expired. Falling back to mock recipe.'
+        'OpenAI API key invalid/expired. Falling back to mock recipe.',
+        error
       );
     } else {
       console.error('Error generating recipes:', error);
