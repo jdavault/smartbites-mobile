@@ -265,7 +265,7 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       overflow: 'hidden',
       // 👇 set a fixed size so horizontal cards align
-      width: 330, // tune for your carousel cell width
+      width: 320, // tune for your carousel cell width
       height: 580, // pick a height that looks good in your layout0
     },
     image: {
