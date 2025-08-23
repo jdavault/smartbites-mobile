@@ -523,7 +523,7 @@ export default function SearchScreen() {
 
                 {/* Separate lines */}
                 <Text style={styles.saveModalText}>Cooking up something</Text>
-                <Text style={styles.saveModalText}>delicious just for you...</Text>
+                <Text style={styles.saveModalText}>special just for you...</Text>
               </View>
             </View>
           </Modal>
