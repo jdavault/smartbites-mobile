@@ -257,6 +257,7 @@ const getStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     card: {
       backgroundColor: colors.surface,
+      height: 380, // Fixed height for consistent layout
       borderRadius: 16,
       marginBottom: 16,
       borderWidth: 1,
@@ -265,7 +266,7 @@ const getStyles = (colors: ThemeColors) =>
     },
     image: {
       width: '100%',
-      height: 200,
+      height: 140, // Fixed image height
       backgroundColor: colors.border,
     },
     content: {
@@ -279,6 +280,7 @@ const getStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
+      height: 50, // Fixed header height for 2 lines of title
       marginBottom: 8,
     },
     title: {
@@ -287,6 +289,8 @@ const getStyles = (colors: ThemeColors) =>
       color: colors.textPrimary,
       flex: 1,
       marginRight: 8,
+      height: 50, // Exactly 2 lines at 18px + 6px line height
+      lineHeight: 22,
     },
     previewTitle: {
       fontSize: 17,
@@ -342,7 +346,9 @@ const getStyles = (colors: ThemeColors) =>
       fontSize: 15,
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
+      height: 88, // Fixed height for exactly 4 lines
       lineHeight: 20,
+      overflow: 'hidden',
       marginBottom: 12,
     },
     previewDescription: {
@@ -354,6 +360,7 @@ const getStyles = (colors: ThemeColors) =>
     },
     metadata: {
       flexDirection: 'row',
+      height: 20, // Fixed height for 1 row
       gap: 16,
       marginBottom: 12,
     },
@@ -396,6 +403,8 @@ const getStyles = (colors: ThemeColors) =>
     tags: {
       flexDirection: 'row',
       flexWrap: 'wrap',
+      height: 24, // Fixed height for 1 row of tags
+      overflow: 'hidden',
       gap: 8,
       marginBottom: 16,
     },
@@ -407,6 +416,8 @@ const getStyles = (colors: ThemeColors) =>
     },
     tag: {
       backgroundColor: '#8ec7df', // Colors.cerulean[200]
+      height: 24, // Fixed tag height
+      justifyContent: 'center',
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 8,
@@ -414,6 +425,8 @@ const getStyles = (colors: ThemeColors) =>
     allergenTag: {
       backgroundColor: colors.primary,
       paddingHorizontal: 8,
+      height: 24, // Fixed tag height
+      justifyContent: 'center',
       paddingVertical: 4,
       borderRadius: 8,
     },
@@ -426,6 +439,8 @@ const getStyles = (colors: ThemeColors) =>
     dietaryTag: {
       backgroundColor: colors.dietary,
       paddingHorizontal: 8,
+      height: 24, // Fixed tag height
+      justifyContent: 'center',
       paddingVertical: 4,
       borderRadius: 8,
     },
