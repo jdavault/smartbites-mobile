@@ -59,7 +59,9 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [savingRecipeId, setSavingRecipeId] = useState<string | null>(null);
-  const [favoritingRecipeId, setFavoritingRecipeId] = useState<string | null>(null);
+  const [favoritingRecipeId, setFavoritingRecipeId] = useState<string | null>(
+    null
+  );
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [selectedAllergens, setSelectedAllergens] = useState<
     { $id: string; name: string }[]
@@ -107,9 +109,10 @@ export default function SearchScreen() {
       console.error('Search error:', error);
       openModal({
         title: 'Search Error',
-        subtitle: error instanceof Error && error.message.includes('OpenAI API key') 
-          ? 'OpenAI API key is required for recipe generation. Please configure your API key.'
-          : 'Failed to search for recipes. Please try again.',
+        subtitle:
+          error instanceof Error && error.message.includes('OpenAI API key')
+            ? 'OpenAI API key is required for recipe generation. Please configure your API key.'
+            : 'Failed to search for recipes. Please try again.',
         emoji: '❌',
       });
     } finally {
@@ -169,7 +172,7 @@ export default function SearchScreen() {
 
   const handleToggleAllergenFilter = (allergenName: string) => {
     // Find the allergen object from the ALLERGENS constant
-    const allergen = ALLERGENS.find(a => a.name === allergenName);
+    const allergen = ALLERGENS.find((a) => a.name === allergenName);
     if (allergen) {
       // Use the context method to toggle the allergen (this updates the database)
       toggleAllergen(allergen);
@@ -178,7 +181,7 @@ export default function SearchScreen() {
 
   const handleToggleDietaryFilter = (dietaryName: string) => {
     // Find the dietary preference object from the DIETARY_PREFERENCES constant
-    const dietary = DIETARY_PREFERENCES.find(d => d.name === dietaryName);
+    const dietary = DIETARY_PREFERENCES.find((d) => d.name === dietaryName);
     if (dietary) {
       // Use the context method to toggle the dietary preference (this updates the database)
       toggleDietaryPref(dietary);
@@ -187,8 +190,8 @@ export default function SearchScreen() {
 
   const handleClearAllergenFilters = () => {
     // Clear all allergens by toggling off each selected one
-    selectedAllergens.forEach(allergen => {
-      const allergenObj = ALLERGENS.find(a => a.name === allergen.name);
+    selectedAllergens.forEach((allergen) => {
+      const allergenObj = ALLERGENS.find((a) => a.name === allergen.name);
       if (allergenObj) {
         toggleAllergen(allergenObj);
       }
@@ -197,8 +200,10 @@ export default function SearchScreen() {
 
   const handleClearDietaryFilters = () => {
     // Clear all dietary preferences by toggling off each selected one
-    selectedDietary.forEach(dietary => {
-      const dietaryObj = DIETARY_PREFERENCES.find(d => d.name === dietary.name);
+    selectedDietary.forEach((dietary) => {
+      const dietaryObj = DIETARY_PREFERENCES.find(
+        (d) => d.name === dietary.name
+      );
       if (dietaryObj) {
         toggleDietaryPref(dietaryObj);
       }
@@ -328,7 +333,7 @@ export default function SearchScreen() {
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       marginTop: 12,
-      flexShrink: 1
+      flexShrink: 1,
     },
     emptyState: {
       flex: 1,
@@ -393,6 +398,7 @@ export default function SearchScreen() {
       fontSize: 40,
       marginBottom: 12,
     },
+
     saveModalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.7)',
@@ -413,12 +419,13 @@ export default function SearchScreen() {
       borderColor: colors.border,
       minWidth: 280,
     },
+
     saveModalText: {
       fontSize: 16,
       fontFamily: 'Inter-Medium',
       color: colors.text,
-      marginTop: 16,
       textAlign: 'center',
+      marginTop: 4, // small spacing between lines
     },
   });
 
@@ -435,9 +442,13 @@ export default function SearchScreen() {
           <View style={styles.saveModalOverlay}>
             <View style={styles.saveModalContent}>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.saveModalText}>
-                🧠 Generating image / Saving Recipe...
-              </Text>
+
+              {/* Emoji line */}
+              <Text style={[styles.saveModalText, styles.modalEmoji]}>🧠</Text>
+
+              {/* Separate lines */}
+              <Text style={styles.saveModalText}>Generating image</Text>
+              <Text style={styles.saveModalText}>Saving Recipe...</Text>
             </View>
           </View>
         </Modal>
@@ -469,9 +480,7 @@ export default function SearchScreen() {
 
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.title}>
-            Hi, {profile?.firstName || 'there'}!
-          </Text>
+          <Text style={styles.title}>Hi, {profile?.firstName || 'there'}!</Text>
           <Text style={styles.subtitle}>
             What would you like to cook today?
           </Text>
@@ -524,7 +533,9 @@ export default function SearchScreen() {
         {loading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>🍳 Cooking up something delicious just for you...</Text>
+            <Text style={styles.loadingText}>
+              🍳 Cooking up something delicious just for you...
+            </Text>
           </View>
         )}
 
@@ -532,7 +543,7 @@ export default function SearchScreen() {
           <View style={styles.searchResults}>
             <View style={styles.searchResultsHeader}>
               <Text style={styles.searchResultsTitle}>Search Results</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.dismissButton}
                 onPress={() => {
                   setSearchResults([]);
