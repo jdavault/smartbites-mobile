@@ -401,6 +401,11 @@ export default function RegisterScreen() {
     () =>
       StyleSheet.create({
         content: { flex: 1, paddingHorizontal: 16 },
+        contentContainer: {
+          width: '100%',
+          maxWidth: 768,
+          alignSelf: 'center',
+        },
 
         header: {
           flexDirection: 'row',
@@ -692,13 +697,6 @@ export default function RegisterScreen() {
           paddingTop: 6,
           paddingBottom: insets.bottom + 12,
         },
-
-        contentContainer: {
-          width: '100%',
-          maxWidth: 768,
-          alignSelf: 'center',
-        },
-
         copyright: {
           fontSize: 14,
           textAlign: 'center',
@@ -801,8 +799,8 @@ export default function RegisterScreen() {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              <View style={styles.contentContainer}>
-                <View style={styles.form}>
+
+              <View style={styles.form}>
                 {/* Email + Passwords first (compact, no labels) */}
                 <TextInput
                   style={styles.input}
@@ -1107,7 +1105,6 @@ export default function RegisterScreen() {
                       <Text style={styles.footerLink}>Sign In</Text>
                     </TouchableOpacity>
                   </Link>
-                </View>
                 </View>
               </View>
             </ScrollView>
