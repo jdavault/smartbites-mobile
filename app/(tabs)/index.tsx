@@ -107,14 +107,35 @@ export default function SearchScreen() {
       setSearchResults(recipes);
     } catch (error) {
       console.error('Search error:', error);
-      openModal({
-        title: 'Search Error',
-        subtitle:
-          error instanceof Error && error.message.includes('OpenAI API key')
-            ? 'OpenAI API key is required for recipe generation. Please configure your API key.'
-            : 'Failed to search for recipes. Please try again.',
-        emoji: '❌',
-      });
+      
+      // Handle different types of errors with appropriate messages and emojis
+      if (error instanceof Error) {
+        if (error.message.includes('Please search for food or recipes only')) {
+          openModal({
+            title: 'Food Items Only',
+            subtitle: error.message,
+            emoji: '🍽️',
+          });
+        } else if (error.message.includes('OpenAI API key')) {
+          openModal({
+            title: 'API Key Required',
+            subtitle: 'OpenAI API key is required for recipe generation. Please configure your API key.',
+            emoji: '🔑',
+          });
+        } else {
+          openModal({
+            title: 'Search Error',
+            subtitle: error.message || 'Failed to search for recipes. Please try again.',
+            emoji: '❌',
+          });
+        }
+      } else {
+        openModal({
+          title: 'Search Error',
+          subtitle: 'Failed to search for recipes. Please try again.',
+          emoji: '❌',
+        });
+      }
     } finally {
       setLoading(false);
     }
