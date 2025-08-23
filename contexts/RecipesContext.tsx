@@ -603,7 +603,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
             await new Promise(resolve => setTimeout(resolve, 1000));
             attempts++;
           }
-        } catch (imageError) {
+        catch (imageError) {
           console.error('🖼️ Error persisting favorite image:', imageError);
         }
 
