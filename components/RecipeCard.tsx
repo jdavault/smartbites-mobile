@@ -171,14 +171,8 @@ export default function RecipeCard({
           <Text style={styles.title}>{recipe.title}</Text>
           <View style={styles.actionButtons}>
             {onDelete && !showSaveButton && (
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={onDelete}
-              >
-                <Trash2
-                  size={20}
-                  color={colors.error}
-                />
+              <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
+                <Trash2 size={20} color={colors.error} />
               </TouchableOpacity>
             )}
             {onToggleFavorite && (
@@ -203,7 +197,9 @@ export default function RecipeCard({
         <View style={styles.metadata}>
           <View style={styles.metadataItem}>
             <Clock size={14} color={colors.textSecondary} />
-            <Text style={styles.metadataText}>{recipe.cookTime.replace('minutes', 'min')}</Text>
+            <Text style={styles.metadataText}>
+              {recipe.cookTime.replace('minutes', 'min')}
+            </Text>
           </View>
 
           <View style={styles.metadataItem}>
@@ -224,30 +220,36 @@ export default function RecipeCard({
           </View>
         </View>
 
-        {recipe.tags.length > 0 && (
-          <View style={styles.tags}>
-            {recipe.tags.slice(0, 3).map((tag, index) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.previewTagText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
-        )}
+        {/* Bottom content: fixed at bottom */}
+        <View style={styles.bottomSection}>
+          {/* optional spacer or divider */}
+          <View style={styles.bottomSpacer} />
 
-        {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
-          <View style={styles.tags}>
-            {recipe.allergens.map((allergen, index) => (
-              <View key={`allergen-${index}`} style={styles.allergenTag}>
-                <Text style={styles.tagText}>🚫 {allergen}</Text>
-              </View>
-            ))}
-            {recipe.dietaryPrefs.map((dietary, index) => (
-              <View key={`dietary-${index}`} style={styles.dietaryTag}>
-                <Text style={styles.tagText}>🌱 {dietary}</Text>
-              </View>
-            ))}
-          </View>
-        )}
+          {recipe.tags.length > 0 && (
+            <View style={styles.tags}>
+              {recipe.tags.slice(0, 3).map((tag, index) => (
+                <View key={index} style={styles.tag}>
+                  <Text style={styles.previewTagText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
+            <View style={styles.tags}>
+              {recipe.allergens.map((allergen, index) => (
+                <View key={`allergen-${index}`} style={styles.allergenTag}>
+                  <Text style={styles.tagText}>🚫 {allergen}</Text>
+                </View>
+              ))}
+              {recipe.dietaryPrefs.map((dietary, index) => (
+                <View key={`dietary-${index}`} style={styles.dietaryTag}>
+                  <Text style={styles.tagText}>🌱 {dietary}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -262,18 +264,34 @@ const getStyles = (colors: ThemeColors) =>
       borderWidth: 1,
       borderColor: colors.border,
       overflow: 'hidden',
+      // 👇 set a fixed size so horizontal cards align
+      width: 350, // tune for your carousel cell width
+      height: 580, // pick a height that looks good in your layout0
     },
     image: {
       width: '100%',
-      height: 200,
+      height: 180, //slight shorter image
       backgroundColor: colors.border,
     },
     content: {
+      flex: 1,
       padding: 16,
     },
     previewContent: {
       padding: 20,
       position: 'relative',
+    },
+    // Top grows naturally
+    topSection: {
+      // nothing special; just your title/description block
+    },
+    // Bottom stays pinned; 'marginTop: auto' pushes it down
+    bottomSection: {
+      marginTop: 'auto',
+    },
+    // subtle breathing room between description and bottom rows
+    bottomSpacer: {
+      height: 0,
     },
     header: {
       flexDirection: 'row',
@@ -343,7 +361,8 @@ const getStyles = (colors: ThemeColors) =>
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       lineHeight: 20,
-      marginBottom: 12,
+      // remove bottom margin because bottom section is pinned
+      marginBottom: 0, //12
     },
     previewDescription: {
       fontSize: 16,
@@ -355,7 +374,9 @@ const getStyles = (colors: ThemeColors) =>
     metadata: {
       flexDirection: 'row',
       gap: 16,
-      marginBottom: 12,
+      // keep this tight; tags follow below
+      marginTop: 12,
+      marginBottom: 8,
     },
     previewMetadata: {
       flexDirection: 'row',
@@ -393,11 +414,13 @@ const getStyles = (colors: ThemeColors) =>
       fontFamily: 'Inter-Medium',
       textTransform: 'capitalize',
     },
+
     tags: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 8,
-      marginBottom: 16,
+      marginBottom: 8,
+      // no bottom margin needed; it's already at the bottom
     },
     previewTags: {
       flexDirection: 'row',
