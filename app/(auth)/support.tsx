@@ -71,111 +71,113 @@ export default function SupportScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.paragraph}>
-              Need help using the{' '}
-              <Text style={styles.brandName}>SmartBites</Text>
-              <Text style={styles.trademark}>™</Text> app? Encountering a bug?
-              We're here to assist.
-            </Text>
+            <View style={styles.contentContainer}>
+              <Text style={styles.paragraph}>
+                Need help using the{' '}
+                <Text style={styles.brandName}>SmartBites</Text>
+                <Text style={styles.trademark}>™</Text> app? Encountering a bug?
+                We're here to assist.
+              </Text>
 
-            <View style={styles.supportItem}>
-              <View style={styles.supportIcon}>
-                <Phone size={24} color={colors.primary} />
+              <View style={styles.supportItem}>
+                <View style={styles.supportIcon}>
+                  <Phone size={24} color={colors.primary} />
+                </View>
+                <View style={styles.supportContent}>
+                  <Text style={styles.supportTitle}>Support Phone</Text>
+                  <TouchableOpacity onPress={handlePhonePress}>
+                    <Text style={styles.supportLink}>{SUPPORT_PHONE}</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-              <View style={styles.supportContent}>
-                <Text style={styles.supportTitle}>Support Phone</Text>
-                <TouchableOpacity onPress={handlePhonePress}>
-                  <Text style={styles.supportLink}>{SUPPORT_PHONE}</Text>
+
+              <View style={styles.supportItem}>
+                <View style={styles.supportIcon}>
+                  <Mail size={24} color={colors.secondary} />
+                </View>
+                <View style={styles.supportContent}>
+                  <Text style={styles.supportTitle}>Support Email</Text>
+                  <TouchableOpacity onPress={handleEmailPress}>
+                    <Text style={styles.supportLink}>{SUPPORT_EMAIL}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <Text style={styles.paragraph}>
+                Please include details like your device type, OS version, and any
+                screenshots if available.
+              </Text>
+
+              <Text style={styles.sectionTitle}>Getting Started</Text>
+
+              <View style={styles.supportItem}>
+                <View style={styles.supportIcon}>
+                  <Zap size={24} color={colors.primary} />
+                </View>
+                <View style={styles.supportContent}>
+                  <Text style={styles.supportTitle}>Quick Start Guide</Text>
+                  <Text style={styles.supportText}>
+                    Set up your allergen profile, search for recipes, and save
+                    your favorites. The app learns your preferences to provide
+                    better recommendations.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.supportItem}>
+                <View style={styles.supportIcon}>
+                  <Shield size={24} color={colors.secondary} />
+                </View>
+                <View style={styles.supportContent}>
+                  <Text style={styles.supportTitle}>Allergen Safety</Text>
+                  <Text style={styles.supportText}>
+                    Always double-check ingredients and consult with healthcare
+                    providers. SmartBites provides suggestions but cannot
+                    guarantee allergen-free recipes.
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
+
+              <View style={styles.supportItem}>
+                <View style={styles.supportIcon}>
+                  <HelpCircle size={24} color={colors.accent} />
+                </View>
+                <View style={styles.supportContent}>
+                  <Text style={styles.supportTitle}>
+                    How accurate are the allergen filters?
+                  </Text>
+                  <Text style={styles.supportText}>
+                    Our AI generates recipes based on your allergen profile, but
+                    always verify ingredients yourself. Cross-contamination and
+                    manufacturing processes can vary.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.supportItem}>
+                <View style={styles.supportIcon}>
+                  <Book size={24} color={colors.primary} />
+                </View>
+                <View style={styles.supportContent}>
+                  <Text style={styles.supportTitle}>
+                    Can I modify generated recipes?
+                  </Text>
+                  <Text style={styles.supportText}>
+                    Yes! Save recipes to your collection and edit ingredients,
+                    instructions, or notes to match your preferences and cooking
+                    style.
+                  </Text>
+                </View>
+              </View>
+
+              <Link href="/(auth)" asChild>
+                <TouchableOpacity>
+                  <Text style={styles.backLink}>Back Home</Text>
                 </TouchableOpacity>
-              </View>
+              </Link>
             </View>
-
-            <View style={styles.supportItem}>
-              <View style={styles.supportIcon}>
-                <Mail size={24} color={colors.secondary} />
-              </View>
-              <View style={styles.supportContent}>
-                <Text style={styles.supportTitle}>Support Email</Text>
-                <TouchableOpacity onPress={handleEmailPress}>
-                  <Text style={styles.supportLink}>{SUPPORT_EMAIL}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <Text style={styles.paragraph}>
-              Please include details like your device type, OS version, and any
-              screenshots if available.
-            </Text>
-
-            <Text style={styles.sectionTitle}>Getting Started</Text>
-
-            <View style={styles.supportItem}>
-              <View style={styles.supportIcon}>
-                <Zap size={24} color={colors.primary} />
-              </View>
-              <View style={styles.supportContent}>
-                <Text style={styles.supportTitle}>Quick Start Guide</Text>
-                <Text style={styles.supportText}>
-                  Set up your allergen profile, search for recipes, and save
-                  your favorites. The app learns your preferences to provide
-                  better recommendations.
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.supportItem}>
-              <View style={styles.supportIcon}>
-                <Shield size={24} color={colors.secondary} />
-              </View>
-              <View style={styles.supportContent}>
-                <Text style={styles.supportTitle}>Allergen Safety</Text>
-                <Text style={styles.supportText}>
-                  Always double-check ingredients and consult with healthcare
-                  providers. SmartBites provides suggestions but cannot
-                  guarantee allergen-free recipes.
-                </Text>
-              </View>
-            </View>
-
-            <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
-
-            <View style={styles.supportItem}>
-              <View style={styles.supportIcon}>
-                <HelpCircle size={24} color={colors.accent} />
-              </View>
-              <View style={styles.supportContent}>
-                <Text style={styles.supportTitle}>
-                  How accurate are the allergen filters?
-                </Text>
-                <Text style={styles.supportText}>
-                  Our AI generates recipes based on your allergen profile, but
-                  always verify ingredients yourself. Cross-contamination and
-                  manufacturing processes can vary.
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.supportItem}>
-              <View style={styles.supportIcon}>
-                <Book size={24} color={colors.primary} />
-              </View>
-              <View style={styles.supportContent}>
-                <Text style={styles.supportTitle}>
-                  Can I modify generated recipes?
-                </Text>
-                <Text style={styles.supportText}>
-                  Yes! Save recipes to your collection and edit ingredients,
-                  instructions, or notes to match your preferences and cooking
-                  style.
-                </Text>
-              </View>
-            </View>
-
-            <Link href="/(auth)" asChild>
-              <TouchableOpacity>
-                <Text style={styles.backLink}>Back Home</Text>
-              </TouchableOpacity>
-            </Link>
           </ScrollView>
         </View>
       </SafeAreaView>
@@ -221,6 +223,13 @@ const getStyles = (colors: any) =>
     // Scroll content padding; add bottom space so it’s not flush with the home indicator
     scrollInner: {
       paddingBottom: 32,
+      alignItems: 'center',
+    },
+
+    contentContainer: {
+      width: '100%',
+      maxWidth: 768,
+      alignSelf: 'center',
     },
 
     paragraph: {
