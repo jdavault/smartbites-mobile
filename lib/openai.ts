@@ -32,7 +32,6 @@ async function getOpenAIKey(): Promise<string> {
     throw new Error('EXPO_PUBLIC_SUPABASE_URL is required');
   }
 
-  const edgeUrl = `${supabaseUrl}/functions/v1/generate-recipes`;
   const edgeUrl = `${supabaseUrl}/functions/v1/getOpenAIKey`;
   
   // Get current session for authorization (optional)
