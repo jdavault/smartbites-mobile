@@ -728,7 +728,7 @@ const getStyles = (colors: ThemeColors) =>
     },
     buttonText: { fontSize: 14, fontFamily: 'Inter-SemiBold' },
     saveButtonText: { color: '#FFFFFF' },
-    signOutButton: { backgroundColor: '#FFFFFF', borderColor: colors.error },
+    signOutButton: { backgroundColor: colors.backgroundLight, borderColor: colors.error },
     signOutButtonText: { color: colors.error },
 
     aboutToggle: { alignItems: 'center', paddingVertical: 6, marginBottom: 4 },
