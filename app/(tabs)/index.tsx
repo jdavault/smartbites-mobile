@@ -223,7 +223,7 @@ export default function SearchScreen() {
       paddingHorizontal: 24,
       paddingTop: 8,
       paddingBottom: 8,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.surface,
       marginBottom: 12,
     },
     headerContent: {
