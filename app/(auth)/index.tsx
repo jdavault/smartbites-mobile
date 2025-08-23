@@ -216,7 +216,7 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
     },
     subtitleTight: {
       textAlign: 'center',
-      marginTop: Platform.OS === 'web' ? -8 : 6, // small gap under the logo
+      marginTop: Platform.OS === 'web' ? -20 : 6, // small gap under the logo
       marginBottom: 8, // keep it close to the middle group
       fontFamily: 'Lato-Regular',
       fontSize: 18,
@@ -259,17 +259,17 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
       justifyContent: 'center',
     },
     storeButton: {
-      paddingVertical: Spacing.md,
-      paddingHorizontal: Spacing.lg,
+      paddingVertical: Platform.OS === 'web' ? 12 : Spacing.md,
+      paddingHorizontal: Platform.OS === 'web' ? 16 : Spacing.lg,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: colors.border,
-      minWidth: 160,
+      minWidth: Platform.OS === 'web' ? 140 : 160,
       alignItems: 'center',
     },
     storeButtonText: {
       fontFamily: Fonts.body,
-      fontSize: FontSizes.sm,
+      fontSize: Platform.OS === 'web' ? 13 : FontSizes.sm,
       textAlign: 'center',
     },
 

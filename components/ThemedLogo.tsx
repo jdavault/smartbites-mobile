@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, ImageSourcePropType, StyleSheet } from 'react-native';
+import { Image, ImageSourcePropType, StyleSheet, Platform } from 'react-native';
 import LightLogo from '@/assets/images/smart-bites-logo.png';
 import DarkLogo from '@/assets/images/smart-bites-logo.png';
 import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
@@ -24,8 +24,8 @@ const getStyles = (colors: ThemeColors) =>
       backgroundColor: colors.secondary,
     },
     logoImage: {
-      width: 300,
-      height: 300,
+      width: Platform.OS === 'web' ? 200 : 300,
+      height: Platform.OS === 'web' ? 200 : 300,
       marginVertical: 20,
     },
   });
