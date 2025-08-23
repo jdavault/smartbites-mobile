@@ -36,7 +36,7 @@ export default function AllergenFilter({
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 24,
+      paddingHorizontal: 14,
       marginBottom: 6,
     },
     titleContainer: {
@@ -58,8 +58,8 @@ export default function AllergenFilter({
       color: colors.primary,
     },
     filters: {
-      paddingHorizontal: 24,
-      paddingBottom: 8,
+      paddingHorizontal: 14,
+      paddingBottom: 6,
     },
     filterItem: {
       flexDirection: 'row',
@@ -88,7 +88,7 @@ export default function AllergenFilter({
     },
     activeFiltersContainer: {
       backgroundColor: colors.surface,
-      paddingHorizontal: 24,
+      paddingHorizontal: 14,
       paddingVertical: 8,
       marginBottom: 6,
     },
