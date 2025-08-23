@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getStorageImageUrl } from '@/lib/supabase';
 import { persistRecipeImage } from '@/services/recipeService';
@@ -55,8 +56,15 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   const { userAllergens } = useAllergens();
   const { userDietaryPrefs } = useDietary();
 
-  const favoriteRecipes = savedRecipes.filter(recipe => recipe.isFavorite);
-  const recentRecipes = savedRecipes.filter(recipe => !recipe.isFavorite).slice(0, 5);
+  const favoriteRecipes = useMemo(() => 
+    savedRecipes.filter(recipe => recipe.isFavorite), 
+    [savedRecipes]
+  );
+  
+  const recentRecipes = useMemo(() => 
+    savedRecipes.filter(recipe => !recipe.isFavorite).slice(0, 5), 
+    [savedRecipes]
+  );
 
   const fetchRecipes = async () => {
     if (!user) return;
