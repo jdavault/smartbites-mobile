@@ -401,11 +401,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         const userAllergenNames = userAllergens.map(a => a.name);
         await persistRecipeImage({
           recipeTitle: recipe.title,
-          await persistRecipeImage({
-            recipeTitle: recipe.title,
-            searchQuery: recipe.searchQuery,
-          }
-          )
+          searchQuery: recipe.searchQuery,
           allergenNames: userAllergenNames,
           recipeId: recipeData.id,
           userId: user.id,
@@ -575,8 +571,14 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           .select()
           .single();
 
+        if (recipeError) throw recipeError;
+
         recipeId = recipeData.id;
 
+        // Generate and persist the image
+        try {
+          await persistRecipeImage({
+            recipeTitle: recipe.title,
             searchQuery: recipe.searchQuery,
             allergenNames: userAllergens.map(a => a.name),
             recipeId,
