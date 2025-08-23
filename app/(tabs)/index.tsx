@@ -22,6 +22,7 @@ import { useDietary } from '@/contexts/DietaryContext';
 import { ALLERGENS } from '@/contexts/AllergensContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 import { generateRecipes } from '@/lib/openai';
+import { validateFoodQuery } from '@/utils/validation';
 import { Search, RefreshCw } from 'lucide-react-native';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeSection from '@/components/RecipeSection';
@@ -94,6 +95,17 @@ export default function SearchScreen() {
       return;
     }
 
+    // Validate food query BEFORE showing loading modal
+    const validation = validateFoodQuery(searchQuery);
+    if (!validation.isValid) {
+      openModal({
+        title: 'Food Items Only',
+        subtitle: `Please search for food or recipes only. ${validation.suggestion || ''}`,
+        emoji: '🍽️',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const allergenNames = selectedAllergens.map((a) => a.name);
@@ -110,13 +122,7 @@ export default function SearchScreen() {
       
       // Handle different types of errors with appropriate messages and emojis
       if (error instanceof Error) {
-        if (error.message.includes('Please search for food or recipes only')) {
-          openModal({
-            title: 'Food Items Only',
-            subtitle: error.message,
-            emoji: '🍽️',
-          });
-        } else if (error.message.includes('OpenAI API key')) {
+        if (error.message.includes('OpenAI API key')) {
           openModal({
             title: 'API Key Required',
             subtitle: 'OpenAI API key is required for recipe generation. Please configure your API key.',
