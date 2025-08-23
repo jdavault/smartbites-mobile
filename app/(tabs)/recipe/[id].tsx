@@ -284,7 +284,7 @@ const getStyles = (colors: ThemeColors) =>
     title: {
       fontSize: 24,
       fontFamily: 'Inter-Bold',
-      color: '#FF8866',
+      color: colors.textPrimary,
       marginBottom: 8,
       lineHeight: 30,
     },
