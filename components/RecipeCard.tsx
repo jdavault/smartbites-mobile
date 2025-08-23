@@ -264,9 +264,10 @@ const getStyles = (colors: ThemeColors) =>
       borderWidth: 1,
       borderColor: colors.border,
       overflow: 'hidden',
-      // Height is fixed, width is flexible based on container
-      height: 580, // pick a height that looks good in your layout0
-      flex: 1, // Allow card to expand in vertical layouts
+      // height: 580, // pick a height that looks good in your layout0
+      // flex: 1, // Allow card to expand in vertical layouts
+      width: '100%',
+      height: 580,
     },
     image: {
       width: '100%',

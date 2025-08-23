@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Modal,
   TouchableWithoutFeedback,
+  useWindowDimensions,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -75,6 +76,10 @@ export default function SearchScreen() {
     title: '',
   });
 
+  const { width } = useWindowDimensions();
+  const containerMax = 1024;
+  const padX = width <= 360 ? 16 : width <= 690 ? 20 : 24; // matches your section spacing scale
+
   const openModal = (info: Omit<ModalInfo, 'visible'>) =>
     setModalInfo({ ...info, visible: true });
   const closeModal = () => setModalInfo((m) => ({ ...m, visible: false }));
@@ -100,7 +105,9 @@ export default function SearchScreen() {
     if (!validation.isValid) {
       openModal({
         title: 'Food Items Only',
-        subtitle: `Please search for food or recipes only. ${validation.suggestion || ''}`,
+        subtitle: `Please search for food or recipes only. ${
+          validation.suggestion || ''
+        }`,
         emoji: '🍽️',
       });
       return;
@@ -119,19 +126,22 @@ export default function SearchScreen() {
       setSearchResults(recipes);
     } catch (error) {
       console.error('Search error:', error);
-      
+
       // Handle different types of errors with appropriate messages and emojis
       if (error instanceof Error) {
         if (error.message.includes('OpenAI API key')) {
           openModal({
             title: 'API Key Required',
-            subtitle: 'OpenAI API key is required for recipe generation. Please configure your API key.',
+            subtitle:
+              'OpenAI API key is required for recipe generation. Please configure your API key.',
             emoji: '🔑',
           });
         } else {
           openModal({
             title: 'Search Error',
-            subtitle: error.message || 'Failed to search for recipes. Please try again.',
+            subtitle:
+              error.message ||
+              'Failed to search for recipes. Please try again.',
             emoji: '❌',
           });
         }
@@ -243,6 +253,12 @@ export default function SearchScreen() {
       flex: 1,
       backgroundColor: colors.background,
     },
+    responsiveShell: {
+      width: '100%',
+      maxWidth: 1034, // same cap as your sections
+      alignSelf: 'center',
+      paddingHorizontal: 24, // 👈 force match card layout
+    },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -273,7 +289,7 @@ export default function SearchScreen() {
       color: colors.textSecondary,
     },
     searchContainer: {
-      paddingHorizontal: 24,
+      //paddingHorizontal: 24,
       marginBottom: 16,
     },
     searchInputContainer: {
@@ -315,10 +331,6 @@ export default function SearchScreen() {
       maxWidth: 1024,
       alignSelf: 'center',
       width: '100%',
-    },
-    searchResults: {
-      paddingHorizontal: 24,
-      marginBottom: 32,
     },
     searchResultsHeader: {
       flexDirection: 'row',
@@ -451,11 +463,7 @@ export default function SearchScreen() {
           <View style={styles.saveModalOverlay}>
             <View style={styles.saveModalContent}>
               <ActivityIndicator size="large" color={colors.primary} />
-
-              {/* Emoji line */}
               <Text style={[styles.saveModalText, styles.modalEmoji]}>🧠</Text>
-
-              {/* Separate lines */}
               <Text style={styles.saveModalText}>Generating image</Text>
               <Text style={styles.saveModalText}>Saving Recipe</Text>
             </View>
@@ -487,6 +495,7 @@ export default function SearchScreen() {
         </Modal>
       )}
 
+      {/* Static full-width header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>Hi, {profile?.firstName || 'there'}!</Text>
@@ -501,36 +510,39 @@ export default function SearchScreen() {
         />
       </View>
 
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
-          <Search
-            size={20}
-            color={colors.textSecondary}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search for recipes or ingredients..."
-            placeholderTextColor={colors.textSecondary}
-            onSubmitEditing={handleSearch}
-            returnKeyType="search"
-          />
+      {/* Responsive shell for search + filters */}
+      <View style={[styles.responsiveShell, { paddingHorizontal: padX }]}>
+        <View style={styles.searchContainer}>
+          <View style={styles.searchInputContainer}>
+            <Search
+              size={20}
+              color={colors.textSecondary}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search for recipes or ingredients..."
+              placeholderTextColor={colors.textSecondary}
+              onSubmitEditing={handleSearch}
+              returnKeyType="search"
+            />
+          </View>
         </View>
+
+        <AllergenFilter
+          selectedAllergens={selectedAllergens}
+          onToggleFilter={handleToggleAllergenFilter}
+          onClearFilters={handleClearAllergenFilters}
+        />
+
+        <DietaryFilter
+          selectedDietary={selectedDietary}
+          onToggleFilter={handleToggleDietaryFilter}
+          onClearFilters={handleClearDietaryFilters}
+        />
       </View>
-
-      <AllergenFilter
-        selectedAllergens={selectedAllergens}
-        onToggleFilter={handleToggleAllergenFilter}
-        onClearFilters={handleClearAllergenFilters}
-      />
-
-      <DietaryFilter
-        selectedDietary={selectedDietary}
-        onToggleFilter={handleToggleDietaryFilter}
-        onClearFilters={handleClearDietaryFilters}
-      />
 
       <ScrollView
         style={styles.content}
@@ -549,21 +561,21 @@ export default function SearchScreen() {
             <View style={styles.saveModalOverlay}>
               <View style={styles.saveModalContent}>
                 <ActivityIndicator size="large" color={colors.primary} />
-
-                {/* Emoji line */}
-                <Text style={[styles.saveModalText, styles.modalEmoji]}>🍳</Text>
-
-                {/* Separate lines */}
+                <Text style={[styles.saveModalText, styles.modalEmoji]}>
+                  🍳
+                </Text>
                 <Text style={styles.saveModalText}>Cooking up something</Text>
-                <Text style={styles.saveModalText}>special just for you...</Text>
+                <Text style={styles.saveModalText}>
+                  special just for you...
+                </Text>
+              </View>
             </View>
-          </View>
-        </Modal>
+          </Modal>
         )}
 
         <View style={styles.contentContainer}>
           {searchResults.length > 0 && (
-            <View style={styles.searchResults}>
+            <View style={[styles.responsiveShell, { paddingHorizontal: padX }]}>
               <View style={styles.searchResultsHeader}>
                 <Text style={styles.searchResultsTitle}>Search Results</Text>
                 <TouchableOpacity

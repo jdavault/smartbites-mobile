@@ -1,10 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  useWindowDimensions,
+} from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Recipe } from '@/contexts/RecipesContext';
 import RecipeCard from './RecipeCard';
-
-const { width } = Dimensions.get('window');
 
 interface RecipeSectionProps {
   title: string;
@@ -22,6 +26,7 @@ export default function RecipeSection({
   horizontal = true,
 }: RecipeSectionProps) {
   const { colors } = useTheme();
+  const { width } = useWindowDimensions();
 
   if (recipes.length === 0) return null;
 
@@ -30,25 +35,25 @@ export default function RecipeSection({
     width < 768 ? Math.min(360, width * 0.9) : Math.min(320, width * 0.85);
   const horizontalPadding = 24;
   const cardGap = 16;
-  const availableWidth = width - horizontalPadding * 2;
-  const cardsPerRow = Math.floor(
-    (availableWidth + cardGap) / (cardWidth + cardGap)
-  );
 
-  // Specific breakpoints for Recently Added cards
+  // Match the page's max container width (you set maxWidth: 1024 in index.tsx)
+  const containerMax = 1024;
+  const effectiveViewport = Math.min(width, containerMax);
+  const availableWidth = effectiveViewport - horizontalPadding * 2;
+
   let verticalCardWidth;
-  if (width < 360) {
-    // Very small devices: full available width
-    verticalCardWidth = Math.min(availableWidth, 320);
-  } else if (width < 690) {
-    // 360px+: same size as horizontal cards (single card width)
-    verticalCardWidth = cardWidth;
-  } else if (width < 1024) {
-    // 690px+: size of two cards (roughly 680px)
-    verticalCardWidth = Math.min(680, cardWidth * 2 + cardGap);
+  if (width <= 360) {
+    // 0–360px: same width as the horizontal “tile” card
+    verticalCardWidth = Math.min(cardWidth, availableWidth);
+  } else if (width <= 690) {
+    // 361–690px: grow to ~two cards wide (~680)
+    verticalCardWidth = Math.min(680, availableWidth);
+  } else if (width <= 1024) {
+    // 691–1024px: grow to ~three cards wide (~1024)
+    verticalCardWidth = Math.min(1024, availableWidth);
   } else {
-    // 1024px+: size of three cards (roughly 1024px)
-    verticalCardWidth = Math.min(1024, cardWidth * 3 + cardGap * 2);
+    // >1024px: cap at 1024 (matches your page container max)
+    verticalCardWidth = 1024;
   }
 
   const styles = StyleSheet.create({
@@ -68,6 +73,7 @@ export default function RecipeSection({
     verticalContainer: {
       paddingHorizontal: 24,
       alignItems: 'center',
+      width: '100%',
     },
     horizontalCardContainer: {
       width: cardWidth,
