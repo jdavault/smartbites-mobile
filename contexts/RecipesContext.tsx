@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getStorageImageUrl } from '@/lib/supabase';
 import { persistRecipeImage } from '@/services/recipeService';
+import { buildSearchKey } from '@/utils/recipeKeys';
 import { useAuth } from './AuthContext';
 import { useAllergens } from './AllergensContext';
 import { useDietary } from './DietaryContext';
@@ -331,10 +332,43 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
     console.log('Saving recipe:', recipe.title);
     try {
-      const searchKey = recipe.searchQuery
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+      const userAllergenNames = userAllergens.map(a => a.name);
+      const userDietaryNames = userDietaryPrefs.map(d => d.name);
+      
+      const searchKey = buildSearchKey({
+        searchQuery: recipe.searchQuery,
+        userAllergens: userAllergenNames,
+        userDietaryPrefs: userDietaryNames,
+        title: recipe.title,
+        headNote: recipe.headNote,
+        description: recipe.description,
+      });
+
+      // Check if a recipe with this search key already exists
+      const { data: existingRecipe, error: checkError } = await supabase
+        .from('recipes')
+        .select('id')
+        .eq('search_key', searchKey)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingRecipe) {
+        // Recipe already exists, just create user association
+        const { error: userRecipeError } = await supabase
+          .from('user_recipes')
+          .insert([{
+            user_id: user.id,
+            recipe_id: existingRecipe.id,
+            actions: [],
+          }]);
+
+        if (userRecipeError) throw userRecipeError;
+        
+        // Fetch the existing recipe to add to local state
+        await fetchRecipes();
+        return;
+      }
 
       // First, insert the recipe
       const { data: recipeData, error: recipeError } = await supabase
@@ -478,16 +512,22 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
     console.log('Saving and favoriting recipe:', recipe.title);
     try {
-      const searchKey = recipe.searchQuery
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+      const userAllergenNames = userAllergens.map(a => a.name);
+      const userDietaryNames = userDietaryPrefs.map(d => d.name);
+      
+      const searchKey = buildSearchKey({
+        searchQuery: recipe.searchQuery,
+        userAllergens: userAllergenNames,
+        userDietaryPrefs: userDietaryNames,
+        title: recipe.title,
+        headNote: recipe.headNote,
+        description: recipe.description,
+      });
 
-      // First, check if a recipe with matching criteria already exists
+      // Check if a recipe with this search key already exists
       const { data: existingRecipes, error: searchError } = await supabase
         .from('recipes')
         .select('id')
-        .eq('title', recipe.title)
         .eq('search_key', searchKey);
 
       if (searchError) throw searchError;
@@ -535,8 +575,6 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         recipeId = recipeData.id;
 
         // Generate and persist the image
-        try {
-          const userAllergenNames = userAllergens.map(a => a.name);
           await persistRecipeImage({
             recipeTitle: recipe.title,
             searchQuery: recipe.searchQuery,
