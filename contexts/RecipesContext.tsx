@@ -576,6 +576,8 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
         // ✅ Wrap image persistence in its own try/catch
         try {
+          await persistRecipeImage({
+            recipeTitle: recipe.title,
             searchQuery: recipe.searchQuery,
             allergenNames: userAllergenNames,
             recipeId,
@@ -601,9 +603,6 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
             await new Promise(resolve => setTimeout(resolve, 1000));
             attempts++;
           }
-        } catch (imageError) {
-          console.error('🖼️ Error persisting favorite image:', imageError);
-        }
         } catch (imageError) {
           console.error('🖼️ Error persisting favorite image:', imageError);
         }
