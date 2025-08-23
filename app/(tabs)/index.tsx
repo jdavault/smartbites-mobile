@@ -311,6 +311,11 @@ export default function SearchScreen() {
     content: {
       flex: 1,
     },
+    contentContainer: {
+      maxWidth: 1200,
+      alignSelf: 'center',
+      width: '100%',
+    },
     searchResults: {
       paddingHorizontal: 24,
       marginBottom: 32,
@@ -534,6 +539,7 @@ export default function SearchScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        <View style={styles.contentContainer}>
         {loading && (
           <Modal
             transparent
@@ -635,6 +641,7 @@ export default function SearchScreen() {
               )}
           </>
         )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
