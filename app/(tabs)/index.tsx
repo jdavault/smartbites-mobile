@@ -252,7 +252,7 @@ export default function SearchScreen() {
     searchInputContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.textWhite,
+      backgroundColor: colors.surface,
       borderRadius: 12,
       paddingHorizontal: 16,
       paddingVertical: 12,
