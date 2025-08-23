@@ -264,9 +264,9 @@ const getStyles = (colors: ThemeColors) =>
       borderWidth: 1,
       borderColor: colors.border,
       overflow: 'hidden',
-      // 👇 set a fixed size so horizontal cards align
-      width: 320, // tune for your carousel cell width
+      // Height is fixed, width is flexible based on container
       height: 580, // pick a height that looks good in your layout0
+      flex: 1, // Allow card to expand in vertical layouts
     },
     image: {
       width: '100%',
@@ -436,8 +436,8 @@ const getStyles = (colors: ThemeColors) =>
     },
     allergenTag: {
       backgroundColor: colors.primary,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingHorizontal: 6, // Reduced padding to save space
+      paddingVertical: 3,
       borderRadius: 8,
     },
     allergenFreeTag: {
@@ -448,8 +448,8 @@ const getStyles = (colors: ThemeColors) =>
     },
     dietaryTag: {
       backgroundColor: colors.dietary,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingHorizontal: 6, // Reduced padding to save space
+      paddingVertical: 3,
       borderRadius: 8,
     },
     tagText: {
