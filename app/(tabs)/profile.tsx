@@ -283,7 +283,7 @@ export default function ProfileScreen() {
         onContentSizeChange={handleContentSizeChange}
         contentContainerStyle={{ paddingBottom: 5 }}
       >
-        <View>
+        <View style={styles.contentContainer}>
           <View style={styles.formCard}>
             <View style={styles.form}>
               {/* Names */}
@@ -574,6 +574,11 @@ const getStyles = (colors: ThemeColors) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
+    },
+    contentContainer: {
+      width: '100%',
+      maxWidth: 1024,
+      alignSelf: 'center',
     },
     header: {
       paddingHorizontal: 24,

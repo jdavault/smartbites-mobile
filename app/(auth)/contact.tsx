@@ -152,7 +152,7 @@ const getStyles = (colors: ThemeColors) =>
 
     contentContainer: {
       width: '100%',
-      maxWidth: 768,
+      maxWidth: 1024,
       alignSelf: 'center',
     },
 
