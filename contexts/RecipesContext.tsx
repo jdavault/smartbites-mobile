@@ -401,7 +401,9 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         const userAllergenNames = userAllergens.map(a => a.name);
         await persistRecipeImage({
           recipeTitle: recipe.title,
-          searchQuery: recipe.searchQuery,
+          await persistRecipeImage({
+            recipeTitle: recipe.title,
+            searchQuery: recipe.searchQuery,
           allergenNames: userAllergenNames,
           recipeId: recipeData.id,
           userId: user.id,
