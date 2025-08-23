@@ -125,11 +125,6 @@ export default function SearchScreen() {
       setShowSaveModal(true);
       setSavingRecipeId(recipe.title);
       await saveRecipe(recipe);
-      openModal({
-        title: 'Recipe Saved!',
-        subtitle: 'Recipe saved to your collection!',
-        emoji: '✅',
-      });
       setSearchResults([]);
       setSearchQuery('');
     } catch (error) {
@@ -150,11 +145,6 @@ export default function SearchScreen() {
       setShowSaveModal(true);
       setFavoritingRecipeId(recipe.title);
       await saveAndFavoriteRecipe(recipe);
-      openModal({
-        title: 'Recipe Favorited!',
-        subtitle: 'Recipe saved and added to favorites!',
-        emoji: '❤️',
-      });
       setSearchResults([]);
       setSearchQuery('');
     } catch (error) {
@@ -333,7 +323,12 @@ export default function SearchScreen() {
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       marginTop: 12,
-      flexShrink: 1,
+      textAlign: 'center',
+    },
+    loadingEmoji: {
+      fontSize: 40,
+      marginBottom: 8,
+      marginTop: 16,
     },
     emptyState: {
       flex: 1,
@@ -533,9 +528,13 @@ export default function SearchScreen() {
         {loading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>
-              🍳 Cooking up something delicious just for you...
-            </Text>
+            
+            {/* Emoji line */}
+            <Text style={[styles.loadingText, styles.loadingEmoji]}>🍳</Text>
+            
+            {/* Separate lines */}
+            <Text style={styles.loadingText}>Cooking up something</Text>
+            <Text style={styles.loadingText}>delicious just for you...</Text>
           </View>
         )}
 
