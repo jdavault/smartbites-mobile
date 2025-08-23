@@ -20,7 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { ArrowLeft, Eye, EyeOff, ChevronDown } from 'lucide-react-native';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import ThemedText from '@/components/ThemedText';
 import { ALLERGENS } from '@/contexts/AllergensContext';
@@ -28,6 +28,23 @@ import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 import SmartBitesLogo from '@/assets/images/smart-bites-logo.png'; // 72x72
 
 const DismissWrapper = Platform.OS === 'web' ? React.Fragment : TouchableWithoutFeedback;
+
+// Phone number formatting helper
+const formatPhoneNumber = (value: string): string => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length < 4) return digits;
+  if (digits.length <= 6) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  } else {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  }
+};
+
+// Phone number validation helper
+const isValidPhoneNumber = (phone: string): boolean => {
+  const digits = phone.replace(/\D/g, '');
+  return digits.length === 10;
+};
 
 // US States list
 const US_STATES = [
@@ -185,16 +202,39 @@ export default function RegisterScreen() {
   const [showAllergens, setShowAllergens] = useState(false);
   const [showPrefs, setShowPrefs] = useState(false);
   const [showStates, setShowStates] = useState(false);
+  const [stateSearchText, setStateSearchText] = useState('');
   const [selectedAllergenIds, setSelectedAllergenIds] = useState<Set<string>>(
     new Set()
   );
   const [selectedPrefIds, setSelectedPrefIds] = useState<Set<string>>(
     new Set()
   );
-
-  // consent toggle
   const [showConsent, setShowConsent] = useState(false);
 
+  // avoid re-opening loops
+  const openStates = React.useCallback((initial?: string) => {
+    if (!showStates) {
+      setShowStates(true);
+      if (initial) {
+        // delay lets the modal mount before we seed the search
+        setTimeout(() => setStateSearchText(initial.toUpperCase()), 0);
+      }
+    }
+  }, [showStates]);
+
+  const handleStateKeyPress = (key: string) => {
+    // open if not open
+    if (!showStates) openStates();
+
+    // if user types A–Z, seed search text
+    if (/^[a-z]$/i.test(key)) {
+      setStateSearchText(prev => (prev + key).toUpperCase());
+    }
+    // Optional: handle Backspace to edit search
+    if (key === 'Backspace') {
+      setStateSearchText(prev => prev.slice(0, -1));
+    }
+  };
   const toggle = (
     set: Set<string>,
     id: string,
@@ -205,9 +245,11 @@ export default function RegisterScreen() {
     setter(next);
   };
 
+  // Filter states based on search text
+
   const normalizePhone = (raw: string) => raw.replace(/[^\d+]/g, '');
   const zipOk = (z: string) => /^(\d{5})(-?\d{4})?$/.test(z.trim());
-  const phoneOk = (p: string) => normalizePhone(p).replace(/\D/g, '').length >= 10;
+  const phoneOk = (p: string) => isValidPhoneNumber(p);
 
   const handleRegister = async () => {
     if (!email || !password || !confirmPassword || !firstName || !lastName) {
@@ -250,7 +292,7 @@ export default function RegisterScreen() {
     if (phone && !phoneOk(phone)) {
       openModal({
         title: 'Invalid Phone',
-        subtitle: 'Please enter a valid phone number.',
+        subtitle: 'Please enter a valid 10-digit phone number.',
         emoji: '📞',
         primary: { label: 'OK' },
       });
@@ -308,7 +350,7 @@ export default function RegisterScreen() {
             city: city.trim() || null,
             state: state.trim() || null,
             zip: zip.trim() || null,
-            phone: normalizePhone(phone) || null,
+            phone: phone.replace(/\D/g, '') || null,
           },
           { onConflict: 'user_id' }
         );
@@ -359,6 +401,11 @@ export default function RegisterScreen() {
     () =>
       StyleSheet.create({
         content: { flex: 1, paddingHorizontal: 16 },
+        contentContainer: {
+          width: '100%',
+          maxWidth: 768,
+          alignSelf: 'center',
+        },
 
         header: {
           flexDirection: 'row',
@@ -389,6 +436,7 @@ export default function RegisterScreen() {
         row: { flexDirection: 'row', gap: 8 },
         flex1: { flex: 1 },
         flex2: { flex: 2 },
+        flex3: { flex: 1.5 },
 
        zipContainer: { width: 80 },
        phoneContainer: { width: 140 },
@@ -443,30 +491,6 @@ export default function RegisterScreen() {
           fontSize: 15,
           fontFamily: 'Inter-Regular',
           color: state ? colors.text : colors.textSecondary,
-        },
-        stateList: {
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          backgroundColor: colors.surface,
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: 9,
-          maxHeight: 200,
-          zIndex: 1000,
-        },
-        stateItem: {
-          paddingHorizontal: 12,
-          paddingVertical: 8,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
-        },
-        stateItemLast: { borderBottomWidth: 0 },
-        stateItemText: {
-          fontSize: 15,
-          fontFamily: 'Inter-Regular',
-          color: colors.text,
         },
 
         sectionToggle: { alignItems: 'center', paddingVertical: 2, marginTop: 4 },
@@ -628,6 +652,46 @@ export default function RegisterScreen() {
         modalBtnText: { fontSize: 13, fontFamily: 'Inter-SemiBold', color: colors.text },
         modalBtnTextPrimary: { color: '#fff' },
 
+        // State picker modal styles
+        dropdownOverlay: {
+          ...StyleSheet.absoluteFillObject,
+          backgroundColor: 'rgba(0,0,0,0.35)',
+        },
+        dropdownSheet: {
+          position: 'absolute',
+          left: 16,
+          right: 16,
+          top: Platform.select({ ios: 120, android: 120, default: 120 }),
+          backgroundColor: colors.surface,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: colors.border,
+          padding: 12,
+          elevation: 50,
+          zIndex: 99999,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 10,
+        },
+        dropdownTitle: {
+          fontSize: 16,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.text,
+          marginBottom: 8,
+          textAlign: 'center',
+        },
+        dropdownList: { maxHeight: 300, borderRadius: 8 },
+        dropdownItem: {
+          paddingVertical: 10,
+          paddingHorizontal: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        dropdownItemText: { fontSize: 15, fontFamily: 'Inter-Regular', color: colors.text },
+        dropdownCancel: { marginTop: 8, alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 14 },
+        dropdownCancelText: { fontSize: 14, fontFamily: 'Inter-SemiBold', color: colors.primary },
+
         bottom: {
           paddingHorizontal: 24,
           paddingTop: 6,
@@ -652,6 +716,60 @@ export default function RegisterScreen() {
 
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={styles.content}>
+          {/* State picker modal */}
+          <Modal
+            transparent
+            visible={showStates}
+            animationType="fade"
+            onRequestClose={() => setShowStates(false)}
+          >
+            <TouchableWithoutFeedback onPress={() => setShowStates(false)}>
+              <View style={styles.dropdownOverlay} />
+            </TouchableWithoutFeedback>
+
+            <View style={styles.dropdownSheet}>
+              <Text style={styles.dropdownTitle}>Select a state</Text>
+              {stateSearchText && (
+                <Text style={{ textAlign: 'center', marginBottom: 8, fontSize: 14, color: colors.primary }}>
+                  Searching: {stateSearchText}
+                </Text>
+              )}
+              <ScrollView style={styles.dropdownList} keyboardShouldPersistTaps="handled">
+                {US_STATES
+                  .filter(stateItem => 
+                    !stateSearchText || 
+                    stateItem.code.startsWith(stateSearchText) || 
+                    stateItem.name.toUpperCase().includes(stateSearchText)
+                  )
+                  .map((stateItem) => (
+                  <TouchableOpacity
+                    key={stateItem.code}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setState(stateItem.code);
+                      setShowStates(false);
+                      setStateSearchText('');
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>
+                      {stateItem.code} — {stateItem.name}
+                    </Text>
+                  </TouchableOpacity>
+                  ))}
+              </ScrollView>
+
+              <TouchableOpacity 
+                style={styles.dropdownCancel} 
+                onPress={() => {
+                  setShowStates(false);
+                  setStateSearchText('');
+                }}
+              >
+                <Text style={styles.dropdownCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </Modal>
+
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerContent}>
@@ -747,6 +865,31 @@ export default function RegisterScreen() {
                   </TouchableOpacity>
                 </View>
 
+                {/* Names */}
+                <View style={styles.row}>
+                  <TextInput
+                    style={[styles.input, styles.flex2]}
+                    value={firstName}
+                    onChangeText={setFirstName}
+                    placeholder="First name"
+                    placeholderTextColor={colors.textSecondary}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    textContentType="givenName"
+                    autoComplete="given-name"
+                  />
+                  <TextInput
+                    style={[styles.input, styles.flex3]}
+                    value={lastName}
+                    onChangeText={setLastName}
+                    placeholder="Last name"
+                    placeholderTextColor={colors.textSecondary}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    textContentType="familyName"
+                    autoComplete="family-name"
+                  />
+                </View>
                 {/* Address */}
                 <TextInput
                   style={styles.input}
@@ -778,75 +921,55 @@ export default function RegisterScreen() {
                     autoCapitalize="words"
                     autoCorrect={false}
                     textContentType="addressCity"
-                   returnKeyType="next"
-                   onSubmitEditing={() => setShowStates(true)}
+                    returnKeyType="next"
+                    onSubmitEditing={() => setShowStates(true)}
                   />
-                  <View style={[styles.stateDropdown, styles.flex1]}>
-                    <TouchableOpacity
-                      style={styles.stateButton}
-                      onPress={() => setShowStates(!showStates)}
-                    >
-                      <Text style={styles.stateButtonText}>
-                        {state || 'State'}
-                      </Text>
-                      <ChevronDown size={16} color={colors.textSecondary} />
-                    </TouchableOpacity>
-
-                    {showStates && (
-                      <ScrollView style={styles.stateList} nestedScrollEnabled>
-                        {US_STATES.map((stateItem, index) => (
-                          <TouchableOpacity
-                            key={stateItem.code}
-                            style={[
-                              styles.stateItem,
-                              index === US_STATES.length - 1 && styles.stateItemLast,
-                            ]}
-                            onPress={() => {
-                              setState(stateItem.code);
-                              setShowStates(false);
-                            }}
-                          >
-                            <Text style={styles.stateItemText}>
-                             {stateItem.name}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </ScrollView>
-                    )}
-                  </View>
+                  <TouchableOpacity
+                    style={[styles.input, styles.flex1, styles.stateButton]}
+                    onPress={() => openStates()}
+                  >
+                    <Text style={styles.stateButtonText}>
+                      {state || 'State'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
 
                 <View style={styles.row}>
-                 <View style={styles.zipContainer}>
-                   <TextInput
-                     style={styles.input}
-                     value={zip}
-                     onChangeText={setZip}
-                     placeholder="ZIP"
-                     placeholderTextColor={colors.textSecondary}
-                     keyboardType="number-pad"
-                     autoCapitalize="none"
-                     autoCorrect={false}
-                     maxLength={10}
-                     textContentType="postalCode"
-                     returnKeyType="next"
-                   />
-                 </View>
-                 <View style={styles.phoneContainer}>
-                   <TextInput
-                     style={styles.input}
-                     value={phone}
-                     onChangeText={setPhone}
-                     placeholder="Phone"
-                     placeholderTextColor={colors.textSecondary}
-                     keyboardType="phone-pad"
-                     autoCapitalize="none"
-                     autoCorrect={false}
-                     textContentType="telephoneNumber"
-                     autoComplete="tel"
-                     returnKeyType="done"
-                   />
-                 </View>
+                  <View style={styles.zipContainer}>
+                    <TextInput
+                      style={styles.input}
+                      value={zip}
+                      onChangeText={setZip}
+                      placeholder="ZIP"
+                      placeholderTextColor={colors.textSecondary}
+                      keyboardType="number-pad"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      maxLength={10}
+                      textContentType="postalCode"
+                      returnKeyType="next"
+                      onSubmitEditing={() => openStates()}
+                    />
+                  </View>
+                  <View style={styles.phoneContainer}>
+                    <TextInput
+                      style={styles.input}
+                      value={phone}
+                      onChangeText={(text) => {
+                        const formatted = formatPhoneNumber(text);
+                        setPhone(formatted);
+                      }}
+                      placeholder="Phone"
+                      placeholderTextColor={colors.textSecondary}
+                      keyboardType="phone-pad"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      maxLength={14}
+                      textContentType="telephoneNumber"
+                      autoComplete="tel"
+                      returnKeyType="done"
+                    />
+                  </View>
                 </View>
 
                 {/* Allergens */}

@@ -26,8 +26,11 @@ export default function AllergenFilter({
   const styles = StyleSheet.create({
     container: {
       backgroundColor: colors.surface,
-      paddingTop: 4,
-      marginBottom: 8,
+      borderRadius: 12, // 👈 rounded corners
+      padding: 12,
+      marginBottom: 16, // 👈 spacing below
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     header: {
       flexDirection: 'row',
@@ -121,8 +124,10 @@ export default function AllergenFilter({
         contentContainerStyle={styles.filters}
       >
         {ALLERGENS.map((allergen) => {
-          const isActive = selectedAllergens.some(a => a.name === allergen.name);
-          
+          const isActive = selectedAllergens.some(
+            (a) => a.name === allergen.name
+          );
+
           return (
             <TouchableOpacity
               key={allergen.$id}
@@ -148,7 +153,7 @@ export default function AllergenFilter({
           <Text style={styles.activeFiltersText}>
             Showing recipes without:{' '}
             <Text style={styles.activeFiltersHighlight}>
-              {selectedAllergens.map(a => a.name).join(', ')}
+              {selectedAllergens.map((a) => a.name).join(', ')}
             </Text>
           </Text>
         </View>

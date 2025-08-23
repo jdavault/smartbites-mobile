@@ -26,8 +26,11 @@ export default function DietaryFilter({
   const styles = StyleSheet.create({
     container: {
       backgroundColor: colors.surface,
-      paddingTop: 4,
-      marginBottom: 8,
+      borderRadius: 12,
+      padding: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginBottom: 24,
     },
     header: {
       flexDirection: 'row',
@@ -122,8 +125,8 @@ export default function DietaryFilter({
         contentContainerStyle={styles.filters}
       >
         {DIETARY_PREFERENCES.map((dietary) => {
-          const isActive = selectedDietary.some(d => d.name === dietary.name);
-          
+          const isActive = selectedDietary.some((d) => d.name === dietary.name);
+
           return (
             <TouchableOpacity
               key={dietary.$id}
@@ -149,7 +152,7 @@ export default function DietaryFilter({
           <Text style={styles.activeFiltersText}>
             Including preferences:{' '}
             <Text style={styles.activeFiltersHighlight}>
-              {selectedDietary.map(d => d.name).join(', ')}
+              {selectedDietary.map((d) => d.name).join(', ')}
             </Text>
           </Text>
         </View>

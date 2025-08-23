@@ -13,6 +13,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_KEY!; // publishable/anon public key
 
+// Export supabaseUrl for use in other modules
+export { supabaseUrl };
+
 if (!supabaseUrl || !supabaseKey) {
   throw new Error(
     'Missing Supabase env. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_KEY.'
