@@ -67,6 +67,7 @@ export default function ResetPasswordScreen() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fieldError, setFieldError] = useState<string | null>(null); // validation/API errors under inputs
+  const [mode, setMode] = useState<'request' | 'reset'>('request');
 
   const [modalInfo, setModalInfo] = useState<ModalInfo>({
     visible: false,
@@ -96,6 +97,7 @@ export default function ResetPasswordScreen() {
             sessionEstablished = true;
             setMode('reset');
           }
+        } else if (access_token && refresh_token) {
           const { data, error } = await supabase.auth.setSession({
             access_token,
             refresh_token,
@@ -108,12 +110,14 @@ export default function ResetPasswordScreen() {
             sessionEstablished = true;
             setMode('reset');
           }
+        }
 
         const { data, error: getErr } = await supabase.auth.getSession();
         if (getErr) throw getErr;
         if (!data.session) {
           setHeaderStatus(
             'This reset link is invalid or expired. Please request a new password reset from the Forgot Password page.'
+          );
         }
 
         // Double-check session after token processing
@@ -131,6 +135,7 @@ export default function ResetPasswordScreen() {
           }
         } else {
           // No tokens or session establishment failed — stay in request mode
+        }
       } catch (e: any) {
         console.error('Reset password initialization error:', e);
         setHeaderStatus(
