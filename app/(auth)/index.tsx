@@ -200,6 +200,8 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
       width: '100%',
       justifyContent: 'space-between',
       alignItems: 'center',
+      maxWidth: 1024,
+      alignSelf: 'center',
     },
 
     // Top group (logo + subtitle close together)
