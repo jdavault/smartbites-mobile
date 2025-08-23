@@ -147,7 +147,9 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   const loadRandomFeaturedRecipes = async () => {
     if (!user) return;
     
-    // console.log('🔍 Loading featured recipes for user:', user.id);
+    console.log('🔍 Loading featured recipes for user:', user.id);
+    console.log('🔍 User allergens count:', userAllergens.length);
+    console.log('🔍 User dietary prefs count:', userDietaryPrefs.length);
 
     try {
       // First, get the user's saved recipe IDs to exclude them
@@ -314,10 +316,11 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
   // Reload featured recipes when user's allergens or dietary preferences change
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && (userAllergens.length > 0 || userDietaryPrefs.length > 0)) {
+      console.log('🔄 Loading featured recipes due to preference change');
       loadRandomFeaturedRecipes();
     }
-  }, [user?.id, userAllergens, userDietaryPrefs]);
+  }, [user?.id, JSON.stringify(userAllergens.map(a => a.$id)), JSON.stringify(userDietaryPrefs.map(d => d.$id))]);
 
   const generateFeaturedRecipes = async () => {
     await loadRandomFeaturedRecipes();
