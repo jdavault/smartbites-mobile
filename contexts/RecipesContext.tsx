@@ -575,15 +575,10 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           .select()
           .single();
 
-        if (recipeError) throw recipeError;
         recipeId = recipeData.id;
 
-        // ✅ Wrap image persistence in its own try/catch
-        try {
-          await persistRecipeImage({
-            recipeTitle: recipe.title,
             searchQuery: recipe.searchQuery,
-            allergenNames: userAllergenNames,
+            allergenNames: userAllergens.map(a => a.name),
             recipeId,
             userId: user.id,
           });
