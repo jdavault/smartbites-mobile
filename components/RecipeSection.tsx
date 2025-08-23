@@ -32,18 +32,20 @@ export default function RecipeSection({ title, recipes, onToggleFavorite, onDele
   const availableWidth = width - (horizontalPadding * 2);
   const cardsPerRow = Math.floor((availableWidth + cardGap) / (cardWidth + cardGap));
   
-  // Progressive width scaling with specific breakpoints
+  // Specific breakpoints for Recently Added cards
   let verticalCardWidth;
-  if (width < 690) {
-    // Mobile: full available width (current behavior)
-    verticalCardWidth = availableWidth;
+  if (width < 360) {
+    // Very small devices: full available width
+    verticalCardWidth = Math.min(availableWidth, 320);
+  } else if (width < 690) {
+    // 360px+: same size as horizontal cards (single card width)
+    verticalCardWidth = cardWidth;
   } else if (width < 1024) {
-    // 690px+: grow to fill more space while matching horizontal sections
-    const baseWidth = (cardWidth * cardsPerRow) + (cardGap * (cardsPerRow - 1));
-    verticalCardWidth = Math.min(width * 0.92, baseWidth); // 92% of viewport or horizontal width
+    // 690px+: size of two cards (roughly 680px)
+    verticalCardWidth = Math.min(680, (cardWidth * 2) + cardGap);
   } else {
-    // 1024px+: cap at 1024px with gutters
-    verticalCardWidth = Math.min(1024, (cardWidth * cardsPerRow) + (cardGap * (cardsPerRow - 1)));
+    // 1024px+: size of three cards (roughly 1024px)
+    verticalCardWidth = Math.min(1024, (cardWidth * 3) + (cardGap * 2));
   }
     
   const styles = StyleSheet.create({
