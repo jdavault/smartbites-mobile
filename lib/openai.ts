@@ -33,6 +33,7 @@ async function getOpenAIKey(): Promise<string> {
   }
 
   const edgeUrl = `${supabaseUrl}/functions/v1/generate-recipes`;
+  const edgeUrl = `${supabaseUrl}/functions/v1/getOpenAIKey`;
   
   // Get current session for authorization (optional)
   const { data: { session } } = await supabase.auth.getSession();
