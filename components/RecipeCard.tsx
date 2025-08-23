@@ -102,16 +102,6 @@ export default function RecipeCard({
           </View>
 
           <View style={styles.previewTags}>
-            {selectedAllergens.map((allergen, index) => (
-              <View
-                key={`allergen-free-${index}`}
-                style={styles.allergenFreeTag}
-              >
-                <Text style={styles.previewTagText}>
-                  🚫 {allergen.name.toLowerCase()}-free
-                </Text>
-              </View>
-            ))}
             {recipe.allergens.map((allergen, index) => (
               <View key={`allergen-${index}`} style={styles.allergenTag}>
                 <Text style={styles.previewTagText}>🚫 {allergen}</Text>
