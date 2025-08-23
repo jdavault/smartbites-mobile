@@ -24,7 +24,7 @@ export type ChatMessage = {
 };
 
 const IMAGE_MODEL = 'dall-e-3';
-const IMAGE_SIZE = '1792x1024'; // was "1024x1024" — smaller helps under tight limits
+const IMAGE_SIZE = '1024'; // was "1024x1024" — smaller helps under tight limits
 const DEFAULT_IMG =
   'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
 
