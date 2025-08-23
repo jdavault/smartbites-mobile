@@ -403,7 +403,7 @@ export default function RegisterScreen() {
         content: { flex: 1, paddingHorizontal: 16 },
         contentContainer: {
           width: '100%',
-          maxWidth: 768,
+          maxWidth: 1024,
           alignSelf: 'center',
         },
 
