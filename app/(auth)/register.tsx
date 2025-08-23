@@ -182,7 +182,11 @@ export default function RegisterScreen() {
             DIETARY_PREFERENCES.map((d) => ({ id: d.$id, name: d.name }))
           );
         } else {
-          setDietPrefs(dietPrefsData || []);
+          // Sort by the preferred order from DIETARY_PREFERENCES constant
+          const orderedDietPrefs = DIETARY_PREFERENCES.map(pref => 
+            dietPrefsData?.find(dbPref => dbPref.name === pref.name)
+          ).filter(Boolean).map(pref => ({ id: pref!.id, name: pref!.name }));
+          setDietPrefs(orderedDietPrefs);
         }
       } catch (error) {
         console.error('Error in fetchTaxonomies:', error);
