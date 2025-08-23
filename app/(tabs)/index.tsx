@@ -312,7 +312,7 @@ export default function SearchScreen() {
       flex: 1,
     },
     contentContainer: {
-      maxWidth: 1200,
+      maxWidth: 1024,
       alignSelf: 'center',
       width: '100%',
     },
