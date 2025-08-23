@@ -425,7 +425,7 @@ export default function SearchScreen() {
 
               {/* Separate lines */}
               <Text style={styles.saveModalText}>Generating image</Text>
-              <Text style={styles.saveModalText}>Saving Recipe...</Text>
+              <Text style={styles.saveModalText}>Saving Recipe</Text>
             </View>
           </View>
         </Modal>
