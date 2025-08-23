@@ -84,7 +84,7 @@ export default function RecipeCard({
   // Show preview version for search results (no image)
   if (showSaveButton) {
     return (
-      <TouchableOpacity style={styles.card} onPress={handleCardPress}>
+      <TouchableOpacity style={styles.previewCard} onPress={handleCardPress}>
         <View style={styles.previewContent}>
           <Text style={styles.previewTitle}>{recipe.title}</Text>
 
@@ -264,10 +264,18 @@ const getStyles = (colors: ThemeColors) =>
       borderWidth: 1,
       borderColor: colors.border,
       overflow: 'hidden',
-      // height: 580, // pick a height that looks good in your layout0
-      // flex: 1, // Allow card to expand in vertical layouts
       width: '100%',
       height: 580,
+    },
+    previewCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: 'hidden',
+      width: '100%',
+      // No fixed height - let content determine height
     },
     image: {
       width: '100%',
