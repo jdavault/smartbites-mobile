@@ -312,24 +312,6 @@ export default function SearchScreen() {
       fontFamily: 'Inter-Medium',
       color: colors.textSecondary,
     },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: 40,
-    },
-    loadingText: {
-      fontSize: 20,
-      fontFamily: 'Lato-Regular',
-      color: colors.textSecondary,
-      marginTop: 12,
-      textAlign: 'center',
-    },
-    loadingEmoji: {
-      fontSize: 40,
-      marginBottom: 8,
-      marginTop: 16,
-    },
     emptyState: {
       flex: 1,
       justifyContent: 'center',
@@ -526,16 +508,25 @@ export default function SearchScreen() {
         }
       >
         {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            
-            {/* Emoji line */}
-            <Text style={[styles.loadingText, styles.loadingEmoji]}>🍳</Text>
-            
-            {/* Separate lines */}
-            <Text style={styles.loadingText}>Cooking up something</Text>
-            <Text style={styles.loadingText}>delicious just for you...</Text>
-          </View>
+          <Modal
+            transparent
+            animationType="fade"
+            visible={loading}
+            onRequestClose={() => {}}
+          >
+            <View style={styles.saveModalOverlay}>
+              <View style={styles.saveModalContent}>
+                <ActivityIndicator size="large" color={colors.primary} />
+
+                {/* Emoji line */}
+                <Text style={[styles.saveModalText, styles.modalEmoji]}>🍳</Text>
+
+                {/* Separate lines */}
+                <Text style={styles.saveModalText}>Cooking up something</Text>
+                <Text style={styles.saveModalText}>delicious just for you...</Text>
+              </View>
+            </View>
+          </Modal>
         )}
 
         {searchResults.length > 0 && (
