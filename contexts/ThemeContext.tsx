@@ -156,12 +156,12 @@ export const ColorScheme = {
     text: Colors.rice[500],
     textSecondary: Colors.rice[300],
     textTertiary: Colors.rice[200],
-    textWhite: Colors.white,
+    textWhite: Colors.rice[200],
     textRice: Colors.rice[500],
 
     // Surfaces (and old 'card' alias)
     surface: Colors.ironBlack[600],
-    card: Colors.ironBlack[600],
+    card: Colors.rice[200],
     cardLight: Colors.ironBlack[500],
 
     // Secondary
