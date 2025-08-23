@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Recipe } from '@/contexts/RecipesContext';
 import RecipeCard from './RecipeCard';
@@ -20,18 +14,27 @@ interface RecipeSectionProps {
   horizontal?: boolean;
 }
 
-export default function RecipeSection({ title, recipes, onToggleFavorite, onDelete = undefined, horizontal = true }: RecipeSectionProps) {
+export default function RecipeSection({
+  title,
+  recipes,
+  onToggleFavorite,
+  onDelete = undefined,
+  horizontal = true,
+}: RecipeSectionProps) {
   const { colors } = useTheme();
 
   if (recipes.length === 0) return null;
 
   // Calculate responsive card width - more generous on mobile
-  const cardWidth = width < 768 ? Math.min(360, width * 0.9) : Math.min(320, width * 0.85);
+  const cardWidth =
+    width < 768 ? Math.min(360, width * 0.9) : Math.min(320, width * 0.85);
   const horizontalPadding = 24;
   const cardGap = 16;
-  const availableWidth = width - (horizontalPadding * 2);
-  const cardsPerRow = Math.floor((availableWidth + cardGap) / (cardWidth + cardGap));
-  
+  const availableWidth = width - horizontalPadding * 2;
+  const cardsPerRow = Math.floor(
+    (availableWidth + cardGap) / (cardWidth + cardGap)
+  );
+
   // Specific breakpoints for Recently Added cards
   let verticalCardWidth;
   if (width < 360) {
@@ -42,12 +45,12 @@ export default function RecipeSection({ title, recipes, onToggleFavorite, onDele
     verticalCardWidth = cardWidth;
   } else if (width < 1024) {
     // 690px+: size of two cards (roughly 680px)
-    verticalCardWidth = Math.min(680, (cardWidth * 2) + cardGap);
+    verticalCardWidth = Math.min(680, cardWidth * 2 + cardGap);
   } else {
     // 1024px+: size of three cards (roughly 1024px)
-    verticalCardWidth = Math.min(1024, (cardWidth * 3) + (cardGap * 2));
+    verticalCardWidth = Math.min(1024, cardWidth * 3 + cardGap * 2);
   }
-    
+
   const styles = StyleSheet.create({
     section: {
       marginBottom: 32,
