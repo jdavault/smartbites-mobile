@@ -257,7 +257,7 @@ const getStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     card: {
       backgroundColor: colors.surface,
-      height: 380, // Fixed height for consistent layout
+      height: 450, // Fixed height for consistent layout
       borderRadius: 16,
       marginBottom: 16,
       borderWidth: 1,
