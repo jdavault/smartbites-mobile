@@ -575,6 +575,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         recipeId = recipeData.id;
 
         // Generate and persist the image
+        try {
           await persistRecipeImage({
             recipeTitle: recipe.title,
             searchQuery: recipe.searchQuery,
