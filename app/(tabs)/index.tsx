@@ -60,6 +60,7 @@ export default function SearchScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [savingRecipeId, setSavingRecipeId] = useState<string | null>(null);
   const [favoritingRecipeId, setFavoritingRecipeId] = useState<string | null>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
   const [selectedAllergens, setSelectedAllergens] = useState<
     { $id: string; name: string }[]
   >([]);
@@ -118,6 +119,7 @@ export default function SearchScreen() {
 
   const handleSaveRecipe = async (recipe: any) => {
     try {
+      setShowSaveModal(true);
       setSavingRecipeId(recipe.title);
       await saveRecipe(recipe);
       openModal({
@@ -136,11 +138,13 @@ export default function SearchScreen() {
       });
     } finally {
       setSavingRecipeId(null);
+      setShowSaveModal(false);
     }
   };
 
   const handleSaveAndFavoriteRecipe = async (recipe: any) => {
     try {
+      setShowSaveModal(true);
       setFavoritingRecipeId(recipe.title);
       await saveAndFavoriteRecipe(recipe);
       openModal({
@@ -159,6 +163,7 @@ export default function SearchScreen() {
       });
     } finally {
       setFavoritingRecipeId(null);
+      setShowSaveModal(false);
     }
   };
 
@@ -388,10 +393,56 @@ export default function SearchScreen() {
       fontSize: 40,
       marginBottom: 12,
     },
+    saveModalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    saveModalContent: {
+      backgroundColor: colors.surface,
+      padding: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 5,
+      borderWidth: 1,
+      borderColor: colors.border,
+      minWidth: 280,
+    },
+    saveModalText: {
+      fontSize: 16,
+      fontFamily: 'Inter-Medium',
+      color: colors.text,
+      marginTop: 16,
+      textAlign: 'center',
+    },
   });
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Full Screen Save Modal */}
+      {showSaveModal && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={showSaveModal}
+          onRequestClose={() => {}}
+        >
+          <View style={styles.saveModalOverlay}>
+            <View style={styles.saveModalContent}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.saveModalText}>
+                🧠 Generating image / Saving Recipe...
+              </Text>
+            </View>
+          </View>
+        </Modal>
+      )}
+
       {/* Success/Error Modal */}
       {modalInfo.visible && (
         <Modal
