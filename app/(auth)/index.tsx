@@ -273,6 +273,11 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
 
     // Native CTA buttons (Sign In / Create Account)
     buttonContainer: { width: '100%', gap: 16 },
+    responsiveContainer: {
+      width: '100%',
+      maxWidth: 400,
+      alignSelf: 'center',
+    },
     primaryButton: {
       backgroundColor: colors.primary,
       paddingVertical: 16,
