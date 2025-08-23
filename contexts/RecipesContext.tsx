@@ -397,13 +397,13 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Insert allergen relationships based on user's selected allergens
-      const userAllergenNames = userAllergens.map(a => a.name);
-      if (userAllergenNames.length > 0) {
+      // Insert allergen relationships based on what OpenAI returned for this recipe
+      if (recipe.allergens.length > 0) {
         // Get allergen IDs by name
         const { data: allergenData, error: allergenError } = await supabase
           .from('allergens')
           .select('id, name')
-          .in('name', userAllergenNames);
+          .in('name', recipe.allergens);
 
         if (allergenError) throw allergenError;
 
@@ -421,14 +421,13 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Insert dietary preference relationships based on user's selected dietary preferences
-      const userDietaryNames = userDietaryPrefs.map(d => d.name);
-      if (userDietaryNames.length > 0) {
+      // Insert dietary preference relationships based on what OpenAI returned for this recipe
+      if (recipe.dietaryPrefs.length > 0) {
         // Get dietary preference IDs by name
         const { data: dietaryData, error: dietaryError } = await supabase
           .from('dietary_prefs')
           .select('id, name')
-          .in('name', userDietaryNames);
+          .in('name', recipe.dietaryPrefs);
 
         if (dietaryError) throw dietaryError;
 
@@ -569,14 +568,13 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           console.error('🖼️ Error persisting favorite image:', imageError);
         }
 
-        // Insert allergen relationships based on user's selected allergens for new recipe
-        const userAllergenNames = userAllergens.map(a => a.name);
-        if (userAllergenNames.length > 0) {
+        // Insert allergen relationships based on what OpenAI returned for this recipe
+        if (recipe.allergens.length > 0) {
           // Get allergen IDs by name
           const { data: allergenData, error: allergenError } = await supabase
             .from('allergens')
             .select('id, name')
-            .in('name', userAllergenNames);
+            .in('name', recipe.allergens);
 
           if (allergenError) throw allergenError;
 
@@ -594,14 +592,13 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Insert dietary preference relationships based on user's selected dietary preferences for new recipe
-        const userDietaryNames = userDietaryPrefs.map(d => d.name);
-        if (userDietaryNames.length > 0) {
+        // Insert dietary preference relationships based on what OpenAI returned for this recipe
+        if (recipe.dietaryPrefs.length > 0) {
           // Get dietary preference IDs by name
           const { data: dietaryData, error: dietaryError } = await supabase
             .from('dietary_prefs')
             .select('id, name')
-            .in('name', userDietaryNames);
+            .in('name', recipe.dietaryPrefs);
 
           if (dietaryError) throw dietaryError;
 
