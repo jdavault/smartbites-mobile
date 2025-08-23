@@ -55,7 +55,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   const { userDietaryPrefs } = useDietary();
 
   const favoriteRecipes = savedRecipes.filter(recipe => recipe.isFavorite);
-  const recentRecipes = savedRecipes.slice(0, 5);
+  const recentRecipes = savedRecipes.filter(recipe => !recipe.isFavorite).slice(0, 5);
 
   const fetchRecipes = async () => {
     if (!user) return;
