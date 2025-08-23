@@ -36,4 +36,4 @@ ios/
 
 # typescript
 *.tsbuildinfo
-supabase/
+#supabase/
