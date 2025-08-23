@@ -595,6 +595,11 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
               .eq('id', recipeId)
               .single();
 
+            if (!error && updatedRecipe?.image) {
+              finalImageFilename = updatedRecipe.image;
+              break;
+            }
+            
             // Wait 1 second before checking again
             await new Promise(resolve => setTimeout(resolve, 1000));
             attempts++;
