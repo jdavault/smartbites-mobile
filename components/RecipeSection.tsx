@@ -32,11 +32,19 @@ export default function RecipeSection({ title, recipes, onToggleFavorite, onDele
   const availableWidth = width - (horizontalPadding * 2);
   const cardsPerRow = Math.floor((availableWidth + cardGap) / (cardWidth + cardGap));
   
-  // For mobile (< 768px), use full available width minus padding
-  // For larger screens, match the horizontal card layout width
-  const verticalCardWidth = width < 768 
-    ? availableWidth 
-    : Math.min(1024, (cardWidth * cardsPerRow) + (cardGap * (cardsPerRow - 1)));
+  // Progressive width scaling with specific breakpoints
+  let verticalCardWidth;
+  if (width < 690) {
+    // Mobile: full available width (current behavior)
+    verticalCardWidth = availableWidth;
+  } else if (width < 1024) {
+    // 690px+: grow to fill more space while matching horizontal sections
+    const baseWidth = (cardWidth * cardsPerRow) + (cardGap * (cardsPerRow - 1));
+    verticalCardWidth = Math.min(width * 0.92, baseWidth); // 92% of viewport or horizontal width
+  } else {
+    // 1024px+: cap at 1024px with gutters
+    verticalCardWidth = Math.min(1024, (cardWidth * cardsPerRow) + (cardGap * (cardsPerRow - 1)));
+  }
     
   const styles = StyleSheet.create({
     section: {
