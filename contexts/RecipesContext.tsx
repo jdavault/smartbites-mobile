@@ -574,16 +574,16 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         if (recipeError) throw recipeError;
         recipeId = recipeData.id;
 
-        // Generate and persist the image
+        // ✅ Wrap image persistence in its own try/catch
         try {
           await persistRecipeImage({
             recipeTitle: recipe.title,
             searchQuery: recipe.searchQuery,
             allergenNames: userAllergenNames,
-            recipeId: recipeId,
+            recipeId,
             userId: user.id,
           });
-          
+
           // Wait for image to be processed and get the filename
           let attempts = 0;
           const maxAttempts = 10;
@@ -598,13 +598,12 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
               finalImageFilename = updatedRecipe.image;
               break;
             }
-            
+
             // Wait 1 second before checking again
             await new Promise(resolve => setTimeout(resolve, 1000));
             attempts++;
           }
-        }
-        catch (imageError) {
+        } catch (imageError) {
           console.error('🖼️ Error persisting favorite image:', imageError);
         }
 
