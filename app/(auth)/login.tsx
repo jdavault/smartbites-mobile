@@ -165,7 +165,8 @@ export default function LoginScreen() {
               contentContainerStyle={styles.scrollInner}
               showsVerticalScrollIndicator={false}
             >
-              <View style={styles.main}>
+              <View style={styles.contentContainer}>
+                <View style={styles.main}>
                 <Image
                   source={SmartBitesLogo}
                   style={styles.brandLogo}
@@ -273,6 +274,7 @@ export default function LoginScreen() {
                     </View>
                   </View>
                 </View>
+                </View>
               </View>
             </ScrollView>
           </View>
@@ -311,6 +313,13 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     main: { flex: 1 },
     scrollInner: {
       paddingBottom: 24, // space so last field isn't tight against keyboard
+      alignItems: 'center',
+    },
+
+    contentContainer: {
+      width: '100%',
+      maxWidth: 768,
+      alignSelf: 'center',
     },
 
     brandLogo: {
