@@ -200,24 +200,40 @@ export async function generateRecipes(
 
 export async function generateRecipeImage(title: string): Promise<string> {
   try {
-    // For now, keep image generation in the client since it's simpler
-    // You could move this to an edge function too if needed
-    const edgeUrl = getEdgeFunctionUrl().replace('generate-recipes', 'generate-image');
+    const edgeUrl = getEdgeFunctionUrl();
+    
+    // Get current session for authorization (optional)
+    const { data: { session } } = await supabase.auth.getSession();
     
     const response = await fetch(edgeUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // Include auth token if you want to require logged-in users
+        ...(session?.access_token && {
+          'Authorization': `Bearer ${session.access_token}`
+        }),
       },
-      body: JSON.stringify({ title }),
+      body: JSON.stringify({
+        model: 'dall-e-3',
+        prompt: `High quality food photo of ${title}, professional lighting, styled on a plate`,
+        n: 1,
+        size: '1024x1024',
+        quality: 'standard',
+        response_format: 'url'
+      }),
     });
 
     if (!response.ok) {
-      throw new Error(`Image generation error: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData?.error || `Image generation error: ${response.status}`);
     }
 
     const data = await response.json();
-    return data.imageUrl || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+    
+    // OpenAI DALL-E response format
+    const imageUrl = data?.data?.[0]?.url;
+    return imageUrl || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
     
   } catch (error) {
     console.error('Error generating recipe image:', error);
