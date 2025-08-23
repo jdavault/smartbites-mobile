@@ -539,7 +539,6 @@ export default function SearchScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.contentContainer}>
         {loading && (
           <Modal
             transparent
@@ -557,90 +556,91 @@ export default function SearchScreen() {
                 {/* Separate lines */}
                 <Text style={styles.saveModalText}>Cooking up something</Text>
                 <Text style={styles.saveModalText}>special just for you...</Text>
-              </View>
             </View>
-          </Modal>
-        )}
-
-        {searchResults.length > 0 && (
-          <View style={styles.searchResults}>
-            <View style={styles.searchResultsHeader}>
-              <Text style={styles.searchResultsTitle}>Search Results</Text>
-              <TouchableOpacity
-                style={styles.dismissButton}
-                onPress={() => {
-                  setSearchResults([]);
-                  setSearchQuery('');
-                }}
-              >
-                <Text style={styles.dismissButtonText}>Dismiss</Text>
-              </TouchableOpacity>
-            </View>
-            {searchResults.map((recipe, index) => (
-              <RecipeCard
-                key={index}
-                recipe={recipe}
-                onSave={() => handleSaveRecipe(recipe)}
-                onSaveAndFavorite={() => handleSaveAndFavoriteRecipe(recipe)}
-                showSaveButton={true}
-                selectedAllergens={selectedAllergens}
-                isSaving={savingRecipeId === recipe.title}
-                isFavoriting={favoritingRecipeId === recipe.title}
-              />
-            ))}
           </View>
+        </Modal>
         )}
 
-        {!loading && searchResults.length === 0 && (
-          <>
-            {featuredRecipes.length > 0 && (
-              <RecipeSection
-                title="🌟 Featured Recipes"
-                recipes={featuredRecipes}
-                onToggleFavorite={toggleFavorite}
-                onDelete={undefined}
-                horizontal={true}
-              />
-            )}
+        <View style={styles.contentContainer}>
+          {searchResults.length > 0 && (
+            <View style={styles.searchResults}>
+              <View style={styles.searchResultsHeader}>
+                <Text style={styles.searchResultsTitle}>Search Results</Text>
+                <TouchableOpacity
+                  style={styles.dismissButton}
+                  onPress={() => {
+                    setSearchResults([]);
+                    setSearchQuery('');
+                  }}
+                >
+                  <Text style={styles.dismissButtonText}>Dismiss</Text>
+                </TouchableOpacity>
+              </View>
+              {searchResults.map((recipe, index) => (
+                <RecipeCard
+                  key={index}
+                  recipe={recipe}
+                  onSave={() => handleSaveRecipe(recipe)}
+                  onSaveAndFavorite={() => handleSaveAndFavoriteRecipe(recipe)}
+                  showSaveButton={true}
+                  selectedAllergens={selectedAllergens}
+                  isSaving={savingRecipeId === recipe.title}
+                  isFavoriting={favoritingRecipeId === recipe.title}
+                />
+              ))}
+            </View>
+          )}
 
-            {favoriteRecipes.length > 0 && (
-              <RecipeSection
-                title="❤️ Your Favorites"
-                recipes={favoriteRecipes}
-                onToggleFavorite={toggleFavorite}
-                onDelete={deleteRecipe}
-                horizontal={true}
-              />
-            )}
-
-            {recentRecipes.length > 0 && (
-              <RecipeSection
-                title="🕑 Recently Added"
-                recipes={recentRecipes}
-                onToggleFavorite={toggleFavorite}
-                onDelete={deleteRecipe}
-                horizontal={false}
-              />
-            )}
-
-            {savedRecipes.length === 0 &&
-              featuredRecipes.length === 0 &&
-              recentRecipes.length === 0 && (
-                <View style={styles.emptyState}>
-                  <View style={styles.emptyStateIcon}>
-                    <Search size={48} color={colors.textSecondary} />
-                  </View>
-                  <Text style={styles.emptyStateTitle}>
-                    Start Your Culinary Journey
-                  </Text>
-                  <Text style={styles.emptyStateText}>
-                    Search for recipes above to discover delicious meals
-                    tailored to your dietary needs and preferences.
-                  </Text>
-                </View>
+          {!loading && searchResults.length === 0 && (
+            <>
+              {featuredRecipes.length > 0 && (
+                <RecipeSection
+                  title="🌟 Featured Recipes"
+                  recipes={featuredRecipes}
+                  onToggleFavorite={toggleFavorite}
+                  onDelete={undefined}
+                  horizontal={true}
+                />
               )}
-          </>
-        )}
+
+              {favoriteRecipes.length > 0 && (
+                <RecipeSection
+                  title="❤️ Your Favorites"
+                  recipes={favoriteRecipes}
+                  onToggleFavorite={toggleFavorite}
+                  onDelete={deleteRecipe}
+                  horizontal={true}
+                />
+              )}
+
+              {recentRecipes.length > 0 && (
+                <RecipeSection
+                  title="🕑 Recently Added"
+                  recipes={recentRecipes}
+                  onToggleFavorite={toggleFavorite}
+                  onDelete={deleteRecipe}
+                  horizontal={false}
+                />
+              )}
+
+              {savedRecipes.length === 0 &&
+                featuredRecipes.length === 0 &&
+                recentRecipes.length === 0 && (
+                  <View style={styles.emptyState}>
+                    <View style={styles.emptyStateIcon}>
+                      <Search size={48} color={colors.textSecondary} />
+                    </View>
+                    <Text style={styles.emptyStateTitle}>
+                      Start Your Culinary Journey
+                    </Text>
+                    <Text style={styles.emptyStateText}>
+                      Search for recipes above to discover delicious meals
+                      tailored to your dietary needs and preferences.
+                    </Text>
+                  </View>
+                )}
+            </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
