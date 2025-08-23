@@ -692,7 +692,7 @@ const getStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.backgroundLight,
       marginHorizontal: 24,
       borderRadius: 12,
       marginBottom: 8,
