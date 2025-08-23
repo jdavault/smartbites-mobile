@@ -318,9 +318,11 @@ export async function generateRecipes(
         - Title can/should reflect ingredients or health focus - Gluten-Free Mac n Cheese, Vegan Chocolate Chip Cookies
         - Add "Rise Time" to recipes as needed. Ie hamburger buns, breads, pizza dough, etc.
         - Tags are not allergens or dietary preferences .. they are additional descriptors, categories or conveniences for the recipe, such as no-bake, quick, easy, or one-pot.
+        - For each recipe list any of the following for which the recipe is free of: Milk, Eggs, Fish, Shellfish, Tree Nuts, Soybeans, Tree Nuts, Peanuts, Wheat (Gluten), Soy, Sesame, and store these in the allergens array
+        - For each recipe list any dietaryPrefs the recipe is suitable for: Vegetarian, Vegan, Gluten-Free, Dairy-Free, Keto, Paleo, Low-Carb, High-Protein and store that in the dietaryPrefs array
 
-      Return ONLY a valid JSON object in the following exact structure:
-      {
+        Return ONLY a valid JSON object in the following exact structure:
+        {
         "recipes": [
           {
             "title": "Recipe Title",
@@ -334,8 +336,8 @@ export async function generateRecipes(
             "difficulty": "easy",
             "tags": ["tag1", "tag2"],
             "searchQuery": "search query used to generate this recipe",
-            "allergens": [any of the ],
-            "dietaryPrefs": [],
+            "allergens",
+            "dietaryPrefs",
             "notes": "for substitutions or troubleshooting",
             "nutritionInfo": "nutrition information"
           }
@@ -438,7 +440,7 @@ export async function generateRecipes(
           },
           messages: [
             { role: 'system', content: prompt },
-            { role: 'user', content: `Generate 5r recipes for: ${query}` },
+            { role: 'user', content: `Generate 3 recipes for: ${query}` },
           ],
         }),
       })
@@ -458,7 +460,12 @@ export async function generateRecipes(
       : [];
 
     // Add the searchQuery to each
-    return recipes.slice(0, 3).map((r) => ({ ...r, searchQuery: query }));
+    const result = recipes
+      .slice(0, 3)
+      .map((r) => ({ ...r, searchQuery: query }));
+    console.log('------------ RECIPES ------------');
+    console.log(result);
+    return result;
   } catch (error) {
     if (error instanceof Error && error.message.includes('401')) {
       console.warn(
