@@ -218,7 +218,7 @@ export async function generateRecipes(
       ? [
           `- Follow these dietary preferences: ${dietaryPrefs.join(', ')}.`,
           `- In "dietaryPrefs", list any and all dietary preferences (including those provided) that would be covered by or apply to this recipe, per this list:`,
-          `  Vegetarian, Vegan, Gluten-Free, Dairy-Free, Keto, Paleo, Low-Carb, High-Protein`,
+          `  Mediterranean, Low-Sodium, Keto, Diabetic, Vegan, Vegetarian, Whole-30, and Paleo`,
         ].join('\n')
       : '';
 
@@ -239,7 +239,7 @@ export async function generateRecipes(
             "tags": string[],          // <=6 (e.g., quick, no-bake, one-pot)
             "searchQuery": string,
             "allergens": string[],     // from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)
-            "dietaryPrefs": string[],  // from: Vegetarian, Vegan, Gluten-Free, Dairy-Free, Keto, Paleo, Low-Carb, High-Protein
+            "dietaryPrefs": string[],  // from: Mediterranean, Low-Sodium, Keto, Diabetic, Vegan, Vegetarian, Whole-30, and Paleo
             "notes": string,
             "nutritionInfo": string
           }
