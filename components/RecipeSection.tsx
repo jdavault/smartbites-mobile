@@ -25,13 +25,19 @@ export default function RecipeSection({ title, recipes, onToggleFavorite, onDele
 
   if (recipes.length === 0) return null;
 
-  // Calculate how many horizontal cards fit and match that width for vertical cards
-  const cardWidth = Math.min(320, width * 0.85);
+  // Calculate responsive card width - more generous on mobile
+  const cardWidth = width < 768 ? Math.min(360, width * 0.9) : Math.min(320, width * 0.85);
   const horizontalPadding = 24;
   const cardGap = 16;
   const availableWidth = width - (horizontalPadding * 2);
   const cardsPerRow = Math.floor((availableWidth + cardGap) / (cardWidth + cardGap));
-  const verticalCardWidth = Math.min(1024, (cardWidth * cardsPerRow) + (cardGap * (cardsPerRow - 1)));
+  
+  // For mobile (< 768px), use full available width minus padding
+  // For larger screens, match the horizontal card layout width
+  const verticalCardWidth = width < 768 
+    ? availableWidth 
+    : Math.min(1024, (cardWidth * cardsPerRow) + (cardGap * (cardsPerRow - 1)));
+    
   const styles = StyleSheet.create({
     section: {
       marginBottom: 32,
