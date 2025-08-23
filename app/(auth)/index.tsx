@@ -211,12 +211,12 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
       gap: 6,
     },
     logoContainer: {
-      marginTop: Platform.OS === 'web' ? height * 0.04 : height * 0.08,
+      marginTop: Platform.OS === 'web' ? height * 0.02 : height * 0.08,
       alignItems: 'center',
     },
     subtitleTight: {
       textAlign: 'center',
-      marginTop: Platform.OS === 'web' ? 2 : 6, // small gap under the logo
+      marginTop: Platform.OS === 'web' ? -4 : 6, // small gap under the logo
       marginBottom: 8, // keep it close to the middle group
       fontFamily: 'Lato-Regular',
       fontSize: 18,
@@ -254,7 +254,7 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
     storeButtonsContainer: {
       flexDirection: 'row',
       gap: Spacing.md,
-      marginBottom: Spacing.lg,
+      marginBottom: Platform.OS === 'web' ? Spacing.sm : Spacing.lg,
       flexWrap: 'wrap',
       justifyContent: 'center',
     },
