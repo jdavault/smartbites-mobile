@@ -43,11 +43,14 @@ export default function RecipeSection({ title, recipes, onToggleFavorite, onDele
       paddingHorizontal: 24,
     },
     horizontalCardContainer: {
-      width: width * 0.8,
+      width: Math.min(320, width * 0.85), // Responsive width with max
       marginRight: 16,
     },
     verticalCardContainer: {
       marginBottom: 16,
+      // Let vertical cards expand to fill available width
+      minWidth: 320,
+      maxWidth: 600, // Prevent cards from getting too wide on tablets
     },
   });
 
