@@ -27,7 +27,7 @@ export default function DietaryFilter({
     container: {
       backgroundColor: colors.surface,
       borderRadius: 12,
-      padding: 8,
+      paddingTop: 4,
       borderWidth: 1,
       borderColor: colors.border,
       marginBottom: 24,
