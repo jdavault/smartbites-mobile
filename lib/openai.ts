@@ -33,6 +33,63 @@ const retryWithBackoff = async <T>(
   throw new Error('Max retries exceeded');
 };
 
+// Validate that the query is food/recipe related
+function validateFoodQuery(query: string): { isValid: boolean; suggestion?: string } {
+  const normalizedQuery = query.toLowerCase().trim();
+  
+  // Common non-food keywords that should be rejected
+  const nonFoodKeywords = [
+    'car', 'engine', 'java', 'javascript', 'python', 'code', 'program', 'app', 'website',
+    'computer', 'software', 'hardware', 'build', 'create', 'develop', 'install',
+    'download', 'upload', 'server', 'database', 'api', 'framework', 'library',
+    'algorithm', 'function', 'class', 'variable', 'array', 'object', 'method',
+    'html', 'css', 'react', 'angular', 'vue', 'node', 'express', 'mongodb',
+    'sql', 'mysql', 'postgresql', 'firebase', 'aws', 'azure', 'docker',
+    'kubernetes', 'git', 'github', 'npm', 'yarn', 'webpack', 'babel',
+    'typescript', 'php', 'ruby', 'go', 'rust', 'swift', 'kotlin', 'dart',
+    'flutter', 'android', 'ios', 'mobile', 'desktop', 'web development',
+    'machine learning', 'ai model', 'neural network', 'data science',
+    'blockchain', 'cryptocurrency', 'bitcoin', 'ethereum', 'nft',
+    'marketing', 'business plan', 'resume', 'cv', 'cover letter',
+    'email template', 'presentation', 'spreadsheet', 'document',
+    'math', 'physics', 'chemistry', 'biology', 'science', 'homework',
+    'essay', 'report', 'thesis', 'research', 'study', 'exam',
+    'workout', 'exercise', 'fitness', 'gym', 'training', 'muscle',
+    'travel', 'vacation', 'hotel', 'flight', 'booking', 'itinerary',
+    'music', 'song', 'lyrics', 'instrument', 'guitar', 'piano',
+    'movie', 'film', 'video', 'youtube', 'streaming', 'netflix',
+    'game', 'gaming', 'xbox', 'playstation', 'nintendo', 'steam',
+    'fashion', 'clothing', 'shoes', 'accessories', 'makeup', 'skincare',
+    'furniture', 'decoration', 'interior design', 'home improvement',
+    'gardening', 'plants', 'flowers', 'landscaping', 'lawn care',
+    'car repair', 'automotive', 'mechanic', 'engine repair', 'oil change',
+    'plumbing', 'electrical', 'construction', 'renovation', 'diy project'
+  ];
+  
+  // Check if query contains non-food keywords
+  const containsNonFood = nonFoodKeywords.some(keyword => 
+    normalizedQuery.includes(keyword)
+  );
+  
+  if (containsNonFood) {
+    return {
+      isValid: false,
+      suggestion: "Try searching for food items like 'chicken pasta', 'chocolate cake', or 'vegetable soup' instead."
+    };
+  }
+  
+  // Additional check for very short or generic queries
+  if (normalizedQuery.length < 2) {
+    return {
+      isValid: false,
+      suggestion: "Please enter a more specific food or recipe name."
+    };
+  }
+  
+  // If it passes all checks, it's likely food-related
+  return { isValid: true };
+}
+
 const cleanAndParse = (content: string): any => {
   try {
     // Find the first opening brace and last closing brace
@@ -270,6 +327,12 @@ export async function generateRecipes(
   allergens: string[] = [],
   dietaryPrefs: string[] = []
 ): Promise<GeneratedRecipe[]> {
+  // Validate that the query is food-related
+  const validation = validateFoodQuery(query);
+  if (!validation.isValid) {
+    throw new Error(`Please search for food or recipes only. ${validation.suggestion || ''}`);
+  }
+  
   const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
   if (!apiKey?.trim()) {
     throw new Error(
@@ -297,7 +360,7 @@ export async function generateRecipes(
       : '';
 
     // --- System prompt (unchanged structure; just minor tidy) ---
-    const system = `You are a professional culinary recipe writer. Create a detailed, well-structured recipe. Output ONLY valid JSON (no prose).
+    const system = `You are a professional culinary recipe writer. Create ONLY food recipes - never respond to non-food requests. Create a detailed, well-structured recipe. Output ONLY valid JSON (no prose).
       Contract:
       {
         "recipes":[
