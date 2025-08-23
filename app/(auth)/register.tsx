@@ -168,7 +168,11 @@ export default function RegisterScreen() {
           console.error('Error fetching allergens:', allergensError);
           setAllergens(ALLERGENS.map((a) => ({ id: a.$id, name: a.name })));
         } else {
-          setAllergens(allergensData || []);
+          // Sort by the preferred order from ALLERGENS constant
+          const orderedAllergens = ALLERGENS.map(allergen => 
+            allergensData?.find(dbAllergen => dbAllergen.name === allergen.name)
+          ).filter(Boolean).map(allergen => ({ id: allergen!.id, name: allergen!.name }));
+          setAllergens(orderedAllergens);
         }
 
         const { data: dietPrefsData, error: dietPrefsError } = await supabase
