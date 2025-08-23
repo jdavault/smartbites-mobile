@@ -73,7 +73,7 @@ export async function persistRecipeImage({
   userId: string;
 }): Promise<string> {
   try {
-    console.log('🖼️ Start image generation:', recipeTitle);
+    //console.log('🖼️ Start image generation:', recipeTitle);
 
     let preSignedImageUrl: string;
     try {
@@ -83,7 +83,7 @@ export async function persistRecipeImage({
       return DEFAULT_RECIPE_IMAGE;
     }
 
-    console.log('🖼️ Presigned URL:', preSignedImageUrl);
+    //console.log('🖼️ Presigned URL:', preSignedImageUrl);
 
     if (preSignedImageUrl === DEFAULT_RECIPE_IMAGE) {
       return DEFAULT_RECIPE_IMAGE;
@@ -113,7 +113,7 @@ export async function persistRecipeImage({
       return DEFAULT_RECIPE_IMAGE;
     }
 
-    console.log('🖼️ Bytes length:', bytes.byteLength);
+    //console.log('🖼️ Bytes length:', bytes.byteLength);
 
     // Basic guardrail
     if (!bytes || bytes.byteLength < 1024) {
@@ -122,7 +122,7 @@ export async function persistRecipeImage({
     }
 
     const filePath = `${recipeId}/${fileName}`;
-    
+
     let uploadError: any;
     try {
       const uploadResult = await supabase.storage
@@ -143,7 +143,7 @@ export async function persistRecipeImage({
       console.error('🖼️ Upload error details:', {
         message: uploadError.message,
         statusCode: uploadError.statusCode,
-        error: uploadError.error
+        error: uploadError.error,
       });
       return DEFAULT_RECIPE_IMAGE;
     }
@@ -160,7 +160,7 @@ export async function persistRecipeImage({
       return DEFAULT_RECIPE_IMAGE;
     }
 
-    console.log('🖼️ ✅ Upload successful:', publicUrl);
+    //console.log('🖼️ ✅ Upload successful:', publicUrl);
 
     // Optional: persist filename in DB
     try {
@@ -173,7 +173,7 @@ export async function persistRecipeImage({
         console.error('🖼️ DB update error details:', {
           message: updateError.message,
           code: updateError.code,
-          details: updateError.details
+          details: updateError.details,
         });
       }
     } catch (dbError) {
@@ -186,7 +186,7 @@ export async function persistRecipeImage({
     console.error('🖼️ Full error details:', {
       name: err instanceof Error ? err.name : 'Unknown',
       message: err instanceof Error ? err.message : String(err),
-      stack: err instanceof Error ? err.stack : undefined
+      stack: err instanceof Error ? err.stack : undefined,
     });
     return DEFAULT_RECIPE_IMAGE;
   }
