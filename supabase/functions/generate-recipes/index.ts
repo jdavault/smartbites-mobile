@@ -15,9 +15,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const requestBody = await req.json();
-    const { type = 'chat', ...otherParams } = requestBody;
-
     // Get OpenAI API key from environment (set in Supabase dashboard)
     const apiKey = Deno.env.get('OPENAI_API_KEY');
     if (!apiKey?.trim()) {
@@ -30,79 +27,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    let openaiUrl: string;
-    let payload: any;
-
-    if (type === 'image') {
-      // Handle image generation requests
-      const { model = 'dall-e-3', prompt, ...imageParams } = otherParams;
-      
-      if (!prompt) {
-        return new Response(
-          JSON.stringify({ error: "Prompt is required for image generation" }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-
-      openaiUrl = 'https://api.openai.com/v1/images/generations';
-      payload = {
-        model,
-        prompt,
-        ...imageParams,
-      };
-    } else {
-      // Handle chat completion requests
-      const { messages, model = 'gpt-4o-mini', ...chatParams } = otherParams;
-
-      if (!messages || !Array.isArray(messages)) {
-        return new Response(
-          JSON.stringify({ error: "Messages array is required" }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-
-      openaiUrl = 'https://api.openai.com/v1/chat/completions';
-      payload = {
-        model,
-        messages,
-        ...chatParams,
-      };
-    }
-
-    // Forward the request to OpenAI with the secure API key
-    const response = await fetch(openaiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return new Response(
-        JSON.stringify({ 
-          error: `OpenAI API error: ${response.status}`,
-          details: errorData 
-        }),
-        {
-          status: response.status,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const data = await response.json();
-    
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify({ apiKey }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }

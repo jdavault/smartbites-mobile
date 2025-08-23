@@ -18,14 +18,50 @@ interface GeneratedRecipe {
   nutritionInfo: string;
 }
 
-// Use the edge function URL from your Supabase project
-const getEdgeFunctionUrl = () => {
+// Cache for the API key to avoid multiple requests
+let cachedApiKey: string | null = null;
+
+// Get OpenAI API key securely from edge function
+async function getOpenAIKey(): Promise<string> {
+  if (cachedApiKey) {
+    return cachedApiKey;
+  }
+
   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
   if (!supabaseUrl) {
     throw new Error('EXPO_PUBLIC_SUPABASE_URL is required');
   }
-  return `${supabaseUrl}/functions/v1/generate-recipes`;
-};
+
+  const edgeUrl = `${supabaseUrl}/functions/v1/generate-recipes`;
+  
+  // Get current session for authorization (optional)
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  const response = await fetch(edgeUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(session?.access_token && {
+        'Authorization': `Bearer ${session.access_token}`
+      }),
+    },
+    body: JSON.stringify({}),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error || `Failed to get API key: ${response.status}`);
+  }
+
+  const data = await response.json();
+  cachedApiKey = data.apiKey;
+  
+  if (!cachedApiKey) {
+    throw new Error('No API key returned from edge function');
+  }
+
+  return cachedApiKey;
+}
 
 const retryWithBackoff = async <T>(
   fn: () => Promise<T>,
@@ -44,22 +80,15 @@ const retryWithBackoff = async <T>(
   throw new Error('Max retries exceeded');
 };
 
-// Secure OpenAI API call through edge function
+// Direct OpenAI API call with secure key
 async function callOpenAI(messages: any[], options: any = {}) {
-  const edgeUrl = getEdgeFunctionUrl();
+  const apiKey = await getOpenAIKey();
   
-  // Get current session for authorization (optional)
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  const response = await fetch(edgeUrl, {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      // Include auth token if you want to require logged-in users
-      ...(session?.access_token && {
-      type: 'image',
-        'Authorization': `Bearer ${session.access_token}`
-      }),
+      'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({ 
       messages,
@@ -69,7 +98,7 @@ async function callOpenAI(messages: any[], options: any = {}) {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData?.error || `Edge function error: ${response.status}`);
+    throw new Error(errorData?.error?.message || `OpenAI API error: ${response.status}`);
   }
 
   return await response.json();
@@ -201,19 +230,13 @@ export async function generateRecipes(
 
 export async function generateRecipeImage(title: string): Promise<string> {
   try {
-    const edgeUrl = getEdgeFunctionUrl();
+    const apiKey = await getOpenAIKey();
     
-    // Get current session for authorization (optional)
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    const response = await fetch(edgeUrl, {
+    const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Include auth token if you want to require logged-in users
-        ...(session?.access_token && {
-          'Authorization': `Bearer ${session.access_token}`
-        }),
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'dall-e-3',
@@ -227,7 +250,7 @@ export async function generateRecipeImage(title: string): Promise<string> {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData?.error || `Image generation error: ${response.status}`);
+      throw new Error(errorData?.error?.message || `Image generation error: ${response.status}`);
     }
 
     const data = await response.json();
