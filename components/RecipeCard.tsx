@@ -437,6 +437,6 @@ const getStyles = (colors: ThemeColors) =>
     previewTagText: {
       fontSize: 13,
       fontFamily: 'Inter-Medium',
-      color: colors.textWhite,
+      color: '#FFFFFF',
     },
   });
