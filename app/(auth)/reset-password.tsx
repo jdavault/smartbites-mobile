@@ -84,35 +84,59 @@ export default function ResetPasswordScreen() {
         const { code, access_token, refresh_token } =
           parseTokensFromUrl(initialUrl);
 
+        let sessionEstablished = false;
+
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) throw error;
-        } else if (access_token && refresh_token) {
-          const { error } = await supabase.auth.setSession({
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            console.error('Code exchange error:', error);
+            throw error;
+          }
+          if (data?.session) {
+            sessionEstablished = true;
+            setMode('reset');
+          }
+          const { data, error } = await supabase.auth.setSession({
             access_token,
             refresh_token,
           });
-          if (error) throw error;
-        }
+          if (error) {
+            console.error('Set session error:', error);
+            throw error;
+          }
+          if (data?.session) {
+            sessionEstablished = true;
+            setMode('reset');
+          }
 
         const { data, error: getErr } = await supabase.auth.getSession();
         if (getErr) throw getErr;
         if (!data.session) {
           setHeaderStatus(
             'This reset link is invalid or expired. Please request a new password reset from the Forgot Password page.'
-          );
-        } else {
-          setHeaderStatus('Enter a new password to complete your reset.');
         }
 
-        if (Platform.OS === 'web') {
-          const cleanUrl = `${window.location.origin}${window.location.pathname}`;
-          window.history.replaceState({}, '', cleanUrl);
-        }
+        // Double-check session after token processing
+        if (sessionEstablished) {
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError || !sessionData.session) {
+            console.error('Session verification failed:', sessionError);
+            setHeaderStatus(
+              'This reset link is invalid or expired. Please request a new password reset from the Forgot Password page.'
+            );
+            setMode('request');
+          } else {
+            setHeaderStatus('Enter a new password to complete your reset.');
+            setMode('reset');
+          }
+        } else {
+          // No tokens or session establishment failed — stay in request mode
       } catch (e: any) {
+        console.error('Reset password initialization error:', e);
         setHeaderStatus(
           e?.message || 'Could not validate the reset link. Please try again.'
         );
+        setMode('request');
       } finally {
         setInitializing(false);
       }
