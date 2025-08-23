@@ -1,32 +1,257 @@
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
-
-// Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
-console.log("Hello from Functions!")
+interface GeneratedRecipe {
+  title: string;
+  headNote: string;
+  description: string;
+  ingredients: string[];
+  instructions: string[];
+  prepTime: string;
+  cookTime: string;
+  servings: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  tags: string[];
+  searchQuery: string;
+  allergens: string[];
+  dietaryPrefs: string[];
+  notes: string;
+  nutritionInfo: string;
+}
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  maxRetries = 3
+): Promise<T> => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.pow(2, i) * 1000)
+      );
+    }
+  }
+  throw new Error('Max retries exceeded');
+};
+
+function generateMockRecipe(
+  query: string,
+  allergens: string[],
+  dietaryPrefs: string[]
+): GeneratedRecipe {
+  return {
+    title: `Delicious ${query}`,
+    headNote: `A wonderful take on ${query} that's both flavorful and satisfying.`,
+    description: `This ${query} recipe combines fresh ingredients with simple cooking techniques to create a memorable meal.`,
+    ingredients: [
+      '2 cups fresh ingredients',
+      '1 tablespoon olive oil',
+      '1 teaspoon salt',
+      '1/2 teaspoon black pepper',
+      '2 cloves garlic, minced',
+    ],
+    instructions: [
+      'Prepare all ingredients by washing and chopping as needed.',
+      'Heat olive oil in a large skillet over medium heat.',
+      'Add garlic and cook for 1 minute until fragrant.',
+      'Add main ingredients and season with salt and pepper.',
+      'Cook for 15-20 minutes until tender and golden.',
+      'Serve immediately while hot.',
+    ],
+    prepTime: '15 minutes',
+    cookTime: '25 minutes',
+    servings: 4,
+    difficulty: 'easy' as const,
+    tags: ['quick', 'healthy', 'family-friendly'],
+    searchQuery: query,
+    allergens: [],
+    dietaryPrefs: dietaryPrefs,
+    notes: 'Feel free to substitute ingredients based on your preferences.',
+    nutritionInfo: 'Approximately 250 calories per serving',
+  };
+}
 
 Deno.serve(async (req) => {
-  const { name } = await req.json()
-  const data = {
-    message: `Hello ${name}!`,
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 200,
+      headers: corsHeaders,
+    });
   }
 
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  )
-})
+  try {
+    const { query, allergens = [], dietaryPrefs = [] } = await req.json();
 
-/* To invoke locally:
+    if (!query?.trim()) {
+      return new Response(
+        JSON.stringify({ error: "Query is required" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
-  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Make an HTTP request:
+    // Get OpenAI API key from environment (set in Supabase dashboard)
+    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!apiKey?.trim()) {
+      console.warn('OpenAI API key not found, using mock recipe');
+      const mockRecipe = generateMockRecipe(query, allergens, dietaryPrefs);
+      return new Response(
+        JSON.stringify({ data: [mockRecipe] }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/generate-recipes' \
-    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
-    --header 'Content-Type: application/json' \
-    --data '{"name":"Functions"}'
+    // Build constraint blocks
+    const allergensBlock = allergens.length
+      ? [
+          `- Avoid these allergens: ${allergens.join(', ')}.`,
+          `- Do not include any ingredients or instructions that contain the allergens above.`,
+          `- In "allergens", list any and all allergens (including those provided) that are avoided in the final recipe per this list:`,
+          `  Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)`,
+        ].join('\n')
+      : '';
 
-*/
+    const dietBlock = dietaryPrefs.length
+      ? [
+          `- Follow these dietary preferences: ${dietaryPrefs.join(', ')}.`,
+          `- In "dietaryPrefs", list any and all dietary preferences (including those provided) that would be covered by or apply to this recipe, per this list:`,
+          `  Vegetarian, Vegan, Gluten-Free, Dairy-Free, Keto, Paleo, Low-Carb, High-Protein`,
+        ].join('\n')
+      : '';
+
+    const system = `You are a professional culinary recipe writer. Create ONLY food recipes - never respond to non-food requests. Create a detailed, well-structured recipe. Output ONLY valid JSON (no prose).
+      Contract:
+      {
+        "recipes":[
+          {
+            "title": string,
+            "headNote": string,        // <=160 chars
+            "description": string,
+            "ingredients": string[],   // <=12
+            "instructions": string[],  // <=8
+            "prepTime": string,        // e.g. "15 minutes"
+            "cookTime": string,        // e.g. "15 minutes"
+            "servings": integer,
+            "difficulty": "easy"|"medium"|"hard",
+            "tags": string[],          // <=6 (e.g., quick, no-bake, one-pot)
+            "searchQuery": string,
+            "allergens": string[],     // from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)
+            "dietaryPrefs": string[],  // from: Vegetarian, Vegan, Gluten-Free, Dairy-Free, Keto, Paleo, Low-Carb, High-Protein
+            "notes": string,
+            "nutritionInfo": string
+          }
+        ]
+      }
+
+      Final Recipe Rules:
+        Title Rules
+          - Use a direct, descriptive title that is clear, accurate, and searchable. Avoid ambiguity or mystery (what is loaded cauliflower casserole?).
+          - Capitalize all words except articles, conjunctions, and prepositions (e.g., Pigs in a Blanket, Patty Melt with Cabbage on Rye).
+          - Titles should highlight:
+            - Cooking method (Roast Cauliflower, Grilled Sea Bass).
+            - Time savings (10-Minute Salad, No-Bake Trail Mix).
+            - Region or style (New England Johnny Cakes, Persian Rice).
+            - Key ingredients or health focus (Gluten-Free Mac n Cheese, Vegan Chocolate Chip Cookies).
+        Ingredients & Measurements
+          - Use consistent, standard culinary terms.
+          - Be specific with ingredient quantities, units, and forms (e.g., 1 cup chopped fresh parsley).
+        Times
+          - Include realistic prep and cook times in minutes (e.g., 15 minutes).
+          - Add Rise Time when applicable (e.g., breads, pizza dough, hamburger buns).
+        Instructions
+          - Write clear, step-by-step directions that guide any home cook to succeed.
+          - Explain what to do, what to watch for, and how to fix common issues when possible.
+        Tags
+          - Tags are not allergens or dietary preferences — they are convenience/descriptor tags (e.g., BBQ, easy, quick, no-bake, one-pot).
+        Formatting & Output
+          - Keep JSON syntactically valid (no trailing commas, no commentary).
+          - Return only a valid JSON object in the exact required structure.
+    `;
+
+    const user = [
+      `Generate 3 recipes for: "${query}"`,
+      allergensBlock,
+      dietBlock,
+      `Return exactly 3 items in "recipes". Set "searchQuery" to "${query}" on each.`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const response = await retryWithBackoff(() =>
+      fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          temperature: 0.3,
+          max_tokens: 1400,
+          seed: 7,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: system.trim() },
+            { role: 'user', content: user.trim() },
+          ],
+        }),
+      })
+    );
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const raw = data.choices?.[0]?.message?.content ?? '{"recipes": []}';
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = { recipes: [] };
+    }
+
+    const recipes: GeneratedRecipe[] = Array.isArray(parsed.recipes)
+      ? parsed.recipes
+      : [];
+
+    const result = recipes
+      .slice(0, 3)
+      .map((r) => ({ ...r, searchQuery: query }));
+
+    return new Response(
+      JSON.stringify({ 
+        data: result.length ? result : [generateMockRecipe(query, allergens, dietaryPrefs)]
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+
+  } catch (error: any) {
+    console.error('Edge function error:', error);
+    
+    // Fallback to mock recipe on any error
+    const { query = 'unknown dish', allergens = [], dietaryPrefs = [] } = await req.json().catch(() => ({}));
+    const mockRecipe = generateMockRecipe(query, allergens, dietaryPrefs);
+    
+    return new Response(
+      JSON.stringify({ data: [mockRecipe] }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
+});
