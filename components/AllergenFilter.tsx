@@ -27,7 +27,7 @@ export default function AllergenFilter({
     container: {
       backgroundColor: colors.surface,
       borderRadius: 12, // 👈 rounded corners
-      padding: 12,
+      paddingTop: 4,
       marginBottom: 16, // 👈 spacing below
       borderWidth: 1,
       borderColor: colors.border,
