@@ -18,6 +18,18 @@ interface GeneratedRecipe {
   nutritionInfo: string;
 }
 
+export type ChatMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
+const IMAGE_MODEL = 'dall-e-3';
+const IMAGE_SIZE = '1792x1024'; // was "1024x1024" — smaller helps under tight limits
+const DEFAULT_IMG =
+  'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+
+const DEFAULT_MODEL = 'gpt-4o-mini';
+const DEFAULT_TIMEOUT_MS = 25_000;
 // Cache for the API key to avoid multiple requests
 let cachedApiKey: string | null = null;
 
@@ -33,16 +45,18 @@ async function getOpenAIKey(): Promise<string> {
   }
 
   const edgeUrl = `${supabaseUrl}/functions/v1/getOpenAIKey`;
-  
+
   // Get current session for authorization (optional)
-  const { data: { session } } = await supabase.auth.getSession();
-  
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   const response = await fetch(edgeUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...(session?.access_token && {
-        'Authorization': `Bearer ${session.access_token}`
+        Authorization: `Bearer ${session.access_token}`,
       }),
     },
     body: JSON.stringify({}),
@@ -50,12 +64,14 @@ async function getOpenAIKey(): Promise<string> {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData?.error || `Failed to get API key: ${response.status}`);
+    throw new Error(
+      errorData?.error || `Failed to get API key: ${response.status}`
+    );
   }
 
   const data = await response.json();
   cachedApiKey = data.apiKey;
-  
+
   if (!cachedApiKey) {
     throw new Error('No API key returned from edge function');
   }
@@ -63,45 +79,123 @@ async function getOpenAIKey(): Promise<string> {
   return cachedApiKey;
 }
 
-const retryWithBackoff = async <T>(
-  fn: () => Promise<T>,
-  maxRetries = 3
-): Promise<T> => {
-  for (let i = 0; i < maxRetries; i++) {
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/**
+ * Retries on 429 and 5xx. Respects Retry-After if present.
+ */
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  tries = 4
+): Promise<Response> {
+  let lastErr: unknown;
+
+  for (let attempt = 1; attempt <= tries; attempt++) {
+    let res: Response | null = null;
     try {
-      return await fn();
-    } catch (error: any) {
-      if (i === maxRetries - 1) throw error;
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.pow(2, i) * 1000)
-      );
+      res = await fetch(url, init);
+    } catch (err) {
+      lastErr = err;
     }
+
+    if (res && res.ok) return res;
+
+    // Decide whether to retry
+    const status = res?.status ?? 0;
+    const shouldRetry = status === 429 || (status >= 500 && status < 600);
+    if (!shouldRetry || attempt === tries) {
+      if (res) {
+        const text = await res.text().catch(() => '');
+        throw new Error(
+          `OpenAI API error ${status}: ${text || res.statusText}`
+        );
+      }
+      throw lastErr instanceof Error ? lastErr : new Error('Network error');
+    }
+
+    // Backoff (use Retry-After when present)
+    const retryAfter = res?.headers.get('retry-after');
+    const retryMs = retryAfter
+      ? Number(retryAfter) * 1000
+      : (800 + Math.random() * 400) * Math.pow(2, attempt - 1);
+    await sleep(retryMs);
   }
-  throw new Error('Max retries exceeded');
-};
 
-// Direct OpenAI API call with secure key
-async function callOpenAI(messages: any[], options: any = {}) {
-  const apiKey = await getOpenAIKey();
-  
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({ 
-      messages,
-      ...options
-    }),
-  });
+  throw new Error('Retries exhausted');
+}
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData?.error?.message || `OpenAI API error: ${response.status}`);
+// const retryWithBackoff = async <T>(
+//   fn: () => Promise<T>,
+//   maxRetries = 3
+// ): Promise<T> => {
+//   for (let i = 0; i < maxRetries; i++) {
+//     try {
+//       return await fn();
+//     } catch (error: any) {
+//       if (i === maxRetries - 1) throw error;
+//       await new Promise((resolve) =>
+//         setTimeout(resolve, Math.pow(2, i) * 1000)
+//       );
+//     }
+//   }
+//   throw new Error('Max retries exceeded');
+// };
+
+async function getOpenAIHeaders() {
+  const apiKey = await getOpenAIKey(); // your Edge function call (keeps key off device)
+  // Prefer pulling these from env/secrets so you don’t hard-code:
+  const org = 'org-pigNWK6KQYXhW9KadKfDpVGu'; //process.env.EXPO_PUBLIC_OPENAI_ORG_ID;
+  const project = 'proj_WQLJGYZRj2GPZSmGchawQ5Bu'; //process.env.EXPO_PUBLIC_OPENAI_PROJECT;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${apiKey}`,
+  };
+  if (org) headers['OpenAI-Organization'] = org;
+  if (project) headers['OpenAI-Project'] = project;
+
+  return headers;
+}
+
+export async function callOpenAI(
+  messages: ChatMessage[],
+  options: any = {},
+  { timeoutMs = DEFAULT_TIMEOUT_MS }: { timeoutMs?: number } = {}
+) {
+  const headers = await getOpenAIHeaders();
+
+  // Reasonable defaults; caller can override via options
+  const body = {
+    model: DEFAULT_MODEL,
+    temperature: 0.3,
+    seed: 7,
+    response_format: { type: 'json_object' },
+    max_tokens: 1400,
+    messages,
+    ...options,
+  };
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetchWithRetry(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      },
+      4 // attempts
+    );
+    return await res.json();
+  } finally {
+    clearTimeout(timeout);
   }
-
-  return await response.json();
 }
 
 export async function generateRecipes(
@@ -186,23 +280,20 @@ export async function generateRecipes(
       .filter(Boolean)
       .join('\n');
 
-    const messages = [
+    const messages: ChatMessage[] = [
       { role: 'system', content: system.trim() },
       { role: 'user', content: user.trim() },
     ];
 
-    const data = await retryWithBackoff(() =>
-      callOpenAI(messages, {
-        model: 'gpt-4o-mini',
-        temperature: 0.3,
-        max_tokens: 1400,
-        seed: 7,
-        response_format: { type: 'json_object' },
-      })
-    );
+    const data = await callOpenAI(messages, {
+      model: 'gpt-4o-mini',
+      temperature: 0.3,
+      max_tokens: 1400,
+      seed: 7,
+      response_format: { type: 'json_object' },
+    });
 
-    const raw = data.choices?.[0]?.message?.content ?? '{"recipes": []}';
-
+    const raw = data?.choices?.[0]?.message?.content ?? '{"recipes":[] }';
     let parsed: any;
     try {
       parsed = JSON.parse(raw);
@@ -213,17 +304,15 @@ export async function generateRecipes(
     const recipes: GeneratedRecipe[] = Array.isArray(parsed.recipes)
       ? parsed.recipes
       : [];
-
     const result = recipes
       .slice(0, 3)
       .map((r) => ({ ...r, searchQuery: query }));
 
-    return result.length ? result : [generateMockRecipe(query, allergens, dietaryPrefs)];
-
-  } catch (error) {
-    console.error('Error generating recipes:', error);
-    
-    // Fallback to mock recipe
+    return result.length
+      ? result
+      : [generateMockRecipe(query, allergens, dietaryPrefs)];
+  } catch (err) {
+    console.error('Error generating recipes:', err);
     return [generateMockRecipe(query, allergens, dietaryPrefs)];
   }
 }
@@ -231,38 +320,79 @@ export async function generateRecipes(
 export async function generateRecipeImage(title: string): Promise<string> {
   try {
     const apiKey = await getOpenAIKey();
-    
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'dall-e-3',
-        prompt: `High quality food photo of ${title}, professional lighting, styled on a plate`,
-        n: 1,
-        size: '1024x1024',
-        quality: 'standard',
-        response_format: 'url'
-      }),
-    });
+    const org = 'org-pigNWK6KQYXhW9KadKfDpVGu'; //process.env.EXPO_PUBLIC_OPENAI_ORG_ID;
+    const project = 'proj_WQLJGYZRj2GPZSmGchawQ5Bu'; //process.env.EXPO_PUBLIC_OPENAI_PROJECT;
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData?.error?.message || `Image generation error: ${response.status}`);
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    };
+
+    if (org) headers['OpenAI-Organization'] = org;
+    if (project) headers['OpenAI-Project'] = project;
+    const body = {
+      model: IMAGE_MODEL,
+      prompt: `High quality food photo of ${title}, professional lighting, styled on a plate`,
+      n: 1,
+      size: IMAGE_SIZE,
+      quality: 'standard',
+      response_format: 'url',
+    };
+
+    const res = await fetchWithRateLimitRetry(
+      'https://api.openai.com/v1/images/generations',
+      { method: 'POST', headers, body: JSON.stringify(body) },
+      4 // attempts
+    );
+    const data = await res.json();
+    const imageUrl = data?.data?.[0]?.url;
+    return imageUrl || DEFAULT_IMG;
+  } catch (err) {
+    console.error('Error generating recipe image:', err);
+    return DEFAULT_IMG;
+  }
+}
+
+async function fetchWithRateLimitRetry(
+  url: string,
+  init: RequestInit,
+  tries = 3
+): Promise<Response> {
+  for (let attempt = 1; attempt <= tries; attempt++) {
+    const res = await fetch(url, init);
+
+    // Log useful RL headers for diagnosis
+    const rlLimit = res.headers.get('x-ratelimit-limit-requests');
+    const rlRemain = res.headers.get('x-ratelimit-remaining-requests');
+    const rlReset = res.headers.get('x-ratelimit-reset-requests');
+    const retryAfter = res.headers.get('retry-after');
+
+    if (!res.ok) {
+      // handle 429 with backoff
+      if (res.status === 429 && attempt < tries) {
+        const retryAfterMs = retryAfter ? Number(retryAfter) * 1000 : undefined;
+        const backoffMs =
+          retryAfterMs ??
+          1500 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 400);
+
+        console.warn(
+          `[images] 429 attempt ${attempt}/${tries} — limit=${rlLimit}, remaining=${rlRemain}, reset=${rlReset}, retryAfter=${retryAfter}. Backing off ${backoffMs}ms`
+        );
+        await new Promise((r) => setTimeout(r, backoffMs));
+        continue;
+      }
+
+      const text = await res.text().catch(() => '');
+      throw new Error(
+        `OpenAI image error ${res.status}: ${
+          text || res.statusText
+        } (limit=${rlLimit}, remaining=${rlRemain}, reset=${rlReset})`
+      );
     }
 
-    const data = await response.json();
-    
-    // OpenAI DALL-E response format
-    const imageUrl = data?.data?.[0]?.url;
-    return imageUrl || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
-    
-  } catch (error) {
-    console.error('Error generating recipe image:', error);
-    return 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+    return res; // success
   }
+  throw new Error('OpenAI image error: retries exhausted');
 }
 
 function generateMockRecipe(
