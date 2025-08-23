@@ -8,14 +8,14 @@ export interface DietaryPref {
 }
 
 export const DIETARY_PREFERENCES: DietaryPref[] = [
+  { $id: 'mediterranean', name: 'Mediterranean' },
+  { $id: 'low-sodium', name: 'Low Sodium' },
+  { $id: 'keto', name: 'Keto' },
+  { $id: 'diabetic', name: 'Diabetic' },
   { $id: 'vegan', name: 'Vegan' },
   { $id: 'vegetarian', name: 'Vegetarian' },
-  { $id: 'gluten-free', name: 'Gluten-Free' },
-  { $id: 'dairy-free', name: 'Dairy-Free' },
-  { $id: 'keto', name: 'Keto' },
+  { $id: 'whole-30', name: 'Whole 30' },
   { $id: 'paleo', name: 'Paleo' },
-  { $id: 'low-carb', name: 'Low-Carb' },
-  { $id: 'high-protein', name: 'High-Protein' },
 ];
 
 interface DietaryContextType {
@@ -45,7 +45,9 @@ export function DietaryProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         if (error.code === '42P01') {
-          console.warn('Database tables not created yet. Please run the migration.');
+          console.warn(
+            'Database tables not created yet. Please run the migration.'
+          );
           setUserDietaryPrefs([]);
           setSelectedDiet([]);
           return;
@@ -53,11 +55,11 @@ export function DietaryProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
 
-      const prefNames = data?.map(item => item.dietary_pref) || [];
-      const prefObjects = DIETARY_PREFERENCES.filter(pref => 
+      const prefNames = data?.map((item) => item.dietary_pref) || [];
+      const prefObjects = DIETARY_PREFERENCES.filter((pref) =>
         prefNames.includes(pref.name)
       );
-      
+
       setUserDietaryPrefs(prefObjects);
       setSelectedDiet(prefObjects);
     } catch (error) {
@@ -86,14 +88,11 @@ export function DietaryProvider({ children }: { children: React.ReactNode }) {
       setUserDietaryPrefs(prefs);
 
       // Remove all existing preferences
-      await supabase
-        .from('user_dietary_prefs')
-        .delete()
-        .eq('user_id', user.id);
+      await supabase.from('user_dietary_prefs').delete().eq('user_id', user.id);
 
       // Add new preferences
       if (prefs.length > 0) {
-        const prefsData = prefs.map(pref => ({
+        const prefsData = prefs.map((pref) => ({
           user_id: user.id,
           dietary_pref: pref.name,
         }));
@@ -116,10 +115,10 @@ export function DietaryProvider({ children }: { children: React.ReactNode }) {
 
   const toggleDietaryPref = async (pref: DietaryPref) => {
     if (!user || loading) return;
-    
-    const isCurrentlySelected = selectedDiet.some(p => p.$id === pref.$id);
+
+    const isCurrentlySelected = selectedDiet.some((p) => p.$id === pref.$id);
     const updatedPrefs = isCurrentlySelected
-      ? selectedDiet.filter(p => p.$id !== pref.$id)
+      ? selectedDiet.filter((p) => p.$id !== pref.$id)
       : [...selectedDiet, pref];
 
     await applySelectedDiet(updatedPrefs);
