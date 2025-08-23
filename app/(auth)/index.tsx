@@ -211,12 +211,12 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
       gap: 6,
     },
     logoContainer: {
-      marginTop: Platform.OS === 'web' ? height * 0.02 : height * 0.08,
+      marginTop: Platform.OS === 'web' ? height * 0.01 : height * 0.08,
       alignItems: 'center',
     },
     subtitleTight: {
       textAlign: 'center',
-      marginTop: Platform.OS === 'web' ? -4 : 6, // small gap under the logo
+      marginTop: Platform.OS === 'web' ? -8 : 6, // small gap under the logo
       marginBottom: 8, // keep it close to the middle group
       fontFamily: 'Lato-Regular',
       fontSize: 18,
