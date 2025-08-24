@@ -21,7 +21,8 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
-import { supabase } from '@/lib/supabase';
+import { AllergenService } from '@/services/allergenService';
+import { DietaryService } from '@/services/dietaryService';
 import ThemedText from '@/components/ThemedText';
 import { ALLERGENS } from '@/contexts/AllergensContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
@@ -158,40 +159,10 @@ export default function RegisterScreen() {
     const fetchTaxonomies = async () => {
       try {
         setLoadingTaxonomies(true);
-
-        const { data: allergensData, error: allergensError } = await supabase
-          .from('allergens')
-          .select('id, name')
-          .order('name');
-
-        if (allergensError) {
-          console.error('Error fetching allergens:', allergensError);
-          setAllergens(ALLERGENS.map((a) => ({ id: a.$id, name: a.name })));
-        } else {
-          // Sort by the preferred order from ALLERGENS constant
-          const orderedAllergens = ALLERGENS.map(allergen => 
-            allergensData?.find(dbAllergen => dbAllergen.name === allergen.name)
-          ).filter(Boolean).map(allergen => ({ id: allergen!.id, name: allergen!.name }));
-          setAllergens(orderedAllergens);
-        }
-
-        const { data: dietPrefsData, error: dietPrefsError } = await supabase
-          .from('dietary_prefs')
-          .select('id, name')
-          .order('name');
-
-        if (dietPrefsError) {
-          console.error('Error fetching dietary preferences:', dietPrefsError);
-          setDietPrefs(
-            DIETARY_PREFERENCES.map((d) => ({ id: d.$id, name: d.name }))
-          );
-        } else {
-          // Sort by the preferred order from DIETARY_PREFERENCES constant
-          const orderedDietPrefs = DIETARY_PREFERENCES.map(pref => 
-            dietPrefsData?.find(dbPref => dbPref.name === pref.name)
-          ).filter(Boolean).map(pref => ({ id: pref!.id, name: pref!.name }));
-          setDietPrefs(orderedDietPrefs);
-        }
+        
+        // Use fallback data from constants
+        setAllergens(ALLERGENS.map((a) => ({ id: a.$id, name: a.name })));
+        setDietPrefs(DIETARY_PREFERENCES.map((d) => ({ id: d.$id, name: d.name })));
       } catch (error) {
         console.error('Error in fetchTaxonomies:', error);
         setAllergens(ALLERGENS.map((a) => ({ id: a.$id, name: a.name })));
@@ -312,6 +283,12 @@ export default function RegisterScreen() {
     const { error: signErr } = await signUp(email, password, {
       first_name: firstName,
       last_name: lastName,
+      address1,
+      address2,
+      city,
+      state,
+      zip,
+      phone,
     });
 
     if (signErr) {
@@ -336,58 +313,6 @@ export default function RegisterScreen() {
           : undefined,
       });
       return;
-    }
-
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      await supabase
-        .from('user_profiles')
-        .upsert(
-          {
-            user_id: userId,
-            first_name: firstName,
-            last_name: lastName,
-            address1: address1.trim() || null,
-            address2: address2.trim() || null,
-            city: city.trim() || null,
-            state: state.trim() || null,
-            zip: zip.trim() || null,
-            phone: phone.replace(/\D/g, '') || null,
-          },
-          { onConflict: 'user_id' }
-        );
-
-      if (selectedAllergenIds.size) {
-        const ua = Array.from(selectedAllergenIds).map((allergenId) => {
-          const allergen = allergens.find((a) => a.id === allergenId);
-          return {
-            user_id: userId,
-            allergen_id: allergenId,
-            allergen: allergen?.name || '',
-          };
-        });
-        await supabase.from('user_allergens').insert(ua);
-      }
-
-      if (selectedPrefIds.size) {
-        const udp = Array.from(selectedPrefIds).map((prefId) => {
-          const dietPref = dietPrefs.find((d) => d.id === prefId);
-          return {
-            user_id: userId,
-            dietary_pref_id: prefId,
-            dietary_pref: dietPref?.name || '',
-          };
-        });
-        await supabase.from('user_dietary_prefs').insert(udp);
-      }
-    } catch (error) {
-      console.error('Error saving user data:', error);
     }
 
     setLoading(false);
