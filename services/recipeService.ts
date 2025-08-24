@@ -158,28 +158,47 @@ export class RecipeService {
       if (error) throw error;
       if (!data || data.length === 0) return [];
 
+      console.log('🔍 Raw recipes from DB:', data?.length || 0);
+      
       let filteredRecipes = data;
+      console.log('🔍 After initial filter:', filteredRecipes.length);
 
       // Filter out recipes that contain user's allergens
       if (allergenIds.length > 0) {
+        const beforeAllergenFilter = filteredRecipes.length;
         filteredRecipes = filteredRecipes.filter(recipe => {
           const recipeAllergenIds = recipe.recipe_allergens?.map((ra: any) => ra.allergen_id) || [];
           // Show recipes that DON'T contain any of the user's allergens
           // If user is allergic to Eggs, don't show recipes that contain Eggs
-          return !allergenIds.some(userAllergenId => recipeAllergenIds.includes(userAllergenId));
+          const shouldShow = !allergenIds.some(userAllergenId => recipeAllergenIds.includes(userAllergenId));
+          
+          if (!shouldShow) {
+            console.log(`🔍 Filtering out recipe "${recipe.title}" - contains user allergens:`, 
+              recipeAllergenIds.filter(id => allergenIds.includes(id)));
+          }
+          
+          return shouldShow;
         });
+        console.log(`🔍 After allergen filter: ${filteredRecipes.length} (filtered out ${beforeAllergenFilter - filteredRecipes.length})`);
       }
 
       // Filter by dietary preferences if user has any - show recipes that match at least one preference
       if (dietaryIds.length > 0) {
+        const beforeDietaryFilter = filteredRecipes.length;
         filteredRecipes = filteredRecipes.filter(recipe => {
           const recipeDietaryIds = recipe.recipe_dietary_prefs?.map((rd: any) => rd.dietary_pref_id) || [];
           // Show recipes that have at least one of the user's dietary preferences
-          return dietaryIds.some(userPrefId => recipeDietaryIds.includes(userPrefId));
+          const hasMatch = dietaryIds.some(userPrefId => recipeDietaryIds.includes(userPrefId));
+          
+          if (!hasMatch) {
+            console.log(`🔍 Filtering out recipe "${recipe.title}" - no dietary match. Recipe has:`, recipeDietaryIds, 'User wants:', dietaryIds);
+          }
+          
+          return hasMatch;
         });
+        console.log(`🔍 After dietary filter: ${filteredRecipes.length} (filtered out ${beforeDietaryFilter - filteredRecipes.length})`);
       } else {
-        // If user has no dietary preferences, show all recipes (after allergen filtering)
-        // No additional filtering needed
+        console.log('🔍 No dietary preferences - showing all recipes after allergen filter');
       }
 
       if (filteredRecipes.length === 0) return [];
