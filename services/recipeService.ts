@@ -160,6 +160,22 @@ export class RecipeService {
 
       console.log('🔍 Raw recipes from DB:', data?.length || 0);
       
+      // Debug: Log what allergen/dietary IDs we're looking for
+      console.log('🔍 User allergen names:', userAllergens);
+      console.log('🔍 User allergen IDs we need recipes to avoid:', allergenIds);
+      console.log('🔍 User dietary names:', userDietaryPrefs);
+      console.log('🔍 User dietary IDs we need recipes to support:', dietaryIds);
+      
+      // Debug: Log first few recipes and their relationships
+      if (data && data.length > 0) {
+        console.log('🔍 Sample recipe relationships:');
+        data.slice(0, 2).forEach((recipe, idx) => {
+          console.log(`  Recipe ${idx + 1}: "${recipe.title}"`);
+          console.log(`    Avoids allergen IDs:`, recipe.recipe_allergens?.map((ra: any) => ra.allergen_id) || []);
+          console.log(`    Supports dietary IDs:`, recipe.recipe_dietary_prefs?.map((rd: any) => rd.dietary_pref_id) || []);
+        });
+      }
+      
       let filteredRecipes = data;
       console.log('🔍 After initial filter:', filteredRecipes.length);
 
