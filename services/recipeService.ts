@@ -114,6 +114,7 @@ export class RecipeService {
       const savedIds = new Set(savedRecipeIds);
       const savedIds = new Set(savedRecipeIds);
       const savedIds = new Set(savedRecipeIds);
+      const savedIds = new Set(savedRecipeIds);
 
       // Get allergen and dietary preference IDs from lookup tables
       let allergenIds: string[] = [];
@@ -159,14 +160,6 @@ export class RecipeService {
         .order('created_at', { ascending: false })
         .limit(100);
 
-
-      // Start with everything (optionally exclude saved client-side; more robust)
-      let filtered = data.filter((r: any) => !savedIds.has(r.id));
-
-      console.log('🔍 Candidate recipes:', filtered.length);
-
-      // --- Allergens: try SUPERSET (interpreting recipe_allergens as "avoided") ---
-      if (userAllergenSet.size) {
         const supersetMatches = filtered.filter((r: any) =>
             recipeDietaryIds.includes(userDietaryId)
           );
@@ -480,6 +473,28 @@ export class RecipeService {
       const userDietSet = new Set(dietaryIds);
 
       // Helpers
+      const getRecipeAllergenSet = (r: any) =>
+        new Set<string>((r.recipe_allergens ?? []).map((ra: any) => ra.allergen_id));
+
+      const getRecipeDietSet = (r: any) =>
+        new Set<string>((r.recipe_dietary_prefs ?? []).map((rd: any) => rd.dietary_pref_id));
+
+      const isSuperset = (have: Set<string>, need: Set<string>) =>
+        [...need].every((id) => have.has(id));
+
+      const isDisjoint = (a: Set<string>, b: Set<string>) => {
+        for (const id of a) if (b.has(id)) return false;
+        return true;
+      };
+
+      // Start with everything (optionally exclude saved client-side; more robust)
+      let filtered = data.filter((r: any) => !savedIds.has(r.id));
+
+      console.log('🔍 Candidate recipes:', filtered.length);
+
+      // --- Allergens: try SUPERSET (interpreting recipe_allergens as "avoided") ---
+      if (userAllergenSet.size) {
+        const supersetMatches = filtered.filter((r: any) =>
       const getRecipeAllergenSet = (r: any) =>
         new Set<string>((r.recipe_allergens ?? []).map((ra: any) => ra.allergen_id));
 
