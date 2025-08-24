@@ -80,9 +80,13 @@ export default function ForgotPasswordScreen() {
     title: '',
   });
 
-  const RESET_REDIRECT =
-    process.env.EXPO_PUBLIC_RESET_REDIRECT ??
-    (typeof window !== 'undefined' ? `${window.location.origin}/(auth)/reset-password` : 'http://localhost:3000/(auth)/reset-password');
+  const RESET_REDIRECT = Platform.select({
+    web:
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/reset-password`
+        : 'https://smartbites.food/reset-password',
+    default: Linking.createURL('/reset-password'), // -> smartbites://reset-password
+  })!;
 
   // Detect if we arrived with a Supabase recovery link; if yes, exchange for a session and switch to reset mode
   useEffect(() => {
@@ -101,7 +105,10 @@ export default function ForgotPasswordScreen() {
           if (error) throw error;
           setMode('reset');
         } else if (access_token && refresh_token) {
-          const { error } = await AuthService.setSession(access_token, refresh_token);
+          const { error } = await AuthService.setSession(
+            access_token,
+            refresh_token
+          );
           if (error) throw error;
           setMode('reset');
         } else {
@@ -148,7 +155,10 @@ export default function ForgotPasswordScreen() {
 
     setSending(true);
     try {
-      const { error } = await AuthService.resetPasswordForEmail(trimmed, RESET_REDIRECT);
+      const { error } = await AuthService.resetPasswordForEmail(
+        trimmed,
+        RESET_REDIRECT
+      );
       if (error) throw error;
 
       setModalInfo({

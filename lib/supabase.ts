@@ -60,9 +60,9 @@ export function getSupabaseEmail(): SupabaseClient {
       storageKey: 'sb-smartbites-auth', // share session with the base client
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: Platform.OS === 'web',
-      lock: processLock,
+      detectSessionInUrl: Platform.OS === 'web', // true on web only
       flowType: Platform.OS === 'web' ? 'implicit' : 'pkce',
+      lock: processLock, // if you use tab-locking, otherwise remove
     },
     global: { headers: { 'x-application-name': 'smartbites' } },
   });

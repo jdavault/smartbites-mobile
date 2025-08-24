@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseEmail } from '@/lib/supabase';
 import { UserService } from './userService';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -97,7 +97,10 @@ export class AuthService {
     }
   }
 
-  static async signInWithIdToken(provider: string, token: string): Promise<AuthResult> {
+  static async signInWithIdToken(
+    provider: string,
+    token: string
+  ): Promise<AuthResult> {
     try {
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: provider as any,
@@ -111,9 +114,12 @@ export class AuthService {
     }
   }
 
-  static async resetPasswordForEmail(email: string, redirectTo: string): Promise<{ error: any }> {
+  static async resetPasswordForEmail(
+    email: string,
+    redirectTo: string
+  ): Promise<{ error: any }> {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabaseEmail.auth.resetPasswordForEmail(email, {
         redirectTo,
       });
       return { error };
@@ -133,7 +139,9 @@ export class AuthService {
     }
   }
 
-  static async exchangeCodeForSession(url: string): Promise<{ data: any; error: any }> {
+  static async exchangeCodeForSession(
+    url: string
+  ): Promise<{ data: any; error: any }> {
     try {
       const { data, error } = await supabase.auth.exchangeCodeForSession(url);
       return { data, error };
@@ -143,7 +151,10 @@ export class AuthService {
     }
   }
 
-  static async setSession(accessToken: string, refreshToken: string): Promise<{ data: any; error: any }> {
+  static async setSession(
+    accessToken: string,
+    refreshToken: string
+  ): Promise<{ data: any; error: any }> {
     try {
       const { data, error } = await supabase.auth.setSession({
         access_token: accessToken,
@@ -156,7 +167,9 @@ export class AuthService {
     }
   }
 
-  static onAuthStateChange(callback: (event: string, session: Session | null) => void) {
+  static onAuthStateChange(
+    callback: (event: string, session: Session | null) => void
+  ) {
     return supabase.auth.onAuthStateChange(callback);
   }
 }
