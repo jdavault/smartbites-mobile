@@ -205,9 +205,9 @@ export class RecipeService {
       if (userDietSet.size) {
         const before = filtered.length;
         filtered = filtered.filter((r: any) => {
-          const recipeDietaryIds = (r.recipe_dietary_prefs ?? []).map((rd: any) => rd.dietary_pref_id);
+          const recipeDietaryIds = getRecipeDietSet(r);
           const hasAllUserDietaryPrefs = [...userDietSet].every(userDietaryId =>
-            recipeDietaryIds.includes(userDietaryId)
+            recipeDietaryIds.has(userDietaryId)
           );
           return hasAllUserDietaryPrefs;
         });
