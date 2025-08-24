@@ -215,13 +215,13 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
       gap: 6,
     },
     logoContainer: {
-      marginTop: width <= 768 ? height * 0.01 : height * 0.08,
+      marginTop: width <= 768 ? height * 0.01 : height * 0.12,
       alignItems: 'center',
     },
     subtitleTight: {
       textAlign: 'center',
-      marginTop: width <= 768 ? -20 : 6, // reduce space on small mobile
-      marginBottom: width <= 768 ? 4 : 8, // keep it close to the middle group
+      marginTop: width <= 768 ? -20 : -8, // reduce space below logo
+      marginBottom: width <= 768 ? 4 : 16, // more space before middle group
       fontFamily: 'Lato-Regular',
       fontSize: 18,
       color: colors.textSecondary,
@@ -240,20 +240,20 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
       width: '100%',
       paddingHorizontal: Spacing.lg,
       alignItems: 'center',
-      marginTop: Spacing.sm,
-      marginBottom: Spacing.md,
+      marginTop: 4,
+      marginBottom: 8,
     },
     appStoreTitle: {
       fontFamily: Fonts.heading,
       fontSize: FontSizes.lg,
       textAlign: 'center',
-      marginBottom: Spacing.xs,
+      marginBottom: 4,
     },
     appStoreSubtitle: {
       fontFamily: Fonts.body,
       fontSize: FontSizes.sm,
       textAlign: 'center',
-      marginBottom: Spacing.lg,
+      marginBottom: 12,
     },
     storeButtonsContainer: {
       flexDirection: 'row',
