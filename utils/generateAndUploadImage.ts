@@ -1,7 +1,7 @@
 // src/utils/generateAndUploadImage.ts
 import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { getOpenAIKey } from '@/utils/openaiKey';
+import { getOpenAIKey } from '@/utils/openAIApiKey';
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/images/generations';
 
