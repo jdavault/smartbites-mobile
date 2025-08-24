@@ -99,7 +99,11 @@ export class RecipeService {
     }
   }
 
-  static async getFeaturedRecipes(userId: string, userAllergens: string[], userDietaryPrefs: string[]): Promise<UserRecipeData[]> {
+  static async getFeaturedRecipes(
+    userId: string,
+    userAllergens: string[],
+    userDietaryPrefs: string[]
+  ): Promise<UserRecipeData[]> {
     try {
       // Get user's saved recipe IDs to exclude them
       const { data: userRecipeData, error: userRecipeError } = await supabase
@@ -108,32 +112,32 @@ export class RecipeService {
         .eq('user_id', userId);
 
       if (userRecipeError) throw userRecipeError;
-      
-      const savedRecipeIds = userRecipeData?.map(ur => ur.recipe_id) || [];
+
+      const savedRecipeIds = userRecipeData?.map((ur) => ur.recipe_id) || [];
       const savedIds = new Set(savedRecipeIds);
 
       // Get allergen and dietary preference IDs from lookup tables
       let allergenIds: string[] = [];
       let dietaryIds: string[] = [];
-      
+
       if (userAllergens.length > 0) {
         const { data: allergenData, error: allergenError } = await supabase
           .from('allergens')
           .select('id')
           .in('name', userAllergens);
-        
+
         if (allergenError) throw allergenError;
-        allergenIds = allergenData?.map(a => a.id) || [];
+        allergenIds = allergenData?.map((a) => a.id) || [];
       }
-      
+
       if (userDietaryPrefs.length > 0) {
         const { data: dietaryData, error: dietaryError } = await supabase
           .from('dietary_prefs')
           .select('id')
           .in('name', userDietaryPrefs);
-        
+
         if (dietaryError) throw dietaryError;
-        dietaryIds = dietaryData?.map(d => d.id) || [];
+        dietaryIds = dietaryData?.map((d) => d.id) || [];
       }
 
       console.log('🔍 User allergen names:', userAllergens);
@@ -144,7 +148,8 @@ export class RecipeService {
       // Get all recipes with their relationships for client-side filtering
       const { data, error } = await supabase
         .from('recipes')
-        .select(`
+        .select(
+          `
           *,
           recipe_allergens (
             allergen_id
@@ -152,7 +157,8 @@ export class RecipeService {
           recipe_dietary_prefs (
             dietary_pref_id
           )
-        `)
+        `
+        )
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -164,10 +170,14 @@ export class RecipeService {
 
       // Helpers
       const getRecipeAllergenSet = (r: any) =>
-        new Set<string>((r.recipe_allergens ?? []).map((ra: any) => ra.allergen_id));
+        new Set<string>(
+          (r.recipe_allergens ?? []).map((ra: any) => ra.allergen_id)
+        );
 
       const getRecipeDietSet = (r: any) =>
-        new Set<string>((r.recipe_dietary_prefs ?? []).map((rd: any) => rd.dietary_pref_id));
+        new Set<string>(
+          (r.recipe_dietary_prefs ?? []).map((rd: any) => rd.dietary_pref_id)
+        );
 
       const isSuperset = (have: Set<string>, need: Set<string>) =>
         [...need].every((id) => have.has(id));
@@ -182,49 +192,62 @@ export class RecipeService {
 
       console.log('🔍 Candidate recipes:', filtered.length);
 
-      // --- Allergens: try SUPERSET (interpreting recipe_allergens as "avoided") ---
+      // --- Allergens: recipe must include ALL user allergen IDs in recipe_allergens ---
       if (userAllergenSet.size) {
-        const supersetMatches = filtered.filter((r: any) =>
-          isSuperset(getRecipeAllergenSet(r), userAllergenSet)
-        );
-
-        if (supersetMatches.length >= 5) {
-          filtered = supersetMatches;
-          console.log(`🔍 Using SUPERSET allergen match: ${filtered.length} recipes`);
-        } else {
-          // Fallback: DISJOINT (no overlap)
-          const disjointMatches = filtered.filter((r: any) =>
-            isDisjoint(getRecipeAllergenSet(r), userAllergenSet)
+        const before = filtered.length;
+        filtered = filtered.filter((r: any) => {
+          const recipeAllergenIds = new Set<string>(
+            (r.recipe_allergens ?? []).map((ra: any) => String(ra.allergen_id))
           );
-          filtered = disjointMatches;
-          console.log(`🔍 Using DISJOINT allergen match: ${filtered.length} recipes`);
-        }
+          const ok = [...userAllergenSet].every((id) =>
+            recipeAllergenIds.has(String(id))
+          );
+          if (!ok) {
+            const missing = [...userAllergenSet].filter(
+              (id) => !recipeAllergenIds.has(String(id))
+            );
+            console.log(`🔍 Allergens miss "${r.title}":`, missing);
+          }
+          return ok;
+        });
+        console.log(
+          `🔍 After allergen superset: ${filtered.length} (filtered out ${
+            before - filtered.length
+          })`
+        );
       }
 
-      // --- Dietary Preferences: try SUPERSET ---
+      // --- Dietary prefs: recipe must include ALL user diet IDs in recipe_dietary_prefs ---
       if (userDietSet.size) {
         const before = filtered.length;
-        const supersetMatches = filtered.filter((r: any) =>
-          isSuperset(getRecipeDietSet(r), userDietSet)
+        filtered = filtered.filter((r: any) => {
+          const recipeDietaryIds = new Set<string>(
+            (r.recipe_dietary_prefs ?? []).map((rd: any) =>
+              String(rd.dietary_pref_id)
+            )
+          );
+          const ok = [...userDietSet].every((id) =>
+            recipeDietaryIds.has(String(id))
+          );
+          if (!ok) {
+            const missing = [...userDietSet].filter(
+              (id) => !recipeDietaryIds.has(String(id))
+            );
+            console.log(`🔍 Dietary miss "${r.title}":`, missing);
+          }
+          return ok;
+        });
+        console.log(
+          `🔍 After dietary superset: ${filtered.length} (filtered out ${
+            before - filtered.length
+          })`
         );
-        
-        if (supersetMatches.length >= 3) {
-          filtered = supersetMatches;
-          console.log(`🔍 Using SUPERSET dietary match: ${filtered.length} recipes`);
-        } else {
-          // Fallback: partial match (at least one dietary pref)
-          const partialMatches = filtered.filter((r: any) => {
-            const recipeDietSet = getRecipeDietSet(r);
-            return [...userDietSet].some(id => recipeDietSet.has(id));
-          });
-          filtered = partialMatches.length > 0 ? partialMatches : filtered;
-          console.log(`🔍 Using PARTIAL dietary match: ${filtered.length} recipes`);
-        }
-        console.log(`🔍 After dietary filter: ${filtered.length} (filtered out ${before - filtered.length})`);
       }
 
-      if (filtered.length === 0) {
-        console.log('🔍 No recipes found matching criteria');
+      if (!filtered.length) {
+        console.log(
+          '🔍 No recipes found matching criteria (after superset filters).'
+        );
         return [];
       }
 
@@ -235,17 +258,21 @@ export class RecipeService {
       const { data: allAllergens } = await supabase
         .from('allergens')
         .select('id, name');
-      
+
       const { data: allDietaryPrefs } = await supabase
         .from('dietary_prefs')
         .select('id, name');
-      
+
       if (!allAllergens || !allDietaryPrefs) return [];
 
-      const allergenMap = new Map(allAllergens?.map(a => [a.id, a.name]) || []);
-      const dietaryMap = new Map(allDietaryPrefs?.map(d => [d.id, d.name]) || []);
+      const allergenMap = new Map(
+        allAllergens?.map((a) => [a.id, a.name]) || []
+      );
+      const dietaryMap = new Map(
+        allDietaryPrefs?.map((d) => [d.id, d.name]) || []
+      );
 
-      return selectedRecipes.map(recipe => ({
+      return selectedRecipes.map((recipe) => ({
         id: recipe.id,
         title: recipe.title,
         headNote: recipe.head_note || '',
@@ -259,8 +286,12 @@ export class RecipeService {
         tags: recipe.tags || [],
         searchQuery: recipe.search_query || '',
         searchKey: recipe.search_key || '',
-        allergens: (recipe.recipe_allergens || []).map((ra: any) => allergenMap.get(ra.allergen_id)).filter(Boolean),
-        dietaryPrefs: (recipe.recipe_dietary_prefs || []).map((rd: any) => dietaryMap.get(rd.dietary_pref_id)).filter(Boolean),
+        allergens: (recipe.recipe_allergens || [])
+          .map((ra: any) => allergenMap.get(ra.allergen_id))
+          .filter(Boolean),
+        dietaryPrefs: (recipe.recipe_dietary_prefs || [])
+          .map((rd: any) => dietaryMap.get(rd.dietary_pref_id))
+          .filter(Boolean),
         notes: recipe.notes || '',
         nutritionInfo: recipe.nutrition_info || '',
         image: recipe.image,
