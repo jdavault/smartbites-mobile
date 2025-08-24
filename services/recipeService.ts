@@ -187,30 +187,39 @@ export class RecipeService {
         const supersetMatches = filtered.filter((r: any) =>
           isSuperset(getRecipeAllergenSet(r), userAllergenSet)
         );
-        
-        if (supersetMatches.length > 0) {
+
+        if (supersetMatches.length >= 5) {
           filtered = supersetMatches;
-          console.log(`🔍 After allergen superset filter: ${filtered.length}`);
+          console.log(`🔍 Using SUPERSET allergen match: ${filtered.length} recipes`);
         } else {
-          // Fallback: disjoint (no overlap)
+          // Fallback: DISJOINT (no overlap)
           const disjointMatches = filtered.filter((r: any) =>
             isDisjoint(getRecipeAllergenSet(r), userAllergenSet)
           );
           filtered = disjointMatches;
-          console.log(`🔍 After allergen disjoint filter: ${filtered.length}`);
+          console.log(`🔍 Using DISJOINT allergen match: ${filtered.length} recipes`);
         }
       }
 
-      // --- Dietary: try SUPERSET ---
+      // --- Dietary Preferences: try SUPERSET ---
       if (userDietSet.size) {
         const before = filtered.length;
-        filtered = filtered.filter((r: any) => {
-          const recipeDietaryIds = [...getRecipeDietSet(r)];
-          const hasAllUserDietaryPrefs = [...userDietSet].every(userDietaryId =>
-            recipeDietaryIds.includes(userDietaryId)
-          );
-          return hasAllUserDietaryPrefs;
-        });
+        const supersetMatches = filtered.filter((r: any) =>
+          isSuperset(getRecipeDietSet(r), userDietSet)
+        );
+        
+        if (supersetMatches.length >= 3) {
+          filtered = supersetMatches;
+          console.log(`🔍 Using SUPERSET dietary match: ${filtered.length} recipes`);
+        } else {
+          // Fallback: partial match (at least one dietary pref)
+          const partialMatches = filtered.filter((r: any) => {
+            const recipeDietSet = getRecipeDietSet(r);
+            return [...userDietSet].some(id => recipeDietSet.has(id));
+          });
+          filtered = partialMatches.length > 0 ? partialMatches : filtered;
+          console.log(`🔍 Using PARTIAL dietary match: ${filtered.length} recipes`);
+        }
         console.log(`🔍 After dietary filter: ${filtered.length} (filtered out ${before - filtered.length})`);
       }
 
@@ -250,8 +259,8 @@ export class RecipeService {
         tags: recipe.tags || [],
         searchQuery: recipe.search_query || '',
         searchKey: recipe.search_key || '',
-        allergens: (recipe.allergen_ids || []).map((id: string) => allergenMap.get(id)).filter(Boolean),
-        dietaryPrefs: (recipe.dietary_ids || []).map((id: string) => dietaryMap.get(id)).filter(Boolean),
+        allergens: (recipe.recipe_allergens || []).map((ra: any) => allergenMap.get(ra.allergen_id)).filter(Boolean),
+        dietaryPrefs: (recipe.recipe_dietary_prefs || []).map((rd: any) => dietaryMap.get(rd.dietary_pref_id)).filter(Boolean),
         notes: recipe.notes || '',
         nutritionInfo: recipe.nutrition_info || '',
         image: recipe.image,
