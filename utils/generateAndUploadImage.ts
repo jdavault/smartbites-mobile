@@ -31,19 +31,26 @@ export async function generateAndUploadImage(opts: {
 
   const OPENAI_API_KEY = await getOpenAIKey();
   const path = `${recipeId}/${fileName}.png`;
+  const org = 'org-pigNWK6KQYXhW9KadKfDpVGu';
+  const project = 'proj_WQLJGYZRj2GPZSmGchawQ5Bu';
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${OPENAI_API_KEY}`,
+  };
+  if (org) headers['OpenAI-Organization'] = org;
+  if (project) headers['OpenAI-Project'] = project;
 
   if (Platform.OS === 'web') {
     // WEB: request base64 to avoid CORS on Azure blob
     const res = await fetch(OPENAI_API_URL, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
+      headers,
       body: JSON.stringify({
-        model: 'gpt-image-1',
+        model: 'dall-e-3',
         prompt,
         size,
+        quality: 'standard',
         response_format: 'b64_json',
       }),
     });
@@ -61,14 +68,12 @@ export async function generateAndUploadImage(opts: {
     // NATIVE: request URL and download (no browser CORS)
     const res = await fetch(OPENAI_API_URL, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
+      headers,
       body: JSON.stringify({
-        model: 'gpt-image-1',
+        model: 'dall-e-3',
         prompt,
         size,
+        quality: 'standard',
         response_format: 'url',
       }),
     });

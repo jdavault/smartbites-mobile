@@ -319,34 +319,9 @@ export async function generateRecipes(
 
 export async function generateRecipeImage(title: string): Promise<string> {
   try {
-    const apiKey = await getOpenAIKey();
-    const org = 'org-pigNWK6KQYXhW9KadKfDpVGu'; //process.env.EXPO_PUBLIC_OPENAI_ORG_ID;
-    const project = 'proj_WQLJGYZRj2GPZSmGchawQ5Bu'; //process.env.EXPO_PUBLIC_OPENAI_PROJECT;
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    };
-
-    if (org) headers['OpenAI-Organization'] = org;
-    if (project) headers['OpenAI-Project'] = project;
-    const body = {
-      model: IMAGE_MODEL,
-      prompt: `High quality food photo of ${title}, professional lighting, styled on a plate`,
-      n: 1,
-      size: IMAGE_SIZE,
-      quality: 'standard',
-      response_format: 'url',
-    };
-
-    const res = await fetchWithRateLimitRetry(
-      'https://api.openai.com/v1/images/generations',
-      { method: 'POST', headers, body: JSON.stringify(body) },
-      4 // attempts
-    );
-    const data = await res.json();
-    const imageUrl = data?.data?.[0]?.url;
-    return imageUrl || DEFAULT_IMG;
+    // Return a special marker that indicates we should generate the image
+    // The actual generation will be handled by generateAndUploadImage
+    return `GENERATE_IMAGE:${title}`;
   } catch (err) {
     console.error('Error generating recipe image:', err);
     return DEFAULT_IMG;
