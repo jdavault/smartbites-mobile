@@ -17,7 +17,7 @@ import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import { ArrowLeft, Mail, MapPin } from 'lucide-react-native';
 
 const CONTACT_EMAIL =
-  process.env.EXPO_PUBLIC_CONTACT_EMAIL ?? 'support@smartbites.cooking';
+  process.env.EXPO_PUBLIC_CONTACT_EMAIL ?? 'support@smartbites.food';
 
 export default function ContactScreen() {
   const { colors } = useTheme();
