@@ -272,26 +272,28 @@ export default function ResetPasswordScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backButtonText}>← Back</Text>
-          </TouchableOpacity>
+          <View style={styles.contentContainer}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.backButtonText}>← Back</Text>
+            </TouchableOpacity>
 
-          <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>Reset Password</Text>
-            {!!headerStatus && (
-              <Text style={styles.subheaderText}>{headerStatus}</Text>
-            )}
-          </View>
+            <View style={styles.headerContainer}>
+              <Text style={styles.headerText}>Reset Password</Text>
+              {!!headerStatus && (
+                <Text style={styles.subheaderText}>{headerStatus}</Text>
+              )}
+            </View>
 
-          <View style={styles.formContainer}>
-            <Link href="/(auth)/forgot-password" asChild>
-              <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Request Password Reset</Text>
-              </TouchableOpacity>
-            </Link>
+            <View style={styles.formContainer}>
+              <Link href="/(auth)/forgot-password" asChild>
+                <TouchableOpacity style={styles.button}>
+                  <Text style={styles.buttonText}>Request Password Reset</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
           </View>
         </ScrollView>
 
@@ -344,118 +346,120 @@ export default function ResetPasswordScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backButtonText}>← Back</Text>
-          </TouchableOpacity>
-
-          <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>Reset Password</Text>
-            {!!headerStatus && (
-              <Text style={styles.subheaderText}>{headerStatus}</Text>
-            )}
-          </View>
-
-          <View style={styles.formContainer}>
-            {/* New Password with eye toggle */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>New Password</Text>
-              <View style={styles.passwordRow}>
-                <TextInput
-                  secureTextEntry={!showPass}
-                  autoCapitalize="none"
-                  placeholder="Enter new password"
-                  placeholderTextColor="#6A7679"
-                  value={password}
-                  onChangeText={(t) => {
-                    setPassword(t);
-                    if (fieldError) setFieldError(null);
-                  }}
-                  style={styles.input}
-                  textContentType="newPassword"
-                />
-                <TouchableOpacity
-                  style={styles.eyeBtn}
-                  onPress={() => setShowPass((v) => !v)}
-                >
-                  {showPass ? (
-                    <EyeOff size={20} color={theme.textSecondary} />
-                  ) : (
-                    <Eye size={20} color={theme.textSecondary} />
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Confirm with eye toggle */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Confirm New Password</Text>
-              <View style={styles.passwordRow}>
-                <TextInput
-                  secureTextEntry={!showConfirm}
-                  autoCapitalize="none"
-                  placeholder="Re-enter new password"
-                  placeholderTextColor="#6A7679"
-                  value={password2}
-                  onChangeText={(t) => {
-                    setPassword2(t);
-                    if (fieldError) setFieldError(null);
-                  }}
-                  style={styles.input}
-                  textContentType="newPassword"
-                />
-                <TouchableOpacity
-                  style={styles.eyeBtn}
-                  onPress={() => setShowConfirm((v) => !v)}
-                >
-                  {showConfirm ? (
-                    <EyeOff size={20} color={theme.textSecondary} />
-                  ) : (
-                    <Eye size={20} color={theme.textSecondary} />
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {/* Live match hint */}
-              {showMatchHint && (
-                <Text
-                  style={
-                    password === password2 ? styles.matchOk : styles.matchNo
-                  }
-                >
-                  {password === password2
-                    ? '✅ Passwords match'
-                    : 'Passwords do not match'}
-                </Text>
-              )}
-
-              {/* Inline validation/API error (no redirect) */}
-              {!!fieldError && (
-                <Text style={styles.errorText}>{fieldError}</Text>
-              )}
-            </View>
-
+          <View style={styles.contentContainer}>
             <TouchableOpacity
-              style={styles.button}
-              onPress={onSave}
-              disabled={saving}
+              style={styles.backButton}
+              onPress={() => router.back()}
             >
-              {saving ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text style={styles.buttonText}>Save New Password</Text>
-              )}
+              <Text style={styles.backButtonText}>← Back</Text>
             </TouchableOpacity>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Link expired?</Text>
-              <Link href="/(auth)/forgot-password" asChild>
-                <TouchableOpacity>
-                  <Text style={styles.footerLink}> Request a new reset</Text>
-                </TouchableOpacity>
-              </Link>
+            <View style={styles.headerContainer}>
+              <Text style={styles.headerText}>Reset Password</Text>
+              {!!headerStatus && (
+                <Text style={styles.subheaderText}>{headerStatus}</Text>
+              )}
+            </View>
+
+            <View style={styles.formContainer}>
+              {/* New Password with eye toggle */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>New Password</Text>
+                <View style={styles.passwordRow}>
+                  <TextInput
+                    secureTextEntry={!showPass}
+                    autoCapitalize="none"
+                    placeholder="Enter new password"
+                    placeholderTextColor="#6A7679"
+                    value={password}
+                    onChangeText={(t) => {
+                      setPassword(t);
+                      if (fieldError) setFieldError(null);
+                    }}
+                    style={styles.input}
+                    textContentType="newPassword"
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeBtn}
+                    onPress={() => setShowPass((v) => !v)}
+                  >
+                    {showPass ? (
+                      <EyeOff size={20} color={theme.textSecondary} />
+                    ) : (
+                      <Eye size={20} color={theme.textSecondary} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Confirm with eye toggle */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Confirm New Password</Text>
+                <View style={styles.passwordRow}>
+                  <TextInput
+                    secureTextEntry={!showConfirm}
+                    autoCapitalize="none"
+                    placeholder="Re-enter new password"
+                    placeholderTextColor="#6A7679"
+                    value={password2}
+                    onChangeText={(t) => {
+                      setPassword2(t);
+                      if (fieldError) setFieldError(null);
+                    }}
+                    style={styles.input}
+                    textContentType="newPassword"
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeBtn}
+                    onPress={() => setShowConfirm((v) => !v)}
+                  >
+                    {showConfirm ? (
+                      <EyeOff size={20} color={theme.textSecondary} />
+                    ) : (
+                      <Eye size={20} color={theme.textSecondary} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+
+                {/* Live match hint */}
+                {showMatchHint && (
+                  <Text
+                    style={
+                      password === password2 ? styles.matchOk : styles.matchNo
+                    }
+                  >
+                    {password === password2
+                      ? '✅ Passwords match'
+                      : 'Passwords do not match'}
+                  </Text>
+                )}
+
+                {/* Inline validation/API error (no redirect) */}
+                {!!fieldError && (
+                  <Text style={styles.errorText}>{fieldError}</Text>
+                )}
+              </View>
+
+              <TouchableOpacity
+                style={styles.button}
+                onPress={onSave}
+                disabled={saving}
+              >
+                {saving ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text style={styles.buttonText}>Save New Password</Text>
+                )}
+              </TouchableOpacity>
+
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Link expired?</Text>
+                <Link href="/(auth)/forgot-password" asChild>
+                  <TouchableOpacity>
+                    <Text style={styles.footerLink}> Request a new reset</Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -479,6 +483,12 @@ const getStyles = (theme: ThemeColors) =>
     scrollContent: {
       flexGrow: 1,
       padding: Spacing.lg,
+      alignItems: 'center',
+    },
+    contentContainer: {
+      width: '100%',
+      maxWidth: 768,
+      alignSelf: 'center',
     },
     backButton: {
       alignSelf: 'flex-start',
@@ -509,6 +519,7 @@ const getStyles = (theme: ThemeColors) =>
     },
     formContainer: {
       marginTop: Spacing.md,
+      width: '100%',
     },
 
     inputContainer: {

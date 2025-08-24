@@ -294,140 +294,142 @@ export default function ForgotPasswordScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backButtonText}>← Back</Text>
-          </TouchableOpacity>
+          <View style={styles.contentContainer}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.backButtonText}>← Back</Text>
+            </TouchableOpacity>
 
-          <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>
-              {mode === 'request' ? 'Forgot Password?' : 'Reset Password'}
-            </Text>
-            <Text style={styles.subheaderText}>
-              {mode === 'request'
-                ? "Enter your email and we'll send you reset instructions."
-                : 'Enter your new password below.'}
-            </Text>
-          </View>
+            <View style={styles.headerContainer}>
+              <Text style={styles.headerText}>
+                {mode === 'request' ? 'Forgot Password?' : 'Reset Password'}
+              </Text>
+              <Text style={styles.subheaderText}>
+                {mode === 'request'
+                  ? "Enter your email and we'll send you reset instructions."
+                  : 'Enter your new password below.'}
+              </Text>
+            </View>
 
-          {/* 88% centered column */}
-          <View style={styles.formCol}>
-            {mode === 'request' ? (
-              <>
-                <Text style={styles.label}>Email Address</Text>
-                <TextInput
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="email-address"
-                  placeholder="you@example.com"
-                  placeholderTextColor={theme.textTertiary}
-                  value={email}
-                  onChangeText={setEmail}
-                  onSubmitEditing={handleSendEmail}
-                  style={styles.input}
-                />
-
-                <TouchableOpacity
-                  style={[styles.primaryButton, sending && { opacity: 0.6 }]}
-                  onPress={handleSendEmail}
-                  disabled={sending}
-                >
-                  {sending ? (
-                    <ActivityIndicator color="white" />
-                  ) : (
-                    <Text style={styles.primaryButtonText}>
-                      Send Reset Link
-                    </Text>
-                  )}
-                </TouchableOpacity>
-
-                <View style={{ height: Spacing.md }} />
-
-                <Link href="/login" asChild>
-                  <TouchableOpacity>
-                    <Text style={styles.linkInline}>Back to Sign In</Text>
-                  </TouchableOpacity>
-                </Link>
-              </>
-            ) : (
-              <>
-                {/* New Password */}
-                <Text style={styles.label}>New Password</Text>
-                <View style={styles.passwordRow}>
+            {/* 88% centered column */}
+            <View style={styles.formCol}>
+              {mode === 'request' ? (
+                <>
+                  <Text style={styles.label}>Email Address</Text>
                   <TextInput
-                    style={styles.input}
-                    placeholder="Enter new password"
-                    placeholderTextColor={theme.textTertiary}
-                    secureTextEntry={!showPass}
-                    value={password}
-                    onChangeText={setPassword}
                     autoCapitalize="none"
-                    textContentType="newPassword"
+                    autoCorrect={false}
+                    keyboardType="email-address"
+                    placeholder="you@example.com"
+                    placeholderTextColor={theme.textTertiary}
+                    value={email}
+                    onChangeText={setEmail}
+                    onSubmitEditing={handleSendEmail}
+                    style={styles.input}
                   />
+
                   <TouchableOpacity
-                    style={styles.eyeBtn}
-                    onPress={() => setShowPass((v) => !v)}
+                    style={[styles.primaryButton, sending && { opacity: 0.6 }]}
+                    onPress={handleSendEmail}
+                    disabled={sending}
                   >
-                    {showPass ? (
-                      <EyeOff size={20} color={theme.textSecondary} />
+                    {sending ? (
+                      <ActivityIndicator color="white" />
                     ) : (
-                      <Eye size={20} color={theme.textSecondary} />
+                      <Text style={styles.primaryButtonText}>
+                        Send Reset Link
+                      </Text>
                     )}
                   </TouchableOpacity>
-                </View>
 
-                {/* Confirm */}
-                <Text style={[styles.label, { marginTop: Spacing.md }]}>
-                  Confirm Password
-                </Text>
-                <View style={styles.passwordRow}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Re-enter new password"
-                    placeholderTextColor={theme.textTertiary}
-                    secureTextEntry={!showConfirm}
-                    value={confirm}
-                    onChangeText={setConfirm}
-                    autoCapitalize="none"
-                    textContentType="newPassword"
-                  />
+                  <View style={{ height: Spacing.md }} />
+
+                  <Link href="/login" asChild>
+                    <TouchableOpacity>
+                      <Text style={styles.linkInline}>Back to Sign In</Text>
+                    </TouchableOpacity>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  {/* New Password */}
+                  <Text style={styles.label}>New Password</Text>
+                  <View style={styles.passwordRow}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter new password"
+                      placeholderTextColor={theme.textTertiary}
+                      secureTextEntry={!showPass}
+                      value={password}
+                      onChangeText={setPassword}
+                      autoCapitalize="none"
+                      textContentType="newPassword"
+                    />
+                    <TouchableOpacity
+                      style={styles.eyeBtn}
+                      onPress={() => setShowPass((v) => !v)}
+                    >
+                      {showPass ? (
+                        <EyeOff size={20} color={theme.textSecondary} />
+                      ) : (
+                        <Eye size={20} color={theme.textSecondary} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Confirm */}
+                  <Text style={[styles.label, { marginTop: Spacing.md }]}>
+                    Confirm Password
+                  </Text>
+                  <View style={styles.passwordRow}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Re-enter new password"
+                      placeholderTextColor={theme.textTertiary}
+                      secureTextEntry={!showConfirm}
+                      value={confirm}
+                      onChangeText={setConfirm}
+                      autoCapitalize="none"
+                      textContentType="newPassword"
+                    />
+                    <TouchableOpacity
+                      style={styles.eyeBtn}
+                      onPress={() => setShowConfirm((v) => !v)}
+                    >
+                      {showConfirm ? (
+                        <EyeOff size={20} color={theme.textSecondary} />
+                      ) : (
+                        <Eye size={20} color={theme.textSecondary} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
                   <TouchableOpacity
-                    style={styles.eyeBtn}
-                    onPress={() => setShowConfirm((v) => !v)}
+                    style={[styles.primaryButton, saving && { opacity: 0.6 }]}
+                    onPress={handleUpdatePassword}
+                    disabled={saving}
                   >
-                    {showConfirm ? (
-                      <EyeOff size={20} color={theme.textSecondary} />
+                    {saving ? (
+                      <ActivityIndicator color="white" />
                     ) : (
-                      <Eye size={20} color={theme.textSecondary} />
+                      <Text style={styles.primaryButtonText}>
+                        Update Password
+                      </Text>
                     )}
                   </TouchableOpacity>
-                </View>
 
-                <TouchableOpacity
-                  style={[styles.primaryButton, saving && { opacity: 0.6 }]}
-                  onPress={handleUpdatePassword}
-                  disabled={saving}
-                >
-                  {saving ? (
-                    <ActivityIndicator color="white" />
-                  ) : (
-                    <Text style={styles.primaryButtonText}>
-                      Update Password
-                    </Text>
-                  )}
-                </TouchableOpacity>
+                  <View style={{ height: Spacing.md }} />
 
-                <View style={{ height: Spacing.md }} />
-
-                <Link href="/login" asChild>
-                  <TouchableOpacity>
-                    <Text style={styles.linkInline}>Back to Sign In</Text>
-                  </TouchableOpacity>
-                </Link>
-              </>
-            )}
+                  <Link href="/login" asChild>
+                    <TouchableOpacity>
+                      <Text style={styles.linkInline}>Back to Sign In</Text>
+                    </TouchableOpacity>
+                  </Link>
+                </>
+              )}
+            </View>
           </View>
         </ScrollView>
       </DismissWrapper>
@@ -450,6 +452,12 @@ const getStyles = (theme: ThemeColors) =>
     scrollContent: {
       flexGrow: 1,
       padding: Spacing.lg,
+      alignItems: 'center',
+    },
+    contentContainer: {
+      width: '100%',
+      maxWidth: 768,
+      alignSelf: 'center',
     },
     backButton: {
       alignSelf: 'flex-start',
