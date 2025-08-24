@@ -239,9 +239,9 @@ export async function generateRecipes(
             "difficulty": "easy"|"medium"|"hard",
             "tags": string[],          // <=6 (e.g., quick, no-bake, one-pot)
             "searchQuery": string,
-            "allergens": string[],     // from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten) (Exact Casing and Spelling)
+            "allergens": string[],     // Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten) AVOIDED in recipe
             "dietaryPrefs": string[],  // from: Mediterranean, Low-Sodium, Keto, Diabetic, Vegan, Vegetarian, Whole-30, and Paleo (Exact Casing and Spelling)
-            "allergensIncluded": string[], // from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten) (Exact Casing and Spelling)
+            "allergensIncluded": string[], // Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten) Found in RECIPE
             "notes": string,
             "nutritionInfo": string
           }
@@ -272,8 +272,9 @@ export async function generateRecipes(
           - Serving size must be exactly 4 servings (hard limit), and specified using Imperial units (e.g., "Serves 4" or "4 servings").
         Tags and Allergens
           - Tags are not allergens or dietary preferences — they are convenience/descriptor tags (e.g., BBQ, easy, quick, no-bake, one-pot).
-          - Allergens is the list of ingredients that must be avoided due to allergies (e.g., Eggs, Fish, Milk, etc) in the recipe.
-          - AllergensIncluded is the list of allergens (from Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)) that are present in the recipe.
+          - Allergens is the list of ingredients that must be AVOID and are NOT included the recipe  (e.g., Eggs, Fish, Milk, etc) in the recipe.
+          - AllergensIncluded includes ANY and ALL allergens (from Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)) that ARE present in the recipe 
+            which mean by it wont contain those that were avoid and listed in Allergens.
         Formatting & Output
           - Keep JSON syntactically valid (no trailing commas, no commentary).
           - Return only a valid JSON object in the exact required structure.
@@ -298,7 +299,127 @@ export async function generateRecipes(
       temperature: 0.3,
       max_tokens: 1400,
       seed: 7,
-      response_format: { type: 'json_object' },
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'recipes_schema',
+          strict: true, // <— important
+          schema: {
+            type: 'object',
+            properties: {
+              recipes: {
+                type: 'array',
+                minItems: 3,
+                maxItems: 3,
+                items: {
+                  type: 'object',
+                  required: [
+                    'title',
+                    'headNote',
+                    'description',
+                    'ingredients',
+                    'instructions',
+                    'prepTime',
+                    'cookTime',
+                    'servings',
+                    'difficulty',
+                    'tags',
+                    'searchQuery',
+                    'allergens',
+                    'dietaryPrefs',
+                    'allergensIncluded',
+                    'notes',
+                    'nutritionInfo',
+                  ],
+                  properties: {
+                    title: { type: 'string' },
+                    headNote: { type: 'string' },
+                    description: { type: 'string' },
+                    ingredients: {
+                      type: 'array',
+                      items: { type: 'string' },
+                      maxItems: 12,
+                    },
+                    instructions: {
+                      type: 'array',
+                      items: { type: 'string' },
+                      maxItems: 8,
+                    },
+                    prepTime: { type: 'string' },
+                    cookTime: { type: 'string' },
+                    servings: { type: 'integer', enum: [4] },
+                    difficulty: {
+                      type: 'string',
+                      enum: ['easy', 'medium', 'hard'],
+                    },
+                    tags: {
+                      type: 'array',
+                      items: { type: 'string' },
+                      maxItems: 6,
+                    },
+                    searchQuery: { type: 'string' },
+                    allergens: {
+                      type: 'array',
+                      items: {
+                        type: 'string',
+                        enum: [
+                          'Eggs',
+                          'Fish',
+                          'Milk',
+                          'Peanuts',
+                          'Sesame',
+                          'Shellfish',
+                          'Soybeans',
+                          'Tree Nuts',
+                          'Wheat (Gluten)',
+                        ],
+                      },
+                    },
+                    dietaryPrefs: {
+                      type: 'array',
+                      items: {
+                        type: 'string',
+                        enum: [
+                          'Mediterranean',
+                          'Low-Sodium',
+                          'Keto',
+                          'Diabetic',
+                          'Vegan',
+                          'Vegetarian',
+                          'Whole-30',
+                          'Paleo',
+                        ],
+                      },
+                    },
+                    allergensIncluded: {
+                      type: 'array',
+                      items: {
+                        type: 'string',
+                        enum: [
+                          'Eggs',
+                          'Fish',
+                          'Milk',
+                          'Peanuts',
+                          'Sesame',
+                          'Shellfish',
+                          'Soybeans',
+                          'Tree Nuts',
+                          'Wheat (Gluten)',
+                        ],
+                      },
+                    },
+                    notes: { type: 'string' },
+                    nutritionInfo: { type: 'string' },
+                  },
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ['recipes'],
+            additionalProperties: false,
+          },
+        },
+      },
     });
 
     const raw = data?.choices?.[0]?.message?.content ?? '{"recipes":[] }';
@@ -316,9 +437,15 @@ export async function generateRecipes(
       .slice(0, 3)
       .map((r) => ({ ...r, searchQuery: query }));
 
-    console.log('🤖 OpenAI recipes generated:', JSON.stringify(result, null, 2));
+    console.log(
+      '🤖 OpenAI recipes generated:',
+      JSON.stringify(result, null, 2)
+    );
     result.forEach((recipe, index) => {
-      console.log(`🤖 Recipe ${index + 1} allergensIncluded:`, recipe.allergensIncluded);
+      console.log(
+        `🤖 Recipe ${index + 1} allergensIncluded:`,
+        recipe.allergensIncluded
+      );
     });
 
     return result.length
