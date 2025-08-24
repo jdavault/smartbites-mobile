@@ -209,7 +209,7 @@ export async function generateRecipes(
       ? [
           `- Avoid these allergens: ${allergens.join(', ')}.`,
           `- Do not include any ingredients or instructions that contain the allergens above.`,
-          `- In "allergens", list any and all allergens (including those provided) that are avoided in the final recipe per this list:`,
+          `- In "allergens", list any and all allergens (especially those provided) that are avoided in the final recipe based on this list:`,
           `  Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)`,
         ].join('\n')
       : '';
@@ -217,7 +217,7 @@ export async function generateRecipes(
     const dietBlock = dietaryPrefs.length
       ? [
           `- Follow these dietary preferences: ${dietaryPrefs.join(', ')}.`,
-          `- In "dietaryPrefs", list any and all dietary preferences (including those provided) that would be covered by or apply to this recipe, per this list:`,
+          `- In "dietaryPrefs", list any and all dietary preferences (especially those provided) that apply to or fall into the category of any of these:`,
           `  Mediterranean, Low-Sodium, Keto, Diabetic, Vegan, Vegetarian, Whole-30, and Paleo`,
         ].join('\n')
       : '';
@@ -238,8 +238,9 @@ export async function generateRecipes(
             "difficulty": "easy"|"medium"|"hard",
             "tags": string[],          // <=6 (e.g., quick, no-bake, one-pot)
             "searchQuery": string,
-            "allergens": string[],     // from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)
-            "dietaryPrefs": string[],  // from: Mediterranean, Low-Sodium, Keto, Diabetic, Vegan, Vegetarian, Whole-30, and Paleo
+            "allergens": string[],     // from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten) (Exact Casing and Spelling)
+            "dietaryPrefs": string[],  // from: Mediterranean, Low-Sodium, Keto, Diabetic, Vegan, Vegetarian, Whole-30, and Paleo (Exact Casing and Spelling)
+            "allergensIncluded": string[], // from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten) (Exact Casing and Spelling)
             "notes": string,
             "nutritionInfo": string
           }
@@ -250,22 +251,28 @@ export async function generateRecipes(
         Title Rules
           - Use a direct, descriptive title that is clear, accurate, and searchable. Avoid ambiguity or mystery (what is loaded cauliflower casserole?).
           - Capitalize all words except articles, conjunctions, and prepositions (e.g., Pigs in a Blanket, Patty Melt with Cabbage on Rye).
+          - Ensure titles are not misleading and are helpful for search and classification.
           - Titles should highlight:
             - Cooking method (Roast Cauliflower, Grilled Sea Bass).
             - Time savings (10-Minute Salad, No-Bake Trail Mix).
             - Region or style (New England Johnny Cakes, Persian Rice).
             - Key ingredients or health focus (Gluten-Free Mac n Cheese, Vegan Chocolate Chip Cookies).
         Ingredients & Measurements
-          - Use consistent, standard culinary terms.
+          - Use consistent, concise, standard culinary terms.
           - Be specific with ingredient quantities, units, and forms (e.g., 1 cup chopped fresh parsley).
         Times
           - Include realistic prep and cook times in minutes (e.g., 15 minutes).
-          - Add Rise Time when applicable (e.g., breads, pizza dough, hamburger buns).
+          - Add Rise Time BUT ONLY when applicable (e.g., breads, pizza dough, hamburger buns).
         Instructions
           - Write clear, step-by-step directions that guide any home cook to succeed.
+          - Instructions and ingredient names must be clear, practical, and appropriate for all skill levels.
           - Explain what to do, what to watch for, and how to fix common issues when possible.
-        Tags
+          - Include food-safe internal temperatures for meats and seafood.
+          - Serving size must be exactly 4 servings (hard limit), and specified using Imperial units (e.g., "Serves 4" or "4 servings").
+        Tags and Allergens
           - Tags are not allergens or dietary preferences — they are convenience/descriptor tags (e.g., BBQ, easy, quick, no-bake, one-pot).
+          - Allergens are the list of ingredients that must be avoided due to allergies (e.g., Eggs, Fish, Milk).
+          - Also include AllergensIncluded with the list of allergens that are present in the recipe.
         Formatting & Output
           - Keep JSON syntactically valid (no trailing commas, no commentary).
           - Return only a valid JSON object in the exact required structure.
