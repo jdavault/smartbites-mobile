@@ -240,8 +240,8 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
       width: '100%',
       paddingHorizontal: Spacing.lg,
       alignItems: 'center',
-      marginTop: Spacing.sm,
-      marginBottom: Spacing.md,
+      marginTop: width <= 768 ? 4 : Spacing.sm,
+      marginBottom: width <= 768 ? 8 : Spacing.md,
     },
     appStoreTitle: {
       fontFamily: Fonts.heading,
