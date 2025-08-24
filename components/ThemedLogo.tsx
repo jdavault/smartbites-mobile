@@ -1,12 +1,17 @@
 import React from 'react';
-import { Image, ImageSourcePropType, StyleSheet } from 'react-native';
+import { Image, ImageSourcePropType, StyleSheet, Platform } from 'react-native';
 import LightLogo from '@/assets/images/smart-bites-logo.png';
 import DarkLogo from '@/assets/images/smart-bites-logo.png';
 import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 
-const ThemedLogo: React.FC = () => {
+interface ThemedLogoProps {
+  width?: number;
+  height?: number;
+}
+
+const ThemedLogo: React.FC<ThemedLogoProps> = ({ width, height }) => {
   const { colors, isDark } = useTheme();
-  const styles = getStyles(colors);
+  const styles = getStyles(colors, width, height);
 
   const logo: ImageSourcePropType = isDark ? DarkLogo : LightLogo;
 
@@ -15,7 +20,7 @@ const ThemedLogo: React.FC = () => {
 
 export default ThemedLogo;
 
-const getStyles = (colors: ThemeColors) =>
+const getStyles = (colors: ThemeColors, width?: number, height?: number) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -24,8 +29,8 @@ const getStyles = (colors: ThemeColors) =>
       backgroundColor: colors.secondary,
     },
     logoImage: {
-      width: 300,
-      height: 300,
+      width: width || 300,
+      height: height || 300,
       marginVertical: 20,
     },
   });

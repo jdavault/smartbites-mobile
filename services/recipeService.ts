@@ -2,6 +2,7 @@ import { generateRecipeImage } from '@/lib/openai';
 import { formatImageName } from '@/utils/filenames';
 import { supabase } from '@/lib/supabase';
 import { fetchImageUploadable, UploadableImage } from '@/lib/apiclient';
+import { generateAndUploadImage } from '@/utils/generateAndUploadImage';
 import { Platform } from 'react-native';
 import RNBlobUtil from 'react-native-blob-util';
 
@@ -73,121 +74,42 @@ export async function persistRecipeImage({
   userId: string;
 }): Promise<string> {
   try {
-    //console.log('🖼️ Start image generation:', recipeTitle);
+    console.log('🖼️ Start image generation:', recipeTitle);
 
-    let preSignedImageUrl: string;
+    // Use the new generateAndUploadImage utility that handles CORS properly
     try {
-      preSignedImageUrl = await generateRecipeImage(recipeTitle);
+      const fileName = formatImageName(searchQuery, allergenNames, 'png').replace('.png', '');
+      const prompt = `High quality food photo of ${recipeTitle}, professional lighting, styled on a plate`;
+      
+      const result = await generateAndUploadImage({
+        prompt,
+        userId,
+        recipeId,
+        fileName,
+        bucket: 'recipe-images',
+        size: '1024x1024',
+      });
+
+      console.log('🖼️ ✅ Upload successful:', result.publicUrl);
+
+      // Update the recipe with the image filename
+      const imageFileName = `${fileName}.png`;
+      const { error: updateError } = await supabase
+        .from('recipes')
+        .update({ image: imageFileName })
+        .eq('id', recipeId);
+
+      if (updateError) {
+        console.error('🖼️ DB update error:', updateError);
+      }
+
+      return result.publicUrl || DEFAULT_RECIPE_IMAGE;
     } catch (imageGenError) {
       console.error('🖼️ Image generation failed:', imageGenError);
       return DEFAULT_RECIPE_IMAGE;
     }
-
-    //console.log('🖼️ Presigned URL:', preSignedImageUrl);
-
-    if (preSignedImageUrl === DEFAULT_RECIPE_IMAGE) {
-      return DEFAULT_RECIPE_IMAGE;
-    }
-
-    const fileName = formatImageName(searchQuery, allergenNames, 'png');
-
-    // Get uploadable (Blob on web; {uri,name,type} on RN)
-    let uploadable: UploadableImage;
-    try {
-      uploadable = await fetchImageUploadable(
-        preSignedImageUrl,
-        fileName,
-        'image/png'
-      );
-    } catch (fetchError) {
-      console.error('🖼️ Image fetch failed:', fetchError);
-      return DEFAULT_RECIPE_IMAGE;
-    }
-
-    // Convert to raw bytes in a RN-safe way
-    let bytes: Uint8Array;
-    try {
-      bytes = await bytesFromUploadable(uploadable);
-    } catch (bytesError) {
-      console.error('🖼️ Bytes conversion failed:', bytesError);
-      return DEFAULT_RECIPE_IMAGE;
-    }
-
-    //console.log('🖼️ Bytes length:', bytes.byteLength);
-
-    // Basic guardrail
-    if (!bytes || bytes.byteLength < 1024) {
-      console.warn('⚠️ Byte payload too small; aborting upload.');
-      return DEFAULT_RECIPE_IMAGE;
-    }
-
-    const filePath = `${recipeId}/${fileName}`;
-
-    let uploadError: any;
-    try {
-      const uploadResult = await supabase.storage
-        .from('recipe-images')
-        .upload(filePath, bytes, {
-          contentType: 'image/png',
-          cacheControl: '3600',
-          upsert: true,
-        });
-      uploadError = uploadResult.error;
-    } catch (storageError) {
-      console.error('🖼️ Storage upload exception:', storageError);
-      return DEFAULT_RECIPE_IMAGE;
-    }
-
-    if (uploadError) {
-      console.error('🖼️ Upload failed:', uploadError);
-      console.error('🖼️ Upload error details:', {
-        message: uploadError.message,
-        statusCode: uploadError.statusCode,
-        error: uploadError.error,
-      });
-      return DEFAULT_RECIPE_IMAGE;
-    }
-
-    // Public URL
-    let publicUrl: string;
-    try {
-      const { data: pub } = supabase.storage
-        .from('recipe-images')
-        .getPublicUrl(filePath);
-      publicUrl = pub?.publicUrl ?? DEFAULT_RECIPE_IMAGE;
-    } catch (urlError) {
-      console.error('🖼️ Public URL generation failed:', urlError);
-      return DEFAULT_RECIPE_IMAGE;
-    }
-
-    //console.log('🖼️ ✅ Upload successful:', publicUrl);
-
-    // Optional: persist filename in DB
-    try {
-      const { error: updateError } = await supabase
-        .from('recipes')
-        .update({ image: fileName })
-        .eq('id', recipeId);
-      if (updateError) {
-        console.error('🖼️ DB update error:', updateError);
-        console.error('🖼️ DB update error details:', {
-          message: updateError.message,
-          code: updateError.code,
-          details: updateError.details,
-        });
-      }
-    } catch (dbError) {
-      console.error('🖼️ DB update exception:', dbError);
-    }
-
-    return publicUrl;
   } catch (err) {
     console.error('🖼️ Error in persistRecipeImage:', err);
-    console.error('🖼️ Full error details:', {
-      name: err instanceof Error ? err.name : 'Unknown',
-      message: err instanceof Error ? err.message : String(err),
-      stack: err instanceof Error ? err.stack : undefined,
-    });
     return DEFAULT_RECIPE_IMAGE;
   }
 }

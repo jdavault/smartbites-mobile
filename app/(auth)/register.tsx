@@ -168,7 +168,11 @@ export default function RegisterScreen() {
           console.error('Error fetching allergens:', allergensError);
           setAllergens(ALLERGENS.map((a) => ({ id: a.$id, name: a.name })));
         } else {
-          setAllergens(allergensData || []);
+          // Sort by the preferred order from ALLERGENS constant
+          const orderedAllergens = ALLERGENS.map(allergen => 
+            allergensData?.find(dbAllergen => dbAllergen.name === allergen.name)
+          ).filter(Boolean).map(allergen => ({ id: allergen!.id, name: allergen!.name }));
+          setAllergens(orderedAllergens);
         }
 
         const { data: dietPrefsData, error: dietPrefsError } = await supabase
@@ -182,7 +186,11 @@ export default function RegisterScreen() {
             DIETARY_PREFERENCES.map((d) => ({ id: d.$id, name: d.name }))
           );
         } else {
-          setDietPrefs(dietPrefsData || []);
+          // Sort by the preferred order from DIETARY_PREFERENCES constant
+          const orderedDietPrefs = DIETARY_PREFERENCES.map(pref => 
+            dietPrefsData?.find(dbPref => dbPref.name === pref.name)
+          ).filter(Boolean).map(pref => ({ id: pref!.id, name: pref!.name }));
+          setDietPrefs(orderedDietPrefs);
         }
       } catch (error) {
         console.error('Error in fetchTaxonomies:', error);
@@ -403,7 +411,7 @@ export default function RegisterScreen() {
         content: { flex: 1, paddingHorizontal: 16 },
         contentContainer: {
           width: '100%',
-          maxWidth: 768,
+          maxWidth: 1024,
           alignSelf: 'center',
         },
 
@@ -799,312 +807,313 @@ export default function RegisterScreen() {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-
-              <View style={styles.form}>
-                {/* Email + Passwords first (compact, no labels) */}
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Email"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="emailAddress"
-                  autoComplete="email"
-                />
-
-                <View style={styles.pwWrap}>
+              <View style={styles.contentContainer}>
+                <View style={styles.form}>
+                  {/* Email + Passwords first (compact, no labels) */}
                   <TextInput
-                    style={styles.pwInput}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="Password"
+                    style={styles.input}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="Email"
                     placeholderTextColor={colors.textSecondary}
-                    secureTextEntry={!showPassword}
+                    keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
-                    textContentType="newPassword"
-                    autoComplete="new-password"
+                    textContentType="emailAddress"
+                    autoComplete="email"
                   />
-                  <TouchableOpacity
-                    style={styles.eyeButton}
-                    onPress={() => setShowPassword((v) => !v)}
-                  >
-                    {showPassword ? (
-                      <EyeOff size={18} color={colors.textSecondary} />
-                    ) : (
-                      <Eye size={18} color={colors.textSecondary} />
-                    )}
-                  </TouchableOpacity>
-                </View>
 
-                <View style={styles.pwWrap}>
-                  <TextInput
-                    style={styles.pwInput}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    placeholder="Confirm password"
-                    placeholderTextColor={colors.textSecondary}
-                    secureTextEntry={!showConfirmPassword}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    textContentType="password"
-                    autoComplete="off"
-                  />
-                  <TouchableOpacity
-                    style={styles.eyeButton}
-                    onPress={() => setShowConfirmPassword((v) => !v)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff size={18} color={colors.textSecondary} />
-                    ) : (
-                      <Eye size={18} color={colors.textSecondary} />
-                    )}
-                  </TouchableOpacity>
-                </View>
-
-                {/* Names */}
-                <View style={styles.row}>
-                  <TextInput
-                    style={[styles.input, styles.flex2]}
-                    value={firstName}
-                    onChangeText={setFirstName}
-                    placeholder="First name"
-                    placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    textContentType="givenName"
-                    autoComplete="given-name"
-                  />
-                  <TextInput
-                    style={[styles.input, styles.flex3]}
-                    value={lastName}
-                    onChangeText={setLastName}
-                    placeholder="Last name"
-                    placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    textContentType="familyName"
-                    autoComplete="family-name"
-                  />
-                </View>
-                {/* Address */}
-                <TextInput
-                  style={styles.input}
-                  value={address1}
-                  onChangeText={setAddress1}
-                  placeholder="Address line 1"
-                  placeholderTextColor={colors.textSecondary}
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                  textContentType="fullStreetAddress"
-                  autoComplete="street-address"
-                />
-                <TextInput
-                  style={styles.input}
-                  value={address2}
-                  onChangeText={setAddress2}
-                  placeholder="Address line 2 (optional)"
-                  placeholderTextColor={colors.textSecondary}
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                />
-                <View style={styles.row}>
-                  <TextInput
-                    style={[styles.input, styles.flex2]}
-                    value={city}
-                    onChangeText={setCity}
-                    placeholder="City"
-                    placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    textContentType="addressCity"
-                    returnKeyType="next"
-                    onSubmitEditing={() => setShowStates(true)}
-                  />
-                  <TouchableOpacity
-                    style={[styles.input, styles.flex1, styles.stateButton]}
-                    onPress={() => openStates()}
-                  >
-                    <Text style={styles.stateButtonText}>
-                      {state || 'State'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.row}>
-                  <View style={styles.zipContainer}>
+                  <View style={styles.pwWrap}>
                     <TextInput
-                      style={styles.input}
-                      value={zip}
-                      onChangeText={setZip}
-                      placeholder="ZIP"
+                      style={styles.pwInput}
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder="Password"
                       placeholderTextColor={colors.textSecondary}
-                      keyboardType="number-pad"
+                      secureTextEntry={!showPassword}
                       autoCapitalize="none"
                       autoCorrect={false}
-                      maxLength={10}
-                      textContentType="postalCode"
-                      returnKeyType="next"
-                      onSubmitEditing={() => openStates()}
+                      textContentType="newPassword"
+                      autoComplete="new-password"
                     />
-                  </View>
-                  <View style={styles.phoneContainer}>
-                    <TextInput
-                      style={styles.input}
-                      value={phone}
-                      onChangeText={(text) => {
-                        const formatted = formatPhoneNumber(text);
-                        setPhone(formatted);
-                      }}
-                      placeholder="Phone"
-                      placeholderTextColor={colors.textSecondary}
-                      keyboardType="phone-pad"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      maxLength={14}
-                      textContentType="telephoneNumber"
-                      autoComplete="tel"
-                      returnKeyType="done"
-                    />
-                  </View>
-                </View>
-
-                {/* Allergens */}
-                <Text style={styles.sectionTitle}>Allergens</Text>
-                {loadingTaxonomies ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  </View>
-                ) : (
-                  <View style={styles.chipGrid}>
-                    {allergens.map((a) => {
-                      const selected = selectedAllergenIds.has(a.id);
-                      return (
-                        <TouchableOpacity
-                          key={a.id}
-                          style={[styles.chip, selected && styles.chipSelected]}
-                          onPress={() =>
-                            toggle(
-                              selectedAllergenIds,
-                              a.id,
-                              setSelectedAllergenIds
-                            )
-                          }
-                        >
-                          <Text
-                            style={[
-                              styles.chipText,
-                              selected && styles.chipTextSelected,
-                            ]}
-                          >
-                            {a.name}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                )}
-
-                {/* Dietary Preferences */}
-                <Text style={styles.sectionTitleDietary}>
-                  Dietary Preferences
-                </Text>
-                {loadingTaxonomies ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color={colors.dietary} />
-                  </View>
-                ) : (
-                  <View style={styles.chipGrid}>
-                    {dietPrefs.map((d) => {
-                      const selected = selectedPrefIds.has(d.id);
-                      return (
-                        <TouchableOpacity
-                          key={d.id}
-                          style={[
-                            styles.chip,
-                            selected && styles.chipSelectedDietary,
-                          ]}
-                          onPress={() =>
-                            toggle(selectedPrefIds, d.id, setSelectedPrefIds)
-                          }
-                        >
-                          <Text
-                            style={[
-                              styles.chipText,
-                              selected && styles.chipTextSelected,
-                            ]}
-                          >
-                            {d.name}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                )}
-
-                {/* Collapsible Consent Section */}
-                <TouchableOpacity
-                  style={styles.consentToggle}
-                  onPress={() => setShowConsent(!showConsent)}
-                >
-                  <Text style={styles.consentToggleText}>
-                    Consent {showConsent ? '▲' : '▼'}
-                  </Text>
-                </TouchableOpacity>
-
-                {showConsent && (
-                  <Text style={styles.tosText}>
-                    By tapping "Create Account", I acknowledge that I have read
-                    and agree to the{' '}
-                    <Text
-                      style={styles.tosLink}
-                      onPress={() =>
-                        Linking.openURL(
-                          'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
-                        )
-                      }
+                    <TouchableOpacity
+                      style={styles.eyeButton}
+                      onPress={() => setShowPassword((v) => !v)}
                     >
-                      Privacy Policy
-                    </Text>{' '}
-                    and{' '}
-                    <Text
-                      style={styles.tosLink}
-                      onPress={() =>
-                        Linking.openURL(
-                          'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
-                        )
-                      }
-                    >
-                      Terms of Service
-                    </Text>
-                    . I also consent to being contacted by SmartBites™ for
-                    account-related communications using the information I
-                    provide.
-                  </Text>
-                )}
-
-                <TouchableOpacity
-                  style={[styles.button, loading && styles.buttonDisabled]}
-                  onPress={handleRegister}
-                  disabled={loading}
-                >
-                  <Text style={styles.buttonText}>
-                    {loading ? 'Creating Account...' : 'Create Account'}
-                  </Text>
-                </TouchableOpacity>
-
-                <View style={styles.footer}>
-                  <Text style={styles.footerText}>
-                    Already have an account?{' '}
-                  </Text>
-                  <Link href="/(auth)/login" asChild>
-                    <TouchableOpacity>
-                      <Text style={styles.footerLink}>Sign In</Text>
+                      {showPassword ? (
+                        <EyeOff size={18} color={colors.textSecondary} />
+                      ) : (
+                        <Eye size={18} color={colors.textSecondary} />
+                      )}
                     </TouchableOpacity>
-                  </Link>
+                  </View>
+
+                  <View style={styles.pwWrap}>
+                    <TextInput
+                      style={styles.pwInput}
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      placeholder="Confirm password"
+                      placeholderTextColor={colors.textSecondary}
+                      secureTextEntry={!showConfirmPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      textContentType="password"
+                      autoComplete="off"
+                    />
+                    <TouchableOpacity
+                      style={styles.eyeButton}
+                      onPress={() => setShowConfirmPassword((v) => !v)}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff size={18} color={colors.textSecondary} />
+                      ) : (
+                        <Eye size={18} color={colors.textSecondary} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Names */}
+                  <View style={styles.row}>
+                    <TextInput
+                      style={[styles.input, styles.flex2]}
+                      value={firstName}
+                      onChangeText={setFirstName}
+                      placeholder="First name"
+                      placeholderTextColor={colors.textSecondary}
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                      textContentType="givenName"
+                      autoComplete="given-name"
+                    />
+                    <TextInput
+                      style={[styles.input, styles.flex3]}
+                      value={lastName}
+                      onChangeText={setLastName}
+                      placeholder="Last name"
+                      placeholderTextColor={colors.textSecondary}
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                      textContentType="familyName"
+                      autoComplete="family-name"
+                    />
+                  </View>
+                  {/* Address */}
+                  <TextInput
+                    style={styles.input}
+                    value={address1}
+                    onChangeText={setAddress1}
+                    placeholder="Address line 1"
+                    placeholderTextColor={colors.textSecondary}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    textContentType="fullStreetAddress"
+                    autoComplete="street-address"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    value={address2}
+                    onChangeText={setAddress2}
+                    placeholder="Address line 2 (optional)"
+                    placeholderTextColor={colors.textSecondary}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                  />
+                  <View style={styles.row}>
+                    <TextInput
+                      style={[styles.input, styles.flex2]}
+                      value={city}
+                      onChangeText={setCity}
+                      placeholder="City"
+                      placeholderTextColor={colors.textSecondary}
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                      textContentType="addressCity"
+                      returnKeyType="next"
+                      onSubmitEditing={() => setShowStates(true)}
+                    />
+                    <TouchableOpacity
+                      style={[styles.input, styles.flex1, styles.stateButton]}
+                      onPress={() => openStates()}
+                    >
+                      <Text style={styles.stateButtonText}>
+                        {state || 'State'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.row}>
+                    <View style={styles.zipContainer}>
+                      <TextInput
+                        style={styles.input}
+                        value={zip}
+                        onChangeText={setZip}
+                        placeholder="ZIP"
+                        placeholderTextColor={colors.textSecondary}
+                        keyboardType="number-pad"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        maxLength={10}
+                        textContentType="postalCode"
+                        returnKeyType="next"
+                        onSubmitEditing={() => openStates()}
+                      />
+                    </View>
+                    <View style={styles.phoneContainer}>
+                      <TextInput
+                        style={styles.input}
+                        value={phone}
+                        onChangeText={(text) => {
+                          const formatted = formatPhoneNumber(text);
+                          setPhone(formatted);
+                        }}
+                        placeholder="Phone"
+                        placeholderTextColor={colors.textSecondary}
+                        keyboardType="phone-pad"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        maxLength={14}
+                        textContentType="telephoneNumber"
+                        autoComplete="tel"
+                        returnKeyType="done"
+                      />
+                    </View>
+                  </View>
+
+                  {/* Allergens */}
+                  <Text style={styles.sectionTitle}>Allergens</Text>
+                  {loadingTaxonomies ? (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size="small" color={colors.primary} />
+                    </View>
+                  ) : (
+                    <View style={styles.chipGrid}>
+                      {allergens.map((a) => {
+                        const selected = selectedAllergenIds.has(a.id);
+                        return (
+                          <TouchableOpacity
+                            key={a.id}
+                            style={[styles.chip, selected && styles.chipSelected]}
+                            onPress={() =>
+                              toggle(
+                                selectedAllergenIds,
+                                a.id,
+                                setSelectedAllergenIds
+                              )
+                            }
+                          >
+                            <Text
+                              style={[
+                                styles.chipText,
+                                selected && styles.chipTextSelected,
+                              ]}
+                            >
+                              {a.name}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
+
+                  {/* Dietary Preferences */}
+                  <Text style={styles.sectionTitleDietary}>
+                    Dietary Preferences
+                  </Text>
+                  {loadingTaxonomies ? (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size="small" color={colors.dietary} />
+                    </View>
+                  ) : (
+                    <View style={styles.chipGrid}>
+                      {dietPrefs.map((d) => {
+                        const selected = selectedPrefIds.has(d.id);
+                        return (
+                          <TouchableOpacity
+                            key={d.id}
+                            style={[
+                              styles.chip,
+                              selected && styles.chipSelectedDietary,
+                            ]}
+                            onPress={() =>
+                              toggle(selectedPrefIds, d.id, setSelectedPrefIds)
+                            }
+                          >
+                            <Text
+                              style={[
+                                styles.chipText,
+                                selected && styles.chipTextSelected,
+                              ]}
+                            >
+                              {d.name}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
+
+                  {/* Collapsible Consent Section */}
+                  <TouchableOpacity
+                    style={styles.consentToggle}
+                    onPress={() => setShowConsent(!showConsent)}
+                  >
+                    <Text style={styles.consentToggleText}>
+                      Consent {showConsent ? '▲' : '▼'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {showConsent && (
+                    <Text style={styles.tosText}>
+                      By tapping "Create Account", I acknowledge that I have read
+                      and agree to the{' '}
+                      <Text
+                        style={styles.tosLink}
+                        onPress={() =>
+                          Linking.openURL(
+                            'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                          )
+                        }
+                      >
+                        Privacy Policy
+                      </Text>{' '}
+                      and{' '}
+                      <Text
+                        style={styles.tosLink}
+                        onPress={() =>
+                          Linking.openURL(
+                            'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                          )
+                        }
+                      >
+                        Terms of Service
+                      </Text>
+                      . I also consent to being contacted by SmartBites™ for
+                      account-related communications using the information I
+                      provide.
+                    </Text>
+                  )}
+
+                  <TouchableOpacity
+                    style={[styles.button, loading && styles.buttonDisabled]}
+                    onPress={handleRegister}
+                    disabled={loading}
+                  >
+                    <Text style={styles.buttonText}>
+                      {loading ? 'Creating Account...' : 'Create Account'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <View style={styles.footer}>
+                    <Text style={styles.footerText}>
+                      Already have an account?{' '}
+                    </Text>
+                    <Link href="/(auth)/login" asChild>
+                      <TouchableOpacity>
+                        <Text style={styles.footerLink}>Sign In</Text>
+                      </TouchableOpacity>
+                    </Link>
+                  </View>
                 </View>
               </View>
             </ScrollView>

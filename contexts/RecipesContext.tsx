@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getStorageImageUrl } from '@/lib/supabase';
 import { persistRecipeImage } from '@/services/recipeService';
@@ -55,8 +55,15 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   const { userAllergens } = useAllergens();
   const { userDietaryPrefs } = useDietary();
 
-  const favoriteRecipes = savedRecipes.filter(recipe => recipe.isFavorite);
-  const recentRecipes = savedRecipes.filter(recipe => !recipe.isFavorite).slice(0, 5);
+  const favoriteRecipes = useMemo(() => 
+    savedRecipes.filter(recipe => recipe.isFavorite), 
+    [savedRecipes]
+  );
+  
+  const recentRecipes = useMemo(() => 
+    savedRecipes.filter(recipe => !recipe.isFavorite).slice(0, 5), 
+    [savedRecipes]
+  );
 
   const fetchRecipes = async () => {
     if (!user) return;
@@ -345,27 +352,31 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       });
 
       // Check if a recipe with this search key already exists
-      const { data: existingRecipe, error: checkError } = await supabase
+      const { data: existingRecipes, error: checkError } = await supabase
         .from('recipes')
-        .select('id')
-        .eq('search_key', searchKey)
-        .maybeSingle();
+        .select('id, image')
+        .eq('search_key', searchKey);
 
       if (checkError) throw checkError;
 
-      if (existingRecipe) {
+      if (existingRecipes && existingRecipes.length > 0) {
         // Recipe already exists, just create user association
+        const existingRecipe = existingRecipes[0];
+        console.log('Recipe already exists, creating user association:', existingRecipe.id);
+        
         const { error: userRecipeError } = await supabase
           .from('user_recipes')
-          .insert([{
+          .upsert([{
             user_id: user.id,
             recipe_id: existingRecipe.id,
             actions: [],
-          }]);
+          }], {
+            onConflict: 'user_id,recipe_id'
+          });
 
         if (userRecipeError) throw userRecipeError;
         
-        // Fetch the existing recipe to add to local state
+        // Refresh recipes to get the newly associated recipe
         await fetchRecipes();
         return;
       }
@@ -427,7 +438,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
           attempts++;
         }
       } catch (imageError) {
-        console.error('🖼️ Error persisting image:', imageError);
+        console.warn('🖼️ Error persisting image (continuing without image):', imageError);
       }
 
       // Insert allergen relationships based on user's selected allergens
@@ -525,28 +536,21 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       });
 
       // Check if a recipe with this search key already exists
-      const { data: existingRecipes, error: searchError } = await supabase
+      const { data: existingRecipes, error: checkError } = await supabase
         .from('recipes')
-        .select('id')
+        .select('id, image')
         .eq('search_key', searchKey);
 
-      if (searchError) throw searchError;
+      if (checkError) throw checkError;
 
       let recipeId: string;
       let finalImageFilename = null;
 
       if (existingRecipes && existingRecipes.length > 0) {
-        // Recipe already exists, use the existing one
+        // Recipe already exists, use the existing one (no new image generation)
         recipeId = existingRecipes[0].id;
+        finalImageFilename = existingRecipes[0].image;
         console.log('Using existing recipe for favorite:', recipeId);
-        
-        // Get the existing image filename
-        const { data: existingRecipe } = await supabase
-          .from('recipes')
-          .select('image')
-          .eq('id', recipeId)
-          .single();
-        finalImageFilename = existingRecipe?.image;
       } else {
         // Recipe doesn't exist, create a new one
         const { data: recipeData, error: recipeError } = await supabase
@@ -595,14 +599,17 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
               .eq('id', recipeId)
               .single();
 
-            searchQuery: recipe.searchQuery,
-
+            if (!error && updatedRecipe?.image) {
+              finalImageFilename = updatedRecipe.image;
+              break;
+            }
+            
             // Wait 1 second before checking again
             await new Promise(resolve => setTimeout(resolve, 1000));
             attempts++;
           }
         } catch (imageError) {
-          console.error('🖼️ Error persisting favorite image:', imageError);
+          console.warn('🖼️ Error persisting favorite image (continuing without image):', imageError);
         }
 
         // Insert allergen relationships based on what OpenAI returned for this recipe
@@ -654,14 +661,16 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Then, create the user-recipe relationship with favorite action
+      // Create the user-recipe relationship with favorite action
       const { error: userRecipeError } = await supabase
         .from('user_recipes')
-        .insert([{
+        .upsert([{
           user_id: user.id,
           recipe_id: recipeId,
           actions: ['favorite'],
-        }]);
+        }], {
+          onConflict: 'user_id,recipe_id'
+        });
 
       if (userRecipeError) throw userRecipeError;
       
