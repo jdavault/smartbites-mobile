@@ -24,7 +24,7 @@ import {
 } from 'lucide-react-native';
 
 const SUPPORT_EMAIL =
-  process.env.EXPO_PUBLIC_SUPPORT_EMAIL ?? 'support@smartbites.cooking';
+  process.env.EXPO_PUBLIC_SUPPORT_EMAIL ?? 'support@smartbites.food';
 const SUPPORT_PHONE = process.env.EXPO_PUBLIC_SUPPORT_PHONE ?? '623-220-9724';
 // Strip spaces/dashes/parentheses for tel: link
 const SUPPORT_PHONE_TEL = SUPPORT_PHONE.replace(/[^\d+]/g, '');
