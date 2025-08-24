@@ -168,33 +168,39 @@ export class RecipeService {
         const beforeAllergenFilter = filteredRecipes.length;
         filteredRecipes = filteredRecipes.filter(recipe => {
           const recipeAllergenIds = recipe.recipe_allergens?.map((ra: any) => ra.allergen_id) || [];
-          // Show recipes that DON'T contain any of the user's allergens
-          // If user is allergic to Eggs, don't show recipes that contain Eggs
-          const shouldShow = !allergenIds.some(userAllergenId => recipeAllergenIds.includes(userAllergenId));
+          // Show recipes where ALL user allergens are avoided by the recipe
+          // User's allergens must be a subset of recipe's avoided allergens
+          const allUserAllergensAvoided = allergenIds.every(userAllergenId => 
+            recipeAllergenIds.includes(userAllergenId)
+          );
           
-          if (!shouldShow) {
-            console.log(`🔍 Filtering out recipe "${recipe.title}" - contains user allergens:`, 
-              recipeAllergenIds.filter(id => allergenIds.includes(id)));
+          if (!allUserAllergensAvoided) {
+            const missingAllergens = allergenIds.filter(id => !recipeAllergenIds.includes(id));
+            console.log(`🔍 Filtering out recipe "${recipe.title}" - doesn't avoid all user allergens. Missing:`, missingAllergens);
           }
           
-          return shouldShow;
+          return allUserAllergensAvoided;
         });
         console.log(`🔍 After allergen filter: ${filteredRecipes.length} (filtered out ${beforeAllergenFilter - filteredRecipes.length})`);
       }
 
-      // Filter by dietary preferences if user has any - show recipes that match at least one preference
+      // Filter by dietary preferences - show recipes that support ALL user preferences
       if (dietaryIds.length > 0) {
         const beforeDietaryFilter = filteredRecipes.length;
         filteredRecipes = filteredRecipes.filter(recipe => {
           const recipeDietaryIds = recipe.recipe_dietary_prefs?.map((rd: any) => rd.dietary_pref_id) || [];
-          // Show recipes that have at least one of the user's dietary preferences
-          const hasMatch = dietaryIds.some(userPrefId => recipeDietaryIds.includes(userPrefId));
+          // Show recipes where ALL user dietary preferences are supported
+          // User's dietary prefs must be a subset of recipe's supported prefs
+          const allUserPrefsSupported = dietaryIds.every(userPrefId => 
+            recipeDietaryIds.includes(userPrefId)
+          );
           
-          if (!hasMatch) {
-            console.log(`🔍 Filtering out recipe "${recipe.title}" - no dietary match. Recipe has:`, recipeDietaryIds, 'User wants:', dietaryIds);
+          if (!allUserPrefsSupported) {
+            const missingPrefs = dietaryIds.filter(id => !recipeDietaryIds.includes(id));
+            console.log(`🔍 Filtering out recipe "${recipe.title}" - doesn't support all user prefs. Missing:`, missingPrefs);
           }
           
-          return hasMatch;
+          return allUserPrefsSupported;
         });
         console.log(`🔍 After dietary filter: ${filteredRecipes.length} (filtered out ${beforeDietaryFilter - filteredRecipes.length})`);
       } else {
