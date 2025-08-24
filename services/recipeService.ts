@@ -32,7 +32,6 @@ export interface UserRecipeData {
   nutritionInfo: string;
   image?: string;
   allergensIncluded: string;
-  allergensIncluded?: string[];
   isFavorite: boolean;
   actions: string[];
   createdAt: string;
@@ -216,7 +215,7 @@ export class RecipeService {
         notes: recipe.notes || '',
         nutritionInfo: recipe.nutrition_info || '',
         image: recipe.image,
-        allergensIncluded: item.allergens_included || '',
+        allergensIncluded: recipe.allergens_included || '',
         isFavorite: false,
         actions: [],
         createdAt: recipe.created_at,
