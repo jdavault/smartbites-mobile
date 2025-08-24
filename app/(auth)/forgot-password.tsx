@@ -492,7 +492,7 @@ const getStyles = (theme: ThemeColors) =>
     /** 88% centered column */
     formCol: {
       alignSelf: 'center',
-      width: '88%',
+      width: '100%',
       maxWidth: 420,
     },
 
