@@ -16,6 +16,7 @@ interface GeneratedRecipe {
   dietaryPrefs: string[];
   notes: string;
   nutritionInfo: string;
+  allergensIncluded: string[];
 }
 
 export type ChatMessage = {
@@ -411,5 +412,6 @@ function generateMockRecipe(
     dietaryPrefs: dietaryPrefs,
     notes: 'Feel free to substitute ingredients based on your preferences.',
     nutritionInfo: 'Approximately 250 calories per serving',
+    allergensIncluded: [],
   };
 }

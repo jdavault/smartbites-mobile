@@ -22,6 +22,7 @@ export interface Recipe {
   dietaryPrefs: string[];
   notes: string;
   nutritionInfo: string;
+  allergensIncluded?: string[];
   image?: string;
   isFavorite?: boolean;
   createdAt?: string;
