@@ -367,6 +367,15 @@ export default function RegisterScreen() {
 
         form: { gap: 8 },
         row: { flexDirection: 'row', gap: 8 },
+        nameRow: { 
+          flexDirection: 'row', 
+          gap: 8,
+          flexWrap: 'wrap', // Allow wrapping on small screens
+        },
+        nameInput: {
+          minWidth: 140, // Minimum width before wrapping
+          flex: 1, // Grow to fill available space
+        },
         flex1: { flex: 1 },
         flex2: { flex: 2 },
         flex3: { flex: 1.5 },
@@ -799,9 +808,9 @@ export default function RegisterScreen() {
                   </View>
 
                   {/* Names */}
-                  <View style={styles.row}>
+                  <View style={[styles.row, styles.nameRow]}>
                     <TextInput
-                      style={[styles.input, styles.flex2]}
+                      style={[styles.input, styles.nameInput]}
                       value={firstName}
                       onChangeText={setFirstName}
                       placeholder="First name"
@@ -812,7 +821,7 @@ export default function RegisterScreen() {
                       autoComplete="given-name"
                     />
                     <TextInput
-                      style={[styles.input, styles.flex3]}
+                      style={[styles.input, styles.nameInput]}
                       value={lastName}
                       onChangeText={setLastName}
                       placeholder="Last name"
