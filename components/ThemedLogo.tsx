@@ -5,6 +5,7 @@ import DarkLogo from '@/assets/images/smart-bites-logo.png';
 import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 
 const ThemedLogo: React.FC = () => {
+}
 interface ThemedLogoProps {
   width?: number;
   height?: number;
