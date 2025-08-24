@@ -61,6 +61,12 @@ export default function RecipeCard({
   };
 
   const handleCardPress = () => {
+    // For search results (showSaveButton), don't navigate - let user use save buttons
+    if (showSaveButton) {
+      return;
+    }
+    
+    // For saved/featured recipes, navigate to details
     if (recipe.id) {
       router.push(`/recipe/${recipe.id}`);
     }
