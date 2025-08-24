@@ -215,13 +215,13 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
       gap: 6,
     },
     logoContainer: {
-      marginTop: width <= 768 ? height * 0.04 : height * 0.08,
+      marginTop: width <= 768 ? height * 0.01 : height * 0.08,
       alignItems: 'center',
     },
     subtitleTight: {
       textAlign: 'center',
-      marginTop: width <= 768 ? -10 : 6, // reduce space on small mobile
-      marginBottom: 8, // keep it close to the middle group
+      marginTop: width <= 768 ? -20 : 6, // reduce space on small mobile
+      marginBottom: width <= 768 ? 4 : 8, // keep it close to the middle group
       fontFamily: 'Lato-Regular',
       fontSize: 18,
       color: colors.textSecondary,
