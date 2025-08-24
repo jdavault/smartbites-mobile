@@ -21,7 +21,7 @@ import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import { Spacing } from '@/constants/Spacing';
 import { Fonts, FontSizes } from '@/constants/Typography';
 import ThemedText from '@/components/ThemedText';
-import { supabase } from '@/lib/supabase';
+import { AuthService } from '@/services/authService';
 
 type ModalInfo = {
   visible: boolean;
@@ -88,7 +88,7 @@ export default function ResetPasswordScreen() {
         let sessionEstablished = false;
 
         if (code) {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(initialUrl);
+          const { data, error } = await AuthService.exchangeCodeForSession(initialUrl);
           if (error) {
             console.error('Code exchange error:', error);
             setHeaderStatus('This reset link is invalid or expired. Please request a new password reset.');
@@ -101,10 +101,7 @@ export default function ResetPasswordScreen() {
             setHeaderStatus('Enter a new password to complete your reset.');
           }
         } else if (access_token && refresh_token) {
-          const { data, error } = await supabase.auth.setSession({
-            access_token,
-            refresh_token,
-          });
+          const { data, error } = await AuthService.setSession(access_token, refresh_token);
           if (error) {
             console.error('Set session error:', error);
             setHeaderStatus('This reset link is invalid or expired. Please request a new password reset.');
@@ -120,14 +117,14 @@ export default function ResetPasswordScreen() {
 
         // Only check session if no tokens were processed
         if (!sessionEstablished) {
-          const { data, error: getErr } = await supabase.auth.getSession();
+          const { session, error: getErr } = await AuthService.getSession();
           if (getErr) {
             console.error('Get session error:', getErr);
             setHeaderStatus('Could not validate session. Please request a new password reset.');
             setMode('request');
             return;
           }
-          if (!data.session) {
+          if (!session) {
             setHeaderStatus('This reset link is invalid or expired. Please request a new password reset from the Forgot Password page.');
             setMode('request');
           } else {
@@ -156,7 +153,7 @@ export default function ResetPasswordScreen() {
         const { code, access_token, refresh_token } = parseTokensFromUrl(url);
         
         if (code) {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(url);
+          const { data, error } = await AuthService.exchangeCodeForSession(url);
           if (error) {
             setHeaderStatus('This reset link is invalid or expired. Please request a new password reset.');
             setMode('request');
@@ -197,11 +194,11 @@ export default function ResetPasswordScreen() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error } = await AuthService.updatePassword(password);
       if (error) throw error;
 
       // Optional: end the recovery session so they sign in fresh in the app
-      await supabase.auth.signOut();
+      await AuthService.signOut();
 
       // success modal; no redirects here
       setModalInfo({

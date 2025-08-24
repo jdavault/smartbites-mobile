@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
-import { supabase } from '@/lib/supabase';
+import { AuthService } from '@/services/authService';
 import type { User, Session } from '@supabase/supabase-js';
 
 import { makeRedirectUri } from 'expo-auth-session';
@@ -73,10 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleGoogleSignIn = async (idToken?: string) => {
     if (!idToken) return;
     try {
-      const { error } = await supabase.auth.signInWithIdToken({
-        provider: 'google',
-        token: idToken,
-      });
+      const { error } = await AuthService.signInWithIdToken('google', idToken);
       if (error) throw error;
     } catch (error) {
       console.error('Google sign-in error:', error);
@@ -89,10 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
+        const { session, error } = await AuthService.getSession();
         if (!mounted) return;
 
         if (error) {
@@ -100,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Clear invalid refresh tokens
           if (error.message?.includes('refresh_token_not_found') || 
               error.message?.includes('Invalid Refresh Token')) {
-            await supabase.auth.signOut();
+            await AuthService.signOut();
           }
           setUser(null);
           setSession(null);
@@ -117,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })();
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: sub } = AuthService.onAuthStateChange((_event, s) => {
       if (!mounted) return;
       setUser(s?.user ?? null);
       setSession(s ?? null);
@@ -145,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       try {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(url);
+        const { data, error } = await AuthService.exchangeCodeForSession(url);
         if (error) {
           console.warn('exchangeCodeForSession (web) error:', error);
         } else if (data?.session) {
@@ -170,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const handleDeepLink = async ({ url }: { url: string }) => {
       try {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(url);
+        const { data, error } = await AuthService.exchangeCodeForSession(url);
         if (error) {
           console.warn('exchangeCodeForSession (native) error:', error);
         } else if (data?.session) {
@@ -198,44 +192,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     additionalData?: any
   ) => {
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await AuthService.signUp({
       email,
       password,
-      options: {
-        data: additionalData,
-        // Set this if you want confirmation emails to open your app:
-        // emailRedirectTo: redirectUri,
-      },
+      firstName: additionalData?.first_name || '',
+      lastName: additionalData?.last_name || '',
     });
-
-    // Create profile row immediately (if user object is present)
-    if (!error && data.user) {
-      try {
-        await supabase.from('user_profiles').insert({
-          user_id: data.user.id,
-          first_name: additionalData?.first_name || '',
-          last_name: additionalData?.last_name || '',
-        });
-      } catch (profileError) {
-        console.error('Error creating user profile:', profileError);
-      }
-    }
 
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) console.error('signIn error:', error);
-      return { error };
-    } catch (err) {
-      console.error('Unexpected signIn error:', err);
-      return { error: err };
-    }
+    return await AuthService.signIn(email, password);
   };
 
   const signOut = async () => {
@@ -245,7 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(null);
 
       // Sign out from Supabase (if there was a session)
-      const { error } = await supabase.auth.signOut();
+      const { error } = await AuthService.signOut();
       if (error) console.error('signOut error:', error);
 
       // Web-only: clear browser storage/cookies (optional but thorough)

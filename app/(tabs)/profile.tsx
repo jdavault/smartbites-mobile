@@ -22,7 +22,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import { useAllergens, ALLERGENS } from '@/contexts/AllergensContext';
 import { useDietary, DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
-import { supabase } from '@/lib/supabase';
+import { UserService } from '@/services/userService';
 import {
   Moon,
   Sun,
@@ -107,33 +107,18 @@ export default function ProfileScreen() {
 
   const loadProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .maybeSingle();
-
-      if (error) {
-        if (error.code === '42P01') {
-          console.warn(
-            'Database tables not created yet. Please run the migration.'
-          );
-          return;
-        }
-        throw error;
-      }
-
-      if (data) {
+      const profileData = await UserService.getUserProfile(user?.id!);
+      if (profileData) {
         setProfile((prev) => ({
           ...prev,
-          firstName: data.first_name || '',
-          lastName: data.last_name || '',
-          address1: data.address1 || '',
-          address2: data.address2 || '',
-          city: data.city || '',
-          state: data.state || '',
-          zip: data.zip || '',
-          phone: data.phone ? formatPhoneNumber(data.phone) : '',
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          address1: profileData.address1 || '',
+          address2: profileData.address2 || '',
+          city: profileData.city || '',
+          state: profileData.state || '',
+          zip: profileData.zip || '',
+          phone: profileData.phone ? formatPhoneNumber(profileData.phone) : '',
         }));
       }
     } catch (err) {
@@ -156,22 +141,17 @@ export default function ProfileScreen() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.from('user_profiles').upsert(
-        {
-          user_id: user.id,
-          first_name: profile.firstName,
-          last_name: profile.lastName,
-          address1: profile.address1,
-          address2: profile.address2,
-          city: profile.city,
-          state: profile.state,
-          zip: profile.zip,
-          phone: profile.phone.replace(/\D/g, ''),
-        },
-        { onConflict: 'user_id' }
-      );
-
-      if (error) throw error;
+      await UserService.upsertUserProfile({
+        userId: user.id,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        address1: profile.address1,
+        address2: profile.address2,
+        city: profile.city,
+        state: profile.state,
+        zip: profile.zip,
+        phone: profile.phone.replace(/\D/g, ''),
+      });
 
       openModal({
         title: 'Profile Updated!',

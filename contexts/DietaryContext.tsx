@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { DietaryService } from '@/services/dietaryService';
 import { useAuth } from './AuthContext';
 
 export interface DietaryPref {
@@ -38,24 +38,7 @@ export function DietaryProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('user_dietary_prefs')
-        .select('dietary_pref')
-        .eq('user_id', user.id);
-
-      if (error) {
-        if (error.code === '42P01') {
-          console.warn(
-            'Database tables not created yet. Please run the migration.'
-          );
-          setUserDietaryPrefs([]);
-          setSelectedDiet([]);
-          return;
-        }
-        throw error;
-      }
-
-      const prefNames = data?.map((item) => item.dietary_pref) || [];
+      const prefNames = await DietaryService.getUserDietaryPrefs(user.id);
       const prefObjects = DIETARY_PREFERENCES.filter((pref) =>
         prefNames.includes(pref.name)
       );
@@ -87,22 +70,7 @@ export function DietaryProvider({ children }: { children: React.ReactNode }) {
       setSelectedDiet(prefs);
       setUserDietaryPrefs(prefs);
 
-      // Remove all existing preferences
-      await supabase.from('user_dietary_prefs').delete().eq('user_id', user.id);
-
-      // Add new preferences
-      if (prefs.length > 0) {
-        const prefsData = prefs.map((pref) => ({
-          user_id: user.id,
-          dietary_pref: pref.name,
-        }));
-
-        const { error } = await supabase
-          .from('user_dietary_prefs')
-          .insert(prefsData);
-
-        if (error) throw error;
-      }
+      await DietaryService.setUserDietaryPrefs(user.id, prefs);
     } catch (error) {
       console.error('Error updating dietary preferences:', error);
       // Revert optimistic update by refetching

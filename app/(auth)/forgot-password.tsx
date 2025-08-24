@@ -20,8 +20,7 @@ import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import { Spacing } from '@/constants/Spacing';
 import { Fonts, FontSizes } from '@/constants/Typography';
 import ThemedText from '@/components/ThemedText';
-import { supabase } from '@/lib/supabase';
-import { supabaseEmail } from '@/lib/supabase';
+import { AuthService } from '@/services/authService';
 
 type ModalInfo = {
   visible: boolean;
@@ -98,14 +97,11 @@ export default function ForgotPasswordScreen() {
           parseTokensFromUrl(initialUrl);
 
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          const { error } = await AuthService.exchangeCodeForSession(code);
           if (error) throw error;
           setMode('reset');
         } else if (access_token && refresh_token) {
-          const { error } = await supabase.auth.setSession({
-            access_token,
-            refresh_token,
-          });
+          const { error } = await AuthService.setSession(access_token, refresh_token);
           if (error) throw error;
           setMode('reset');
         } else {
@@ -152,12 +148,7 @@ export default function ForgotPasswordScreen() {
 
     setSending(true);
     try {
-      const { error } = await supabaseEmail.auth.resetPasswordForEmail(
-        trimmed,
-        {
-          redirectTo: RESET_REDIRECT, // dev: http://localhost:8081/reset-password | prod: https://smartbites.food/reset-password
-        }
-      );
+      const { error } = await AuthService.resetPasswordForEmail(trimmed, RESET_REDIRECT);
       if (error) throw error;
 
       setModalInfo({
@@ -211,11 +202,11 @@ export default function ForgotPasswordScreen() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error } = await AuthService.updatePassword(password);
       if (error) throw error;
 
       // Optional: Sign out recovery session so user signs in fresh
-      await supabase.auth.signOut();
+      await AuthService.signOut();
 
       setModalInfo({
         visible: true,

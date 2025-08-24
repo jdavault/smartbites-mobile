@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { AllergenService } from '@/services/allergenService';
 import { useAuth } from './AuthContext';
 
 export interface Allergen {
@@ -39,22 +39,7 @@ export function AllergensProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('user_allergens')
-        .select('allergen')
-        .eq('user_id', user.id);
-
-      if (error) {
-        if (error.code === '42P01') {
-          console.warn('Database tables not created yet. Please run the migration.');
-          setUserAllergens([]);
-          setSelectedAllergens([]);
-          return;
-        }
-        throw error;
-      }
-
-      const allergenNames = data?.map(item => item.allergen) || [];
+      const allergenNames = await AllergenService.getUserAllergens(user.id);
       const allergenObjects = ALLERGENS.filter(allergen => 
         allergenNames.includes(allergen.name)
       );
@@ -86,25 +71,7 @@ export function AllergensProvider({ children }: { children: React.ReactNode }) {
       setSelectedAllergens(allergens);
       setUserAllergens(allergens);
 
-      // Remove all existing allergens
-      await supabase
-        .from('user_allergens')
-        .delete()
-        .eq('user_id', user.id);
-
-      // Add new allergens
-      if (allergens.length > 0) {
-        const allergensData = allergens.map(allergen => ({
-          user_id: user.id,
-          allergen: allergen.name,
-        }));
-
-        const { error } = await supabase
-          .from('user_allergens')
-          .insert(allergensData);
-
-        if (error) throw error;
-      }
+      await AllergenService.setUserAllergens(user.id, allergens);
     } catch (error) {
       console.error('Error updating allergens:', error);
       // Revert optimistic update by refetching
