@@ -258,27 +258,30 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
     storeButtonsContainer: {
       flexDirection: 'row',
       gap: Spacing.md,
-      marginBottom: Platform.OS === 'web' ? (width <= 768 ? 4 : Spacing.sm) : Spacing.lg,
+      marginBottom: Platform.OS === 'web' ? Spacing.sm : Spacing.lg,
       flexWrap: 'wrap',
       justifyContent: 'center',
     },
     storeButton: {
-      paddingVertical: Platform.OS === 'web' ? (width <= 768 ? 8 : 12) : Spacing.md,
-      paddingHorizontal: Platform.OS === 'web' ? (width <= 768 ? 12 : 16) : Spacing.lg,
+      paddingVertical: width <= 768 ? 10 : Spacing.md,
+      paddingHorizontal: width <= 768 ? 14 : Spacing.lg,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: colors.border,
-      minWidth: Platform.OS === 'web' ? (width <= 768 ? 120 : 140) : 160,
+      minWidth: width <= 768 ? 130 : 160,
       alignItems: 'center',
     },
     storeButtonText: {
       fontFamily: Fonts.body,
-      fontSize: Platform.OS === 'web' ? (width <= 768 ? 11 : 13) : FontSizes.sm,
+      fontSize: width <= 768 ? 12 : FontSizes.sm,
       textAlign: 'center',
     },
 
     // Native CTA buttons (Sign In / Create Account)
-    buttonContainer: { width: '100%', gap: 16 },
+    buttonContainer: { 
+      width: '100%', 
+      gap: width <= 768 ? 12 : 16 
+    },
     responsiveContainer: {
       width: '100%',
       maxWidth: 400,
@@ -286,14 +289,14 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
     },
     primaryButton: {
       backgroundColor: colors.primary,
-      paddingVertical: 16,
+      paddingVertical: width <= 768 ? 12 : 16,
       paddingHorizontal: 32,
       borderRadius: 12,
       alignItems: 'center',
     },
     secondaryButton: {
       backgroundColor: 'transparent',
-      paddingVertical: 16,
+      paddingVertical: width <= 768 ? 12 : 16,
       paddingHorizontal: 32,
       borderRadius: 12,
       alignItems: 'center',
@@ -301,12 +304,12 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
       borderColor: colors.primary,
     },
     primaryButtonText: {
-      fontSize: 16,
+      fontSize: width <= 768 ? 14 : 16,
       fontFamily: 'Inter-SemiBold',
       color: '#FFFFFF',
     },
     secondaryButtonText: {
-      fontSize: 16,
+      fontSize: width <= 768 ? 14 : 16,
       fontFamily: 'Inter-SemiBold',
       color: colors.primary,
     },
