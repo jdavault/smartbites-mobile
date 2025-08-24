@@ -2,7 +2,7 @@
   "expo": {
     "name": "SmartBites",
     "slug": "allergy-aware-recipe-finder",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "smartbites",
@@ -32,7 +32,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.allergy-aware-recipe-finder",
-      "buildNumber": "35",
+      "buildNumber": "45",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "This app uses the camera to scan items for allergy-friendly recipes.",
@@ -42,8 +42,15 @@
       }
     },
     "android": {
-      "package": "cooking.safeplate.allergyawarerecipefinder",
       "versionCode": 16,
+      "package": "cooking.safeplate.allergyawarerecipefinder",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": ["BROWSABLE", "DEFAULT"],
+          "data": [{ "scheme": "smartbites" }]
+        }
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon-android.png",
         "backgroundColor": "#f9f8f2"

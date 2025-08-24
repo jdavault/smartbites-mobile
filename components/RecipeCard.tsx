@@ -65,7 +65,7 @@ export default function RecipeCard({
     if (showSaveButton) {
       return;
     }
-    
+
     // For saved/featured recipes, navigate to details
     if (recipe.id) {
       router.push(`/recipe/${recipe.id}`);
@@ -261,7 +261,7 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       overflow: 'hidden',
       width: '100%',
-      height: 580,
+      height: 520,
     },
     previewCard: {
       backgroundColor: colors.surface,
@@ -379,9 +379,7 @@ const getStyles = (colors: ThemeColors) =>
     metadata: {
       flexDirection: 'row',
       gap: 16,
-      // keep this tight; tags follow below
       marginTop: 12,
-      marginBottom: 8,
     },
     previewMetadata: {
       flexDirection: 'row',
@@ -431,7 +429,7 @@ const getStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 8,
-      marginBottom: 20,
+      marginBottom: 5,
     },
     tag: {
       backgroundColor: '#8ec7df', // Colors.cerulean[200]
