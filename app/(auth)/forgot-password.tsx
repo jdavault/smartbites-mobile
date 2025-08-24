@@ -456,7 +456,7 @@ const getStyles = (theme: ThemeColors) =>
     },
     contentContainer: {
       width: '100%',
-      maxWidth: 768,
+      maxWidth: 1024,
       alignSelf: 'center',
     },
     backButton: {
