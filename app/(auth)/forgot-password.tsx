@@ -313,8 +313,7 @@ export default function ForgotPasswordScreen() {
               </Text>
             </View>
 
-            {/* 88% centered column */}
-            <View style={styles.formCol}>
+            <View style={styles.formContainer}>
               {mode === 'request' ? (
                 <>
                   <Text style={styles.label}>Email Address</Text>
@@ -489,11 +488,9 @@ const getStyles = (theme: ThemeColors) =>
       paddingHorizontal: Spacing.md,
     },
 
-    /** 88% centered column */
-    formCol: {
-      alignSelf: 'center',
+    formContainer: {
+      marginTop: Spacing.md,
       width: '100%',
-      maxWidth: 420,
     },
 
     label: {
