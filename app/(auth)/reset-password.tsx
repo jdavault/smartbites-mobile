@@ -361,7 +361,7 @@ export default function ResetPasswordScreen() {
               )}
             </View>
 
-            <View style={styles.formContainer}>
+            <View style={styles.form}>
               {/* New Password with eye toggle */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>New Password</Text>
@@ -517,7 +517,7 @@ const getStyles = (theme: ThemeColors) =>
       textAlign: 'center',
       paddingHorizontal: Spacing.md,
     },
-    formContainer: {
+    form: {
       marginTop: Spacing.md,
       width: '100%',
     },
