@@ -113,8 +113,6 @@ export class RecipeService {
 
       // Get allergen and dietary preference IDs from lookup tables
       let allergenIds: string[] = [];
-      // Get allergen and dietary preference IDs from lookup tables
-      let allergenIds: string[] = [];
       let dietaryIds: string[] = [];
       
       if (userAllergens.length > 0) {
@@ -154,19 +152,22 @@ export class RecipeService {
         query = query.not('id', 'in', `(${savedRecipeIds.join(',')})`);
       }
 
-      // Filter by allergens: recipe must avoid ALL user allergens (recipe_allergen_ids @> user_allergen_ids)
+      // Filter by allergens: recipe must avoid ALL user allergens (recipe.allergen_ids @> user.allergen_ids)
       if (allergenIds.length > 0) {
         query = query.contains('allergen_ids', allergenIds);
       }
 
-      // Filter by dietary preferences: recipe must support ALL user preferences (recipe_dietary_ids @> user_dietary_ids)
+      // Filter by dietary preferences: recipe must support ALL user preferences (recipe.dietary_ids @> user.dietary_ids)
       if (dietaryIds.length > 0) {
         query = query.contains('dietary_ids', dietaryIds);
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      if (!data || data.length === 0) return [];
+      if (!data || data.length === 0) {
+        console.log('🔍 No recipes found matching criteria');
+        return [];
+      }
 
       console.log('🔍 Filtered recipes from recipe_meta view:', data?.length || 0);
       
