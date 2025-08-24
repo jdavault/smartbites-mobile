@@ -221,7 +221,7 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
     subtitleTight: {
       textAlign: 'center',
       marginTop: width <= 768 ? -20 : -8, // reduce space below logo
-      marginBottom: width <= 768 ? 4 : 16, // more space before middle group
+      marginBottom: width <= 768 ? 4 : 8, // more space before middle group
       fontFamily: 'Lato-Regular',
       fontSize: 18,
       color: colors.textSecondary,
@@ -232,7 +232,7 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
     middleGroup: {
       width: '100%',
       alignItems: 'center',
-      marginTop: 3,
+      marginTop: -4,
     },
 
     // Web-only app store section
@@ -240,7 +240,7 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
       width: '100%',
       paddingHorizontal: Spacing.lg,
       alignItems: 'center',
-      marginTop: 1,
+      marginTop: -8,
       marginBottom: 8,
     },
     appStoreTitle: {
