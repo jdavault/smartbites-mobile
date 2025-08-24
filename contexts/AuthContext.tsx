@@ -128,14 +128,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (Platform.OS !== 'web') return;
 
-    // Only try to exchange if we see auth params present
+    // Check if this is a recovery link
     const url = window.location.href;
-    const hasAuthParams =
-      url.includes('code=') ||
-      url.includes('access_token=') ||
-      url.includes('refresh_token=');
+    const isRecoveryLink = url.includes('type=recovery');
+    const hasAuthParams = url.includes('code=') || url.includes('access_token=') || url.includes('refresh_token=');
 
     if (!hasAuthParams) return;
+
+    // If it's a recovery link, redirect to reset-password without exchanging tokens
+    if (isRecoveryLink) {
+      try {
+        window.location.href = '/reset-password' + window.location.hash;
+      } catch {}
+      return;
+    }
 
     (async () => {
       try {
@@ -163,6 +169,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (Platform.OS === 'web') return;
 
     const handleDeepLink = async ({ url }: { url: string }) => {
+      // Check if this is a recovery link
+      const isRecoveryLink = url.includes('type=recovery');
+      
+      // If it's a recovery link, redirect to reset-password without exchanging tokens
+      if (isRecoveryLink) {
+        router.replace('/reset-password');
+        return;
+      }
+
       try {
         const { data, error } = await AuthService.exchangeCodeForSession(url);
         if (error) {
@@ -178,7 +193,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // cold start
     Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink({ url });
+      if (url) {
+        const isRecoveryLink = url.includes('type=recovery');
+        if (isRecoveryLink) {
+          router.replace('/reset-password');
+        } else {
+          handleDeepLink({ url });
+        }
+      }
     });
 
     // foreground links
