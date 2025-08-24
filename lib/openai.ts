@@ -272,8 +272,8 @@ export async function generateRecipes(
           - Serving size must be exactly 4 servings (hard limit), and specified using Imperial units (e.g., "Serves 4" or "4 servings").
         Tags and Allergens
           - Tags are not allergens or dietary preferences — they are convenience/descriptor tags (e.g., BBQ, easy, quick, no-bake, one-pot).
-          - 'Allergens' is the list of ingredients that must be avoided due to allergies (e.g., Eggs, Fish, Milk, etc) in the recipe
-          - 'AllergensIncluded' is the list of allergens (from Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)) that are present in the recipe.
+          - Allergens is the list of ingredients that must be avoided due to allergies (e.g., Eggs, Fish, Milk, etc) in the recipe.
+          - AllergensIncluded is the list of allergens (from Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)) that are present in the recipe.
         Formatting & Output
           - Keep JSON syntactically valid (no trailing commas, no commentary).
           - Return only a valid JSON object in the exact required structure.
