@@ -316,6 +316,11 @@ export async function generateRecipes(
       .slice(0, 3)
       .map((r) => ({ ...r, searchQuery: query }));
 
+    console.log('🤖 OpenAI recipes generated:', JSON.stringify(result, null, 2));
+    result.forEach((recipe, index) => {
+      console.log(`🤖 Recipe ${index + 1} allergensIncluded:`, recipe.allergensIncluded);
+    });
+
     return result.length
       ? result
       : [generateMockRecipe(query, allergens, dietaryPrefs)];
