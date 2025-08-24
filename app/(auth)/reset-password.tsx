@@ -67,6 +67,7 @@ export default function ResetPasswordScreen() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fieldError, setFieldError] = useState<string | null>(null); // validation/API errors under inputs
+  const [mode, setMode] = useState<'request' | 'reset'>('request');
 
   const [modalInfo, setModalInfo] = useState<ModalInfo>({
     visible: false,
@@ -84,39 +85,97 @@ export default function ResetPasswordScreen() {
         const { code, access_token, refresh_token } =
           parseTokensFromUrl(initialUrl);
 
+        let sessionEstablished = false;
+
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) throw error;
+          const { data, error } = await supabase.auth.exchangeCodeForSession(initialUrl);
+          if (error) {
+            console.error('Code exchange error:', error);
+            setHeaderStatus('This reset link is invalid or expired. Please request a new password reset.');
+            setMode('request');
+            return;
+          }
+          if (data?.session) {
+            sessionEstablished = true;
+            setMode('reset');
+            setHeaderStatus('Enter a new password to complete your reset.');
+          }
         } else if (access_token && refresh_token) {
-          const { error } = await supabase.auth.setSession({
+          const { data, error } = await supabase.auth.setSession({
             access_token,
             refresh_token,
           });
-          if (error) throw error;
+          if (error) {
+            console.error('Set session error:', error);
+            setHeaderStatus('This reset link is invalid or expired. Please request a new password reset.');
+            setMode('request');
+            return;
+          }
+          if (data?.session) {
+            sessionEstablished = true;
+            setMode('reset');
+            setHeaderStatus('Enter a new password to complete your reset.');
+          }
         }
 
-        const { data, error: getErr } = await supabase.auth.getSession();
-        if (getErr) throw getErr;
-        if (!data.session) {
-          setHeaderStatus(
-            'This reset link is invalid or expired. Please request a new password reset from the Forgot Password page.'
-          );
-        } else {
-          setHeaderStatus('Enter a new password to complete your reset.');
-        }
-
-        if (Platform.OS === 'web') {
-          const cleanUrl = `${window.location.origin}${window.location.pathname}`;
-          window.history.replaceState({}, '', cleanUrl);
+        // Only check session if no tokens were processed
+        if (!sessionEstablished) {
+          const { data, error: getErr } = await supabase.auth.getSession();
+          if (getErr) {
+            console.error('Get session error:', getErr);
+            setHeaderStatus('Could not validate session. Please request a new password reset.');
+            setMode('request');
+            return;
+          }
+          if (!data.session) {
+            setHeaderStatus('This reset link is invalid or expired. Please request a new password reset from the Forgot Password page.');
+            setMode('request');
+          } else {
+            setMode('reset');
+            setHeaderStatus('Enter a new password to complete your reset.');
+          }
         }
       } catch (e: any) {
+        console.error('Reset password initialization error:', e);
         setHeaderStatus(
-          e?.message || 'Could not validate the reset link. Please try again.'
+          'Could not validate the reset link. Please request a new password reset.'
         );
+        setMode('request');
       } finally {
         setInitializing(false);
       }
     })();
+  }, []);
+
+  // Handle deep links on native
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    const handleDeepLink = async ({ url }: { url: string }) => {
+      try {
+        const { code, access_token, refresh_token } = parseTokensFromUrl(url);
+        
+        if (code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(url);
+          if (error) {
+            setHeaderStatus('This reset link is invalid or expired. Please request a new password reset.');
+            setMode('request');
+            return;
+          }
+          if (data?.session) {
+            setMode('reset');
+            setHeaderStatus('Enter a new password to complete your reset.');
+          }
+        }
+      } catch (e) {
+        console.error('Deep link handling failed:', e);
+        setHeaderStatus('Could not validate the reset link. Please request a new password reset.');
+        setMode('request');
+      }
+    };
+
+    const sub = Linking.addEventListener('url', handleDeepLink);
+    return () => sub.remove();
   }, []);
 
   const onSave = async () => {
@@ -182,6 +241,45 @@ export default function ResetPasswordScreen() {
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator />
       </View>
+    );
+  }
+
+  // If we're in request mode, show a message to go back to forgot password
+  if (mode === 'request') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backButtonText}>← Back</Text>
+          </TouchableOpacity>
+
+          <View style={styles.headerContainer}>
+            <Text style={styles.headerText}>Reset Password</Text>
+            {!!headerStatus && (
+              <Text style={styles.subheaderText}>{headerStatus}</Text>
+            )}
+          </View>
+
+          <View style={styles.formContainer}>
+            <Link href="/(auth)/forgot-password" asChild>
+              <TouchableOpacity style={styles.button}>
+                <Text style={styles.buttonText}>Request Password Reset</Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
+        </ScrollView>
+
+        <ThemedText style={{ fontSize: 14, textAlign: 'center', margin: 24 }}>
+          <Text style={{ fontWeight: 'bold' }}>SmartBites</Text>
+          <Text>™ © 2025</Text>
+        </ThemedText>
+      </SafeAreaView>
     );
   }
 

@@ -51,6 +51,11 @@ export default function RestaurantsScreen() {
       flex: 1,
       paddingHorizontal: 24,
     },
+    contentContainer: {
+      width: '100%',
+      maxWidth: 1024,
+      alignSelf: 'center',
+    },
     comingSoonSection: {
       backgroundColor: colors.surface,
       padding: 24,
@@ -221,7 +226,8 @@ export default function RestaurantsScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.comingSoonSection}>
+        <View style={styles.contentContainer}>
+          <View style={styles.comingSoonSection}>
           <View style={styles.comingSoonBadge}>
             <Text style={styles.comingSoonBadgeText}>Coming Soon</Text>
           </View>
@@ -232,7 +238,7 @@ export default function RestaurantsScreen() {
           </Text>
         </View>
 
-        <View style={styles.heroSection}>
+          <View style={styles.heroSection}>
           <View style={styles.heroIcon}>
             <ChefHat size={64} color={colors.primary} />
           </View>
@@ -242,7 +248,7 @@ export default function RestaurantsScreen() {
           </Text>
         </View>
 
-        <View style={styles.featuresGrid}>
+          <View style={styles.featuresGrid}>
           <View style={styles.featureCard}>
             <View style={styles.featureIcon}>
               <MapPin size={24} color={colors.primary} />
@@ -280,7 +286,7 @@ export default function RestaurantsScreen() {
           </View>
         </View>
 
-        <View style={styles.websiteSection}>
+          <View style={styles.websiteSection}>
           <View style={styles.websiteIcon}>
             <Globe size={24} color={colors.primary} />
           </View>
@@ -293,10 +299,11 @@ export default function RestaurantsScreen() {
           </View>
         </View>
 
-        <Text style={styles.heroSubtitle}>
+          <Text style={styles.heroSubtitle}>
           Part of the <Text style={styles.brandName}>SmartBites</Text>
           <Text style={styles.trademark}>™</Text> ecosystem for safer dining experiences.
         </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

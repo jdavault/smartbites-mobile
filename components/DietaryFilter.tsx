@@ -27,7 +27,7 @@ export default function DietaryFilter({
     container: {
       backgroundColor: colors.surface,
       borderRadius: 12,
-      padding: 8,
+      paddingTop: 4,
       borderWidth: 1,
       borderColor: colors.border,
       marginBottom: 24,
@@ -36,7 +36,7 @@ export default function DietaryFilter({
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 24,
+      paddingHorizontal: 14,
       marginBottom: 6,
     },
     titleContainer: {
@@ -58,8 +58,8 @@ export default function DietaryFilter({
       color: colors.dietary,
     },
     filters: {
-      paddingHorizontal: 24,
-      paddingBottom: 8,
+      paddingHorizontal: 14,
+      paddingBottom: 6,
     },
     filterItem: {
       flexDirection: 'row',
@@ -89,7 +89,7 @@ export default function DietaryFilter({
     },
     activeFiltersContainer: {
       backgroundColor: colors.surface,
-      paddingHorizontal: 24,
+      paddingHorizontal: 14,
       paddingVertical: 8,
       marginBottom: 6,
     },

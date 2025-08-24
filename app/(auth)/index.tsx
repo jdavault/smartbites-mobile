@@ -23,9 +23,13 @@ import { Fonts, FontSizes } from '@/constants/Typography';
 
 export default function SplashScreen() {
   const { colors } = useTheme();
-  const { height } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const styles = getStyles(colors, height, insets);
+  const styles = getStyles(colors, height, width, insets);
+
+  // Responsive sizing for small mobile viewports
+  const isSmallMobile = width <= 768;
+  const logoSize = isSmallMobile ? 200 : 300;
 
   const logoAnim = useRef(new Animated.Value(0)).current;
   const buttonsAnim = useRef(new Animated.Value(0)).current;
@@ -63,7 +67,7 @@ export default function SplashScreen() {
               <Animated.View
                 style={[styles.logoContainer, { opacity: logoAnim }]}
               >
-                <ThemedLogo />
+                <ThemedLogo width={logoSize} height={logoSize} />
               </Animated.View>
 
               <Animated.Text
@@ -185,7 +189,7 @@ export default function SplashScreen() {
   );
 }
 
-const getStyles = (colors: ThemeColors, height: number, insets: any) =>
+const getStyles = (colors: ThemeColors, height: number, width: number, insets: any) =>
   StyleSheet.create({
     // Restores the padding that used to live on the gradient
     content: {
@@ -211,13 +215,13 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
       gap: 6,
     },
     logoContainer: {
-      marginTop: height * 0.08,
+      marginTop: width <= 768 ? height * 0.01 : height * 0.12,
       alignItems: 'center',
     },
     subtitleTight: {
       textAlign: 'center',
-      marginTop: 6, // small gap under the logo
-      marginBottom: 8, // keep it close to the middle group
+      marginTop: width <= 768 ? -20 : -8, // reduce space below logo
+      marginBottom: width <= 768 ? 4 : 8, // more space before middle group
       fontFamily: 'Lato-Regular',
       fontSize: 18,
       color: colors.textSecondary,
@@ -228,7 +232,7 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
     middleGroup: {
       width: '100%',
       alignItems: 'center',
-      marginTop: 12,
+      marginTop: -4,
     },
 
     // Web-only app store section
@@ -236,45 +240,48 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
       width: '100%',
       paddingHorizontal: Spacing.lg,
       alignItems: 'center',
-      marginTop: Spacing.sm,
-      marginBottom: Spacing.md,
+      marginTop: -8,
+      marginBottom: 8,
     },
     appStoreTitle: {
       fontFamily: Fonts.heading,
       fontSize: FontSizes.lg,
       textAlign: 'center',
-      marginBottom: Spacing.xs,
+      marginBottom: 4,
     },
     appStoreSubtitle: {
       fontFamily: Fonts.body,
       fontSize: FontSizes.sm,
       textAlign: 'center',
-      marginBottom: Spacing.lg,
+      marginBottom: 12,
     },
     storeButtonsContainer: {
       flexDirection: 'row',
       gap: Spacing.md,
-      marginBottom: Spacing.lg,
+      marginBottom: Platform.OS === 'web' ? Spacing.sm : Spacing.lg,
       flexWrap: 'wrap',
       justifyContent: 'center',
     },
     storeButton: {
-      paddingVertical: Spacing.md,
-      paddingHorizontal: Spacing.lg,
+      paddingVertical: width <= 768 ? 10 : Spacing.md,
+      paddingHorizontal: width <= 768 ? 14 : Spacing.lg,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: colors.border,
-      minWidth: 160,
+      minWidth: width <= 768 ? 130 : 160,
       alignItems: 'center',
     },
     storeButtonText: {
       fontFamily: Fonts.body,
-      fontSize: FontSizes.sm,
+      fontSize: width <= 768 ? 12 : FontSizes.sm,
       textAlign: 'center',
     },
 
     // Native CTA buttons (Sign In / Create Account)
-    buttonContainer: { width: '100%', gap: 16 },
+    buttonContainer: { 
+      width: '100%', 
+      gap: width <= 768 ? 12 : 16 
+    },
     responsiveContainer: {
       width: '100%',
       maxWidth: 400,
@@ -282,14 +289,14 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
     },
     primaryButton: {
       backgroundColor: colors.primary,
-      paddingVertical: 16,
+      paddingVertical: width <= 768 ? 12 : 16,
       paddingHorizontal: 32,
       borderRadius: 12,
       alignItems: 'center',
     },
     secondaryButton: {
       backgroundColor: 'transparent',
-      paddingVertical: 16,
+      paddingVertical: width <= 768 ? 12 : 16,
       paddingHorizontal: 32,
       borderRadius: 12,
       alignItems: 'center',
@@ -297,12 +304,12 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
       borderColor: colors.primary,
     },
     primaryButtonText: {
-      fontSize: 16,
+      fontSize: width <= 768 ? 14 : 16,
       fontFamily: 'Inter-SemiBold',
       color: '#FFFFFF',
     },
     secondaryButtonText: {
-      fontSize: 16,
+      fontSize: width <= 768 ? 14 : 16,
       fontFamily: 'Inter-SemiBold',
       color: colors.primary,
     },
