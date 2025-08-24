@@ -184,18 +184,18 @@ export class RecipeService {
         const beforeAllergenFilter = filteredRecipes.length;
         filteredRecipes = filteredRecipes.filter(recipe => {
           const recipeAllergenIds = recipe.recipe_allergens?.map((ra: any) => ra.allergen_id) || [];
-          // Show recipes where ALL user allergens are avoided by the recipe
-          // User's allergens must be a subset of recipe's avoided allergens
-          const allUserAllergensAvoided = allergenIds.every(userAllergenId => 
+          // Show recipes that DON'T contain ANY of the user's allergens
+          // If user is allergic to Eggs, recipe must not contain Eggs
+          const recipeContainsUserAllergen = allergenIds.some(userAllergenId => 
             recipeAllergenIds.includes(userAllergenId)
           );
           
-          if (!allUserAllergensAvoided) {
-            const missingAllergens = allergenIds.filter(id => !recipeAllergenIds.includes(id));
-            console.log(`🔍 Filtering out recipe "${recipe.title}" - doesn't avoid all user allergens. Missing:`, missingAllergens);
+          if (recipeContainsUserAllergen) {
+            const containedAllergens = allergenIds.filter(id => recipeAllergenIds.includes(id));
+            console.log(`🔍 Filtering out recipe "${recipe.title}" - contains user allergens:`, containedAllergens);
           }
           
-          return allUserAllergensAvoided;
+          return !recipeContainsUserAllergen;
         });
         console.log(`🔍 After allergen filter: ${filteredRecipes.length} (filtered out ${beforeAllergenFilter - filteredRecipes.length})`);
       }
