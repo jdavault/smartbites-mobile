@@ -23,9 +23,13 @@ import { Fonts, FontSizes } from '@/constants/Typography';
 
 export default function SplashScreen() {
   const { colors } = useTheme();
-  const { height } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const styles = getStyles(colors, height, insets);
+  const styles = getStyles(colors, height, width, insets);
+
+  // Responsive sizing for small mobile viewports
+  const isSmallMobile = width <= 768;
+  const logoSize = isSmallMobile ? 200 : 300;
 
   const logoAnim = useRef(new Animated.Value(0)).current;
   const buttonsAnim = useRef(new Animated.Value(0)).current;
@@ -63,7 +67,7 @@ export default function SplashScreen() {
               <Animated.View
                 style={[styles.logoContainer, { opacity: logoAnim }]}
               >
-                <ThemedLogo />
+                <ThemedLogo width={logoSize} height={logoSize} />
               </Animated.View>
 
               <Animated.Text
@@ -185,7 +189,7 @@ export default function SplashScreen() {
   );
 }
 
-const getStyles = (colors: ThemeColors, height: number, insets: any) =>
+const getStyles = (colors: ThemeColors, height: number, width: number, insets: any) =>
   StyleSheet.create({
     // Restores the padding that used to live on the gradient
     content: {
@@ -211,12 +215,12 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
       gap: 6,
     },
     logoContainer: {
-      marginTop: Platform.OS === 'web' ? height * 0.01 : height * 0.08,
+      marginTop: width <= 768 ? height * 0.04 : height * 0.08,
       alignItems: 'center',
     },
     subtitleTight: {
       textAlign: 'center',
-      marginTop: Platform.OS === 'web' ? -20 : 6, // small gap under the logo
+      marginTop: width <= 768 ? -10 : 6, // reduce space on small mobile
       marginBottom: 8, // keep it close to the middle group
       fontFamily: 'Lato-Regular',
       fontSize: 18,
@@ -259,17 +263,17 @@ const getStyles = (colors: ThemeColors, height: number, insets: any) =>
       justifyContent: 'center',
     },
     storeButton: {
-      paddingVertical: Platform.OS === 'web' ? 12 : Spacing.md,
-      paddingHorizontal: Platform.OS === 'web' ? 16 : Spacing.lg,
+      paddingVertical: width <= 768 ? 10 : Spacing.md,
+      paddingHorizontal: width <= 768 ? 14 : Spacing.lg,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: colors.border,
-      minWidth: Platform.OS === 'web' ? 140 : 160,
+      minWidth: width <= 768 ? 130 : 160,
       alignItems: 'center',
     },
     storeButtonText: {
       fontFamily: Fonts.body,
-      fontSize: Platform.OS === 'web' ? 13 : FontSizes.sm,
+      fontSize: width <= 768 ? 12 : FontSizes.sm,
       textAlign: 'center',
     },
 
