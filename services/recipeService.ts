@@ -257,6 +257,15 @@ export class RecipeService {
         console.log('Using existing recipe:', recipeId);
       } else {
         // Create new recipe
+        console.log('💾 Saving new recipe to DB:');
+        console.log('💾 recipe.allergensIncluded from OpenAI:', recipe.allergensIncluded);
+        
+        const allergensContained = Array.isArray(recipe.allergensIncluded) 
+          ? recipe.allergensIncluded.join(', ')
+          : (recipe.allergensIncluded || '');
+        
+        console.log('💾 allergensContained for DB:', allergensContained);
+        
         const { data: recipeData, error: recipeError } = await supabase
           .from('recipes')
           .insert([{
@@ -274,12 +283,14 @@ export class RecipeService {
             search_key: searchKey,
             notes: recipe.notes,
             nutrition_info: recipe.nutritionInfo,
-            allergens_included: recipe.allergensIncluded ? recipe.allergensIncluded.join(', ') : '',
+            allergens_included: allergensContained,
             image: null,
           }])
           .select()
           .single();
 
+        console.log('💾 Inserted recipe data:', recipeData);
+        
         if (recipeError) throw recipeError;
         recipeId = recipeData.id;
 
