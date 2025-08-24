@@ -232,7 +232,7 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
     middleGroup: {
       width: '100%',
       alignItems: 'center',
-      marginTop: 12,
+      marginTop: 3,
     },
 
     // Web-only app store section
@@ -240,7 +240,7 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
       width: '100%',
       paddingHorizontal: Spacing.lg,
       alignItems: 'center',
-      marginTop: 4,
+      marginTop: 1,
       marginBottom: 8,
     },
     appStoreTitle: {
