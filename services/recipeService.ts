@@ -113,6 +113,8 @@ export class RecipeService {
 
       // Get allergen and dietary preference IDs from lookup tables
       let allergenIds: string[] = [];
+      // Get allergen and dietary preference IDs from lookup tables
+      let allergenIds: string[] = [];
       let dietaryIds: string[] = [];
       
       if (userAllergens.length > 0) {
@@ -135,99 +137,41 @@ export class RecipeService {
         dietaryIds = dietaryData?.map(d => d.id) || [];
       }
 
-      // Get recipes with relationships, excluding user's saved recipes
-      let query = supabase
-        .from('recipes')
-        .select(`
-          *,
-          recipe_allergens (
-            allergen_id
-          ),
-          recipe_dietary_prefs (
-            dietary_pref_id
-          )
-        `)
-        .limit(20)
-        .order('created_at', { ascending: false });
+      console.log('🔍 User allergen names:', userAllergens);
+      console.log('🔍 User allergen IDs:', allergenIds);
+      console.log('🔍 User dietary names:', userDietaryPrefs);
+      console.log('🔍 User dietary IDs:', dietaryIds);
 
+      // Build query using recipe_meta view with PostgreSQL array contains operator
+      let query = supabase
+        .from('recipe_meta')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      // Exclude user's saved recipes
       if (savedRecipeIds.length > 0) {
         query = query.not('id', 'in', `(${savedRecipeIds.join(',')})`);
+      }
+
+      // Filter by allergens: recipe must avoid ALL user allergens (recipe_allergen_ids @> user_allergen_ids)
+      if (allergenIds.length > 0) {
+        query = query.contains('allergen_ids', allergenIds);
+      }
+
+      // Filter by dietary preferences: recipe must support ALL user preferences (recipe_dietary_ids @> user_dietary_ids)
+      if (dietaryIds.length > 0) {
+        query = query.contains('dietary_ids', dietaryIds);
       }
 
       const { data, error } = await query;
       if (error) throw error;
       if (!data || data.length === 0) return [];
 
-      console.log('🔍 Raw recipes from DB:', data?.length || 0);
+      console.log('🔍 Filtered recipes from recipe_meta view:', data?.length || 0);
       
-      // Debug: Log what allergen/dietary IDs we're looking for
-      console.log('🔍 User allergen names:', userAllergens);
-      console.log('🔍 User allergen IDs we need recipes to avoid:', allergenIds);
-      console.log('🔍 User dietary names:', userDietaryPrefs);
-      console.log('🔍 User dietary IDs we need recipes to support:', dietaryIds);
-      
-      // Debug: Log first few recipes and their relationships
-      if (data && data.length > 0) {
-        console.log('🔍 Sample recipe relationships:');
-        data.slice(0, 2).forEach((recipe, idx) => {
-          console.log(`  Recipe ${idx + 1}: "${recipe.title}"`);
-          console.log(`    Avoids allergen IDs:`, recipe.recipe_allergens?.map((ra: any) => ra.allergen_id) || []);
-          console.log(`    Supports dietary IDs:`, recipe.recipe_dietary_prefs?.map((rd: any) => rd.dietary_pref_id) || []);
-        });
-      }
-      
-      let filteredRecipes = data;
-      console.log('🔍 After initial filter:', filteredRecipes.length);
-
-      // Filter out recipes that contain user's allergens
-      if (allergenIds.length > 0) {
-        const beforeAllergenFilter = filteredRecipes.length;
-        filteredRecipes = filteredRecipes.filter(recipe => {
-          const recipeAllergenIds = recipe.recipe_allergens?.map((ra: any) => ra.allergen_id) || [];
-          // CORRECT LOGIC: Show recipes that AVOID ALL of the user's allergens
-          // User allergens must be a SUBSET of recipe's avoided allergens
-          // If user is allergic to [Eggs, Fish], recipe must avoid AT LEAST [Eggs, Fish] (can avoid more)
-          const userAllergensAreSubsetOfRecipeAllergens = allergenIds.every(userAllergenId => 
-            recipeAllergenIds.includes(userAllergenId)
-          );
-          
-          if (!userAllergensAreSubsetOfRecipeAllergens) {
-            const missingAllergens = allergenIds.filter(id => !recipeAllergenIds.includes(id));
-            console.log(`🔍 Filtering out recipe "${recipe.title}" - doesn't avoid all user allergens. Missing:`, missingAllergens);
-          }
-          
-          return userAllergensAreSubsetOfRecipeAllergens;
-        });
-        console.log(`🔍 After allergen filter: ${filteredRecipes.length} (filtered out ${beforeAllergenFilter - filteredRecipes.length})`);
-      }
-
-      // Filter by dietary preferences - show recipes that support ALL user preferences
-      if (dietaryIds.length > 0) {
-        const beforeDietaryFilter = filteredRecipes.length;
-        filteredRecipes = filteredRecipes.filter(recipe => {
-          const recipeDietaryIds = recipe.recipe_dietary_prefs?.map((rd: any) => rd.dietary_pref_id) || [];
-          // Show recipes where ALL user dietary preferences are supported
-          // User's dietary prefs must be a subset of recipe's supported prefs
-          const allUserPrefsSupported = dietaryIds.every(userPrefId => 
-            recipeDietaryIds.includes(userPrefId)
-          );
-          
-          if (!allUserPrefsSupported) {
-            const missingPrefs = dietaryIds.filter(id => !recipeDietaryIds.includes(id));
-            console.log(`🔍 Filtering out recipe "${recipe.title}" - doesn't support all user prefs. Missing:`, missingPrefs);
-          }
-          
-          return allUserPrefsSupported;
-        });
-        console.log(`🔍 After dietary filter: ${filteredRecipes.length} (filtered out ${beforeDietaryFilter - filteredRecipes.length})`);
-      } else {
-        console.log('🔍 No dietary preferences - showing all recipes after allergen filter');
-      }
-
-      if (filteredRecipes.length === 0) return [];
-
       // Randomize and take 5
-      const shuffled = filteredRecipes.sort(() => 0.5 - Math.random());
+      const shuffled = data.sort(() => 0.5 - Math.random());
       const selectedRecipes = shuffled.slice(0, 5);
 
       // Get allergen and dietary preference names for display
@@ -258,8 +202,8 @@ export class RecipeService {
         tags: recipe.tags || [],
         searchQuery: recipe.search_query || '',
         searchKey: recipe.search_key || '',
-        allergens: recipe.recipe_allergens?.map((ra: any) => allergenMap.get(ra.allergen_id)).filter(Boolean) || [],
-        dietaryPrefs: recipe.recipe_dietary_prefs?.map((rd: any) => dietaryMap.get(rd.dietary_pref_id)).filter(Boolean) || [],
+        allergens: recipe.allergen_ids?.map((id: string) => allergenMap.get(id)).filter(Boolean) || [],
+        dietaryPrefs: recipe.dietary_ids?.map((id: string) => dietaryMap.get(id)).filter(Boolean) || [],
         notes: recipe.notes || '',
         nutritionInfo: recipe.nutrition_info || '',
         image: recipe.image,
