@@ -36,6 +36,8 @@ export interface UserRecipeData {
   createdAt: string;
 }
 
+const DEFAULT_RECIPE_IMAGE = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+
 export class RecipeService {
   static async getUserRecipes(userId: string): Promise<UserRecipeData[]> {
     try {
@@ -434,7 +436,7 @@ export class RecipeService {
       throw error;
     }
   }
-  }
+
   private static async persistRecipeImage({
     recipeTitle,
     searchQuery,
@@ -476,26 +478,10 @@ export class RecipeService {
         console.error('🖼️ DB update error:', updateError);
       }
 
-      return result.publicUrl || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
-    } catch (err) {
-      console.error('🖼️ Error in persistRecipeImage:', err);
-      return 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
-    }
-  }
-}
-
-
-      if (updateError) {
-        console.error('🖼️ DB update error:', updateError);
-      }
-
       return result.publicUrl || DEFAULT_RECIPE_IMAGE;
     } catch (imageGenError) {
       console.error('🖼️ Image generation failed:', imageGenError);
       return DEFAULT_RECIPE_IMAGE;
     }
-  } catch (err) {
-    console.error('🖼️ Error in persistRecipeImage:', err);
-    return DEFAULT_RECIPE_IMAGE;
   }
 }
