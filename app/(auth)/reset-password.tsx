@@ -18,6 +18,7 @@ import * as Linking from 'expo-linking';
 import { useRouter, Link } from 'expo-router';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Spacing } from '@/constants/Spacing';
 import { Fonts, FontSizes } from '@/constants/Typography';
 import ThemedText from '@/components/ThemedText';
@@ -57,6 +58,7 @@ function parseTokensFromUrl(rawUrl: string | null) {
 export default function ResetPasswordScreen() {
   const router = useRouter();
   const { colors: theme } = useTheme();
+  const { signIn } = useAuth();
   const styles = useMemo(() => getStyles(theme), [theme]);
 
   const [initializing, setInitializing] = useState(true);
@@ -66,6 +68,7 @@ export default function ResetPasswordScreen() {
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null); // validation/API errors under inputs
   const [mode, setMode] = useState<'request' | 'reset'>('request');
 
@@ -96,6 +99,7 @@ export default function ResetPasswordScreen() {
             return;
           }
           if (data?.session) {
+            setUserEmail(data.session.user?.email || null);
             sessionEstablished = true;
             setMode('reset');
             setHeaderStatus('Enter a new password to complete your reset.');
@@ -109,6 +113,7 @@ export default function ResetPasswordScreen() {
             return;
           }
           if (data?.session) {
+            setUserEmail(data.session.user?.email || null);
             sessionEstablished = true;
             setMode('reset');
             setHeaderStatus('Enter a new password to complete your reset.');
@@ -128,6 +133,7 @@ export default function ResetPasswordScreen() {
             setHeaderStatus('This reset link is invalid or expired. Please request a new password reset from the Forgot Password page.');
             setMode('request');
           } else {
+            setUserEmail(session.user?.email || null);
             setMode('reset');
             setHeaderStatus('Enter a new password to complete your reset.');
           }
@@ -160,6 +166,7 @@ export default function ResetPasswordScreen() {
             return;
           }
           if (data?.session) {
+            setUserEmail(data.session.user?.email || null);
             setMode('reset');
             setHeaderStatus('Enter a new password to complete your reset.');
           }
@@ -197,16 +204,32 @@ export default function ResetPasswordScreen() {
       const { error } = await AuthService.updatePassword(password);
       if (error) throw error;
 
-      // Optional: end the recovery session so they sign in fresh in the app
-      await AuthService.signOut();
+      // Auto-login the user with their new password
+      if (userEmail) {
+        const { error: signInError } = await signIn(userEmail, password);
+        if (signInError) {
+          // If auto-login fails, show success but suggest manual login
+          setModalInfo({
+            visible: true,
+            title: 'Password Updated 🔐',
+            subtitle: 'Your password has been changed successfully. Please sign in with your new password.',
+            emoji: '✅',
+          });
+        } else {
+          // Success! User is now logged in, redirect to app
+          router.replace('/(tabs)');
+          return;
+        }
+      } else {
+        // No email available for auto-login
+        setModalInfo({
+          visible: true,
+          title: 'Password Updated 🔐',
+          subtitle: 'Your password has been changed successfully. Please sign in with your new password.',
+          emoji: '✅',
+        });
+      }
 
-      // success modal; no redirects here
-      setModalInfo({
-        visible: true,
-        title: 'Password Updated 🔐',
-        subtitle: 'Your password has been changed successfully.',
-        emoji: '✅',
-      });
       setPassword('');
       setPassword2('');
       setShowPass(false);
@@ -299,12 +322,6 @@ export default function ResetPasswordScreen() {
                 {!!modalInfo.subtitle && (
                   <Text style={styles.modalSubtitle}>{modalInfo.subtitle}</Text>
                 )}
-                <View style={{ height: Spacing.md }} />
-                {/* Helpful hints instead of redirecting */}
-                <Text style={styles.modalSubtitle}>
-                  Return to the SmartBites mobile app to sign in with your new
-                  password.
-                </Text>
                 <View style={{ height: Spacing.md }} />
                 <TouchableOpacity
                   onPress={handleModalClose}
