@@ -91,10 +91,14 @@ export default function ResetPasswordScreen() {
         let sessionEstablished = false;
 
         if (code) {
-          const { data, error } = await AuthService.exchangeCodeForSession(initialUrl);
+          const { data, error } = await AuthService.exchangeCodeForSession(
+            code
+          );
           if (error) {
             console.error('Code exchange error:', error);
-            setHeaderStatus('This reset link is invalid or expired. Please request a new password reset.');
+            setHeaderStatus(
+              'This reset link is invalid or expired. Please request a new password reset.'
+            );
             setMode('request');
             return;
           }
@@ -105,10 +109,15 @@ export default function ResetPasswordScreen() {
             setHeaderStatus('Enter a new password to complete your reset.');
           }
         } else if (access_token && refresh_token) {
-          const { data, error } = await AuthService.setSession(access_token, refresh_token);
+          const { data, error } = await AuthService.setSession(
+            access_token,
+            refresh_token
+          );
           if (error) {
             console.error('Set session error:', error);
-            setHeaderStatus('This reset link is invalid or expired. Please request a new password reset.');
+            setHeaderStatus(
+              'This reset link is invalid or expired. Please request a new password reset.'
+            );
             setMode('request');
             return;
           }
@@ -125,12 +134,16 @@ export default function ResetPasswordScreen() {
           const { session, error: getErr } = await AuthService.getSession();
           if (getErr) {
             console.error('Get session error:', getErr);
-            setHeaderStatus('Could not validate session. Please request a new password reset.');
+            setHeaderStatus(
+              'Could not validate session. Please request a new password reset.'
+            );
             setMode('request');
             return;
           }
           if (!session) {
-            setHeaderStatus('This reset link is invalid or expired. Please request a new password reset from the Forgot Password page.');
+            setHeaderStatus(
+              'This reset link is invalid or expired. Please request a new password reset from the Forgot Password page.'
+            );
             setMode('request');
           } else {
             setUserEmail(session.user?.email || null);
@@ -157,11 +170,13 @@ export default function ResetPasswordScreen() {
     const handleDeepLink = async ({ url }: { url: string }) => {
       try {
         const { code, access_token, refresh_token } = parseTokensFromUrl(url);
-        
+
         if (code) {
           const { data, error } = await AuthService.exchangeCodeForSession(url);
           if (error) {
-            setHeaderStatus('This reset link is invalid or expired. Please request a new password reset.');
+            setHeaderStatus(
+              'This reset link is invalid or expired. Please request a new password reset.'
+            );
             setMode('request');
             return;
           }
@@ -173,7 +188,9 @@ export default function ResetPasswordScreen() {
         }
       } catch (e) {
         console.error('Deep link handling failed:', e);
-        setHeaderStatus('Could not validate the reset link. Please request a new password reset.');
+        setHeaderStatus(
+          'Could not validate the reset link. Please request a new password reset.'
+        );
         setMode('request');
       }
     };
@@ -212,7 +229,8 @@ export default function ResetPasswordScreen() {
           setModalInfo({
             visible: true,
             title: 'Password Updated 🔐',
-            subtitle: 'Your password has been changed successfully. Please sign in with your new password.',
+            subtitle:
+              'Your password has been changed successfully. Please sign in with your new password.',
             emoji: '✅',
           });
         } else {
@@ -225,7 +243,8 @@ export default function ResetPasswordScreen() {
         setModalInfo({
           visible: true,
           title: 'Password Updated 🔐',
-          subtitle: 'Your password has been changed successfully. Please sign in with your new password.',
+          subtitle:
+            'Your password has been changed successfully. Please sign in with your new password.',
           emoji: '✅',
         });
       }
