@@ -80,12 +80,11 @@ export default function ForgotPasswordScreen() {
     title: '',
   });
 
+  const WEB_ORIGIN = 'https://smartbites.food';
+
   const RESET_REDIRECT = Platform.select({
-    web:
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/reset-password`
-        : 'https://smartbites.food/reset-password',
-    default: Linking.createURL('/reset-password'), // -> smartbites://reset-password
+    web: `${WEB_ORIGIN}/reset-password`,
+    default: Linking.createURL('/reset-password'), // smartbites://reset-password
   })!;
 
   // Detect if we arrived with a Supabase recovery link; if yes, exchange for a session and switch to reset mode
