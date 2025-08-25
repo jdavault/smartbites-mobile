@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "GEVW9YV737.com.anonymous.allergy-aware-recipe-finder",
+        "paths": [
+          "/forgot-password",
+          "/forgot-password/*",
+          "/reset-password",
+          "/reset-password/*"
+        ]
+      }
+    ]
+  }
+}
