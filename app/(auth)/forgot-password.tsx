@@ -84,7 +84,7 @@ export default function ForgotPasswordScreen() {
 
   const RESET_REDIRECT = Platform.select({
     web: `${WEB_ORIGIN}/reset-password`,
-    default: Linking.createURL('/reset-password'), // smartbites://reset-password
+    default: 'smartbites://reset-password', // Direct deep link for mobile
   })!;
 
   // Detect if we arrived with a Supabase recovery link; if yes, exchange for a session and switch to reset mode
@@ -154,6 +154,7 @@ export default function ForgotPasswordScreen() {
 
     setSending(true);
     try {
+      console.log('🔗 RESET_REDIRECT URL:', RESET_REDIRECT);
       const { error } = await AuthService.resetPasswordForEmail(
         trimmed,
         RESET_REDIRECT
