@@ -37,7 +37,15 @@ const DismissWrapper =
 function parseTokensFromUrl(rawUrl: string | null) {
   if (!rawUrl) return {};
   try {
-    const url = new URL(rawUrl);
+    // Handle both web URLs and deep link schemes
+    let url: URL;
+    if (rawUrl.startsWith('smartbites://')) {
+      // Convert deep link to web URL for parsing
+      url = new URL(rawUrl.replace('smartbites://', 'https://smartbites.food/'));
+    } else {
+      url = new URL(rawUrl);
+    }
+    
     // Supabase may send tokens in the hash (#access_token=...) or PKCE code in ?code=
     const hash = (url.hash || '').replace(/^#/, '');
     const h = new URLSearchParams(hash);
@@ -48,8 +56,10 @@ function parseTokensFromUrl(rawUrl: string | null) {
       h.get('access_token') || q.get('access_token') || undefined;
     const refresh_token =
       h.get('refresh_token') || q.get('refresh_token') || undefined;
+    const token = q.get('token') || h.get('token') || undefined;
+    const type = q.get('type') || h.get('type') || undefined;
 
-    return { code, access_token, refresh_token };
+    return { code, access_token, refresh_token, token, type };
   } catch {
     return {};
   }
@@ -85,14 +95,34 @@ export default function ResetPasswordScreen() {
             ? window.location.href
             : (await Linking.getInitialURL()) ?? '';
 
-        const { code, access_token, refresh_token } =
+        const { code, access_token, refresh_token, token, type } =
           parseTokensFromUrl(initialUrl);
 
         let sessionEstablished = false;
 
-        if (code) {
+        // Handle direct token from recovery link
+        if (token && type === 'recovery') {
+          // This is a recovery token, we need to exchange it for a session
           const { data, error } = await AuthService.exchangeCodeForSession(
-            code
+            initialUrl
+          );
+          if (error) {
+            console.error('Token exchange error:', error);
+            setHeaderStatus(
+              'This reset link is invalid or expired. Please request a new password reset.'
+            );
+            setMode('request');
+            return;
+          }
+          if (data?.session) {
+            setUserEmail(data.session.user?.email || null);
+            sessionEstablished = true;
+            setMode('reset');
+            setHeaderStatus('Enter a new password to complete your reset.');
+          }
+        } else if (code) {
+          const { data, error } = await AuthService.exchangeCodeForSession(
+            initialUrl
           );
           if (error) {
             console.error('Code exchange error:', error);
