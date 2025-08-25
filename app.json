@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "smartbites",
+    "schemes": ["smartbites"],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "web": {
