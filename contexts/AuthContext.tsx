@@ -169,11 +169,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (Platform.OS === 'web') return;
 
     const handleDeepLink = async ({ url }: { url: string }) => {
+      console.log('🔗 Deep link received:', url);
+      
       // Check if this is a recovery link
       const isRecoveryLink = url.includes('type=recovery');
       
       // If it's a recovery link, redirect to reset-password without exchanging tokens
       if (isRecoveryLink) {
+        console.log('🔗 Recovery link detected, navigating to reset-password');
         router.replace('/reset-password');
         return;
       }
@@ -183,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) {
           console.warn('exchangeCodeForSession (native) error:', error);
         } else if (data?.session) {
+          console.log('🔗 Session established from deep link');
           setUser(data.session.user);
           setSession(data.session);
         }
@@ -194,8 +198,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // cold start
     Linking.getInitialURL().then((url) => {
       if (url) {
+        console.log('🔗 Initial URL:', url);
         const isRecoveryLink = url.includes('type=recovery');
         if (isRecoveryLink) {
+          console.log('🔗 Initial recovery link, navigating to reset-password');
           router.replace('/reset-password');
         } else {
           handleDeepLink({ url });
