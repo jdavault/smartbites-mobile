@@ -46,17 +46,16 @@ export default function ForgotPasswordScreen() {
     title: '',
   });
 
+  // Replace the RESET_REDIRECT block with this:
   const RESET_REDIRECT = Platform.select({
-    // Web: go straight to the web reset page (keeps your good web flow)
     web:
       typeof window !== 'undefined'
         ? `${window.location.origin}/reset-password`
         : 'https://smartbites.food/reset-password',
-
-    // Native: go straight into the app via custom scheme (no /recover hop)
-    default: Linking.createURL('/reset-password'), // => smartbites://reset-password
+    default: __DEV__
+      ? 'http://localhost:8081/reset-password' // Simulator / cable-tether tests
+      : Linking.createURL('/reset-password'), // smartbites://reset-password
   })!;
-
   const handleSendEmail = async () => {
     const trimmed = email.trim();
 
