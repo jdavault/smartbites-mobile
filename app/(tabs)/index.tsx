@@ -289,7 +289,7 @@ export default function SearchScreen() {
       color: colors.textSecondary,
     },
     searchContainer: {
-      //paddingHorizontal: 24,
+      marginTop: 8,
       marginBottom: 6,
     },
     searchInputContainer: {
