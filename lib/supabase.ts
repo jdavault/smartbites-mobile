@@ -37,8 +37,7 @@ export function getSupabase(): SupabaseClient {
       autoRefreshToken: true,
       detectSessionInUrl: Platform.OS === 'web',
       lock: processLock,
-      // For mobile OAuth add this (optional):
-      // flowType: Platform.OS === 'web' ? 'implicit' : 'pkce',
+      flowType: Platform.OS === 'web' ? 'implicit' : 'pkce',
     },
     // optional: a tiny bit of app metadata on requests
     global: {
