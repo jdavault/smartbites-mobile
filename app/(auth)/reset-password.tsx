@@ -87,6 +87,7 @@ export default function ResetPasswordScreen() {
     title: '',
   });
 
+  // --- Initialization: check URL for tokens and exchange into session ---
   useEffect(() => {
     (async () => {
       try {
@@ -100,7 +101,7 @@ export default function ResetPasswordScreen() {
 
         let sessionEstablished = false;
 
-        // If Supabase provided a PKCE code or OAuth tokens, exchange the *original* URL.
+        // Exchange if Supabase provided PKCE code or implicit tokens
         if (code || (access_token && refresh_token)) {
           const { data, error } = await AuthService.exchangeCodeForSession(
             initialUrl
@@ -144,7 +145,7 @@ export default function ResetPasswordScreen() {
           }
         }
 
-        // Optional: clean the URL on web
+        // Clean the URL on web to avoid re-processing on refresh
         if (Platform.OS === 'web') {
           const clean = `${window.location.origin}${window.location.pathname}`;
           window.history.replaceState({}, '', clean);
@@ -161,7 +162,7 @@ export default function ResetPasswordScreen() {
     })();
   }, []);
 
-  // Handle deep links on native while the app is already open
+  // --- Native deep link handling while app is open ---
   useEffect(() => {
     if (Platform.OS === 'web') return;
 
@@ -218,30 +219,22 @@ export default function ResetPasswordScreen() {
       const { error } = await AuthService.updatePassword(password);
       if (error) throw error;
 
-      // Optional: auto-sign-in so you can route back to the app immediately.
+      // Optional: auto-sign-in so you can route back immediately
       if (userEmail) {
         const { error: signInError } = await signIn(userEmail, password);
-        if (signInError) {
-          setModalInfo({
-            visible: true,
-            title: 'Password Updated 🔐',
-            subtitle:
-              'Your password has been changed successfully. Please sign in with your new password.',
-            emoji: '✅',
-          });
-        } else {
+        if (!signInError) {
           router.replace('/(tabs)');
           return;
         }
-      } else {
-        setModalInfo({
-          visible: true,
-          title: 'Password Updated 🔐',
-          subtitle:
-            'Your password has been changed successfully. Please sign in with your new password.',
-          emoji: '✅',
-        });
       }
+
+      setModalInfo({
+        visible: true,
+        title: 'Password Updated 🔐',
+        subtitle:
+          'Your password has been changed successfully. Please sign in with your new password.',
+        emoji: '✅',
+      });
 
       setPassword('');
       setPassword2('');
@@ -265,6 +258,7 @@ export default function ResetPasswordScreen() {
     setModalInfo((m) => ({ ...m, visible: false }));
   };
 
+  // ✅ restore your live match hint
   const showMatchHint = password.length > 0 && password2.length > 0;
 
   if (initializing) {
@@ -275,6 +269,7 @@ export default function ResetPasswordScreen() {
     );
   }
 
+  // If we're in request mode, show a message to go back to forgot password
   if (mode === 'request') {
     return (
       <SafeAreaView style={styles.container}>
@@ -431,6 +426,7 @@ export default function ResetPasswordScreen() {
                   </TouchableOpacity>
                 </View>
 
+                {/* ✅ live match hint restored */}
                 {showMatchHint && (
                   <Text
                     style={
@@ -609,6 +605,7 @@ const getStyles = (theme: ThemeColors) =>
       fontSize: FontSizes.md,
       color: theme.primary,
     },
+    // Modal styles
     modalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.4)',
