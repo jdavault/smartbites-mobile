@@ -257,7 +257,7 @@ export default function SearchScreen() {
       width: '100%',
       maxWidth: 1034, // same cap as your sections
       alignSelf: 'center',
-      paddingHorizontal: 4, // much less padding for search/filters
+      paddingHorizontal: 1, // minimal padding for search/filters
     },
     header: {
       flexDirection: 'row',
