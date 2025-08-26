@@ -43,7 +43,7 @@ export default function RecipeSection({
 
   let verticalCardWidth;
   if (width <= 360) {
-    // 0–360px: same width as the horizontal “tile” card
+    // 0–360px: same width as the horizontal "tile" card
     verticalCardWidth = Math.min(cardWidth, availableWidth);
   } else if (width <= 690) {
     // 361–690px: grow to ~two cards wide (~680)
@@ -58,13 +58,13 @@ export default function RecipeSection({
 
   const styles = StyleSheet.create({
     section: {
-      marginBottom: 32,
+      marginBottom: 16,
     },
     sectionTitle: {
       fontSize: 20,
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
-      marginBottom: 16,
+      marginBottom: 12,
       paddingHorizontal: 24,
     },
     horizontalScrollContainer: {
