@@ -257,7 +257,7 @@ export default function SearchScreen() {
       width: '100%',
       maxWidth: 1034, // same cap as your sections
       alignSelf: 'center',
-      paddingHorizontal: 24, // reverted back
+      paddingHorizontal: 12, // match body content padding
     },
     header: {
       flexDirection: 'row',
