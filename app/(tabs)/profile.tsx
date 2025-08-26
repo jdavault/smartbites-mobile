@@ -565,7 +565,7 @@ const getStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 12,
+      paddingHorizontal: 24, // reverted back
       paddingTop: 4,
       paddingBottom: 4,
       backgroundColor: colors.surface,
@@ -620,7 +620,7 @@ const getStyles = (colors: ThemeColors) =>
     // Card wrapper
     formCard: {
       backgroundColor: colors.surface,
-      marginHorizontal: 12,
+      marginHorizontal: 12, // keep reduced for body content
       borderRadius: 12,
       padding: 16,
       marginBottom: 16,
@@ -635,7 +635,7 @@ const getStyles = (colors: ThemeColors) =>
       color: colors.primary,
       marginTop: 0,
       marginBottom: 6,
-      paddingHorizontal: 12,
+      paddingHorizontal: 12, // keep reduced for body content
     },
     sectionTitleDiet: {
       fontSize: 18,
@@ -643,7 +643,7 @@ const getStyles = (colors: ThemeColors) =>
       color: colors.dietary,
       marginTop: 0,
       marginBottom: 6,
-      paddingHorizontal: 12,
+      paddingHorizontal: 12, // keep reduced for body content
     },
 
     // Chips
@@ -651,7 +651,7 @@ const getStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 6,
-      paddingHorizontal: 12,
+      paddingHorizontal: 12, // keep reduced for body content
       marginBottom: 16,
     },
     chip: {
@@ -675,13 +675,13 @@ const getStyles = (colors: ThemeColors) =>
 
     // Theme toggle
     themeContainer: {
-      paddingHorizontal: 12,
+      paddingHorizontal: 12, // keep reduced for body content
       paddingVertical: 8,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       backgroundColor: colors.backgroundLight,
-      marginHorizontal: 12,
+      marginHorizontal: 12, // keep reduced for body content
       borderRadius: 12,
       marginBottom: 8,
       marginTop: 4,
@@ -704,7 +704,7 @@ const getStyles = (colors: ThemeColors) =>
     },
     buttonRow: {
       flexDirection: 'row',
-      paddingHorizontal: 12,
+      paddingHorizontal: 12, // keep reduced for body content
       gap: 12,
       marginTop: 8,
       marginBottom: 12,

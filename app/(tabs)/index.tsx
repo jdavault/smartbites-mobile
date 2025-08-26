@@ -257,13 +257,13 @@ export default function SearchScreen() {
       width: '100%',
       maxWidth: 1034, // same cap as your sections
       alignSelf: 'center',
-      paddingHorizontal: 12, // 👈 reduced from 24 to 12
+      paddingHorizontal: 24, // reverted back
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 12,
+      paddingHorizontal: 24, // reverted back
       paddingTop: 4,
       paddingBottom: 4,
       backgroundColor: colors.surface,
