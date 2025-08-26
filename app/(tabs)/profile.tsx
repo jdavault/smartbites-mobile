@@ -203,6 +203,7 @@ export default function ProfileScreen() {
         </Modal>
       )}
 
+      {/* White header matching other tabs */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>Profile</Text>
@@ -561,12 +562,14 @@ const getStyles = (colors: ThemeColors) =>
       alignSelf: 'center',
     },
     header: {
-      paddingHorizontal: 24,
-      paddingTop: 8,
-      paddingBottom: 12,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
+      paddingHorizontal: 24,
+      paddingTop: 6,
+      paddingBottom: 6,
+      backgroundColor: colors.surface,
+      marginBottom: 12,
     },
     headerContent: { flex: 1 },
     headerLogo: { width: 72, height: 72, marginLeft: 16 },
