@@ -27,8 +27,8 @@ export default function AllergenFilter({
     container: {
       backgroundColor: colors.surface,
       borderRadius: 12, // 👈 rounded corners
-      paddingTop: 4,
-      marginBottom: 8, // 👈 spacing below
+      paddingTop: 2,
+      marginBottom: 6, // 👈 spacing below
       borderWidth: 1,
       borderColor: colors.border,
     },
@@ -36,8 +36,8 @@ export default function AllergenFilter({
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 14,
-      marginBottom: 6,
+      paddingHorizontal: 12,
+      marginBottom: 4,
     },
     titleContainer: {
       flexDirection: 'row',
@@ -58,8 +58,8 @@ export default function AllergenFilter({
       color: colors.primary,
     },
     filters: {
-      paddingHorizontal: 14,
-      paddingBottom: 6,
+      paddingHorizontal: 12,
+      paddingBottom: 4,
     },
     filterItem: {
       flexDirection: 'row',
@@ -67,9 +67,9 @@ export default function AllergenFilter({
       borderWidth: 1,
       borderColor: '#000000',
       borderRadius: 20,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      marginRight: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      marginRight: 4,
       backgroundColor: colors.surface,
     },
     activeFilterItem: {
@@ -77,7 +77,7 @@ export default function AllergenFilter({
       borderColor: colors.primary,
     },
     filterText: {
-      fontSize: 14,
+      fontSize: 13,
       color: colors.text,
     },
     activeFilterText: {
@@ -88,13 +88,13 @@ export default function AllergenFilter({
     },
     activeFiltersContainer: {
       backgroundColor: colors.surface,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      marginBottom: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      marginBottom: 4,
     },
     activeFiltersText: {
       fontFamily: 'Inter-Regular',
-      fontSize: 14,
+      fontSize: 13,
       color: colors.text,
     },
     activeFiltersHighlight: {
