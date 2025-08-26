@@ -30,7 +30,7 @@ export default function DietaryFilter({
       paddingTop: 4,
       borderWidth: 1,
       borderColor: colors.border,
-      marginBottom: 24,
+      marginBottom: 12,
     },
     header: {
       flexDirection: 'row',
