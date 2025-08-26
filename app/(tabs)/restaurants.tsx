@@ -20,8 +20,8 @@ export default function RestaurantsScreen() {
     },
     header: {
       paddingHorizontal: 24,
-      paddingTop: 6,
-      paddingBottom: 6,
+      paddingTop: 4,
+      paddingBottom: 4,
       backgroundColor: colors.surface,
       marginBottom: 12,
       flexDirection: 'row',
