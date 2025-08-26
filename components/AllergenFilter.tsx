@@ -45,7 +45,7 @@ export default function AllergenFilter({
     },
     title: {
       fontFamily: 'Inter-SemiBold',
-      fontSize: 16,
+      fontSize: 15,
       color: colors.primary,
       marginLeft: 8,
     },

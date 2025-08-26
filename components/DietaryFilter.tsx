@@ -45,7 +45,7 @@ export default function DietaryFilter({
     },
     title: {
       fontFamily: 'Inter-SemiBold',
-      fontSize: 16,
+      fontSize: 15,
       color: colors.dietary,
       marginLeft: 8,
     },
