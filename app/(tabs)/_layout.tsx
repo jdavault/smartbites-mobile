@@ -35,6 +35,9 @@ export default function TabLayout() {
           fontFamily: 'Inter-Medium',
           marginTop: 4,
         },
+        tabBarIconStyle: {
+          marginBottom: 2,
+        },
       }}
     >
       <Tabs.Screen
@@ -42,7 +45,7 @@ export default function TabLayout() {
         options={{
           title: 'Recipes',
           tabBarIcon: ({ size, color }) => (
-            <Search size={size} color={color} />
+            <Search size={22} color={color} />
           ),
         }}
       />
@@ -51,7 +54,7 @@ export default function TabLayout() {
         options={{
           title: 'Restaurants',
           tabBarIcon: ({ size, color }) => (
-            <ChefHat size={size} color={color} />
+            <ChefHat size={22} color={color} />
           ),
         }}
       />
@@ -60,7 +63,7 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ size, color }) => (
-            <User size={size} color={color} />
+            <User size={22} color={color} />
           ),
         }}
       />
