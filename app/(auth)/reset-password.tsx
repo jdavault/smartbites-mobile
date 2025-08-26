@@ -34,34 +34,34 @@ type ModalInfo = {
 const DismissWrapper =
   Platform.OS === 'web' ? (Fragment as any) : TouchableWithoutFeedback;
 
+/**
+ * Parse both query (?code=...) and hash (#access_token=...) params from:
+ * - Web URLs (https://domain/reset-password?...#...)
+ * - Deep links (smartbites://reset-password?...#...)
+ * We DO NOT rewrite the scheme; we just parse strings safely.
+ */
 function parseTokensFromUrl(rawUrl: string | null) {
-  if (!rawUrl) return {};
+  if (!rawUrl) return { code: null, access_token: null, refresh_token: null };
   try {
-    // Handle both web URLs and deep link schemes
-    let url: URL;
-    if (rawUrl.startsWith('smartbites://')) {
-      // Convert deep link to web URL for parsing
-      url = new URL(rawUrl.replace('smartbites://', 'https://smartbites.food/'));
-    } else {
-      url = new URL(rawUrl);
-    }
-    
-    // Supabase may send tokens in the hash (#access_token=...) or PKCE code in ?code=
-    const hash = (url.hash || '').replace(/^#/, '');
-    const h = new URLSearchParams(hash);
-    const q = url.searchParams;
+    const qIndex = rawUrl.indexOf('?');
+    const hIndex = rawUrl.indexOf('#');
 
-    const code = q.get('code') || h.get('code') || undefined;
-    const access_token =
-      h.get('access_token') || q.get('access_token') || undefined;
-    const refresh_token =
-      h.get('refresh_token') || q.get('refresh_token') || undefined;
-    const token = q.get('token') || h.get('token') || undefined;
-    const type = q.get('type') || h.get('type') || undefined;
+    const queryStr =
+      qIndex >= 0
+        ? rawUrl.slice(qIndex + 1, hIndex >= 0 ? hIndex : undefined)
+        : '';
+    const hashStr = hIndex >= 0 ? rawUrl.slice(hIndex + 1) : '';
 
-    return { code, access_token, refresh_token, token, type };
+    const q = new URLSearchParams(queryStr);
+    const h = new URLSearchParams(hashStr);
+
+    const code = q.get('code') || h.get('code');
+    const access_token = h.get('access_token') || q.get('access_token');
+    const refresh_token = h.get('refresh_token') || q.get('refresh_token');
+
+    return { code, access_token, refresh_token };
   } catch {
-    return {};
+    return { code: null, access_token: null, refresh_token: null };
   }
 }
 
@@ -72,14 +72,14 @@ export default function ResetPasswordScreen() {
   const styles = useMemo(() => getStyles(theme), [theme]);
 
   const [initializing, setInitializing] = useState(true);
-  const [headerStatus, setHeaderStatus] = useState<string | null>(null); // only for link/session status
+  const [headerStatus, setHeaderStatus] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [fieldError, setFieldError] = useState<string | null>(null); // validation/API errors under inputs
+  const [fieldError, setFieldError] = useState<string | null>(null);
   const [mode, setMode] = useState<'request' | 'reset'>('request');
 
   const [modalInfo, setModalInfo] = useState<ModalInfo>({
@@ -95,19 +95,18 @@ export default function ResetPasswordScreen() {
             ? window.location.href
             : (await Linking.getInitialURL()) ?? '';
 
-        const { code, access_token, refresh_token, token, type } =
+        const { code, access_token, refresh_token } =
           parseTokensFromUrl(initialUrl);
 
         let sessionEstablished = false;
 
-        // Handle direct token from recovery link
-        if (token && type === 'recovery') {
-          // This is a recovery token, we need to exchange it for a session
+        // If Supabase provided a PKCE code or OAuth tokens, exchange the *original* URL.
+        if (code || (access_token && refresh_token)) {
           const { data, error } = await AuthService.exchangeCodeForSession(
             initialUrl
           );
           if (error) {
-            console.error('Token exchange error:', error);
+            console.error('exchangeCodeForSession error:', error);
             setHeaderStatus(
               'This reset link is invalid or expired. Please request a new password reset.'
             );
@@ -115,55 +114,18 @@ export default function ResetPasswordScreen() {
             return;
           }
           if (data?.session) {
-            setUserEmail(data.session.user?.email || null);
             sessionEstablished = true;
-            setMode('reset');
-            setHeaderStatus('Enter a new password to complete your reset.');
-          }
-        } else if (code) {
-          const { data, error } = await AuthService.exchangeCodeForSession(
-            initialUrl
-          );
-          if (error) {
-            console.error('Code exchange error:', error);
-            setHeaderStatus(
-              'This reset link is invalid or expired. Please request a new password reset.'
-            );
-            setMode('request');
-            return;
-          }
-          if (data?.session) {
             setUserEmail(data.session.user?.email || null);
-            sessionEstablished = true;
-            setMode('reset');
-            setHeaderStatus('Enter a new password to complete your reset.');
-          }
-        } else if (access_token && refresh_token) {
-          const { data, error } = await AuthService.setSession(
-            access_token,
-            refresh_token
-          );
-          if (error) {
-            console.error('Set session error:', error);
-            setHeaderStatus(
-              'This reset link is invalid or expired. Please request a new password reset.'
-            );
-            setMode('request');
-            return;
-          }
-          if (data?.session) {
-            setUserEmail(data.session.user?.email || null);
-            sessionEstablished = true;
             setMode('reset');
             setHeaderStatus('Enter a new password to complete your reset.');
           }
         }
 
-        // Only check session if no tokens were processed
+        // If no tokens present, see if we already have a session
         if (!sessionEstablished) {
           const { session, error: getErr } = await AuthService.getSession();
           if (getErr) {
-            console.error('Get session error:', getErr);
+            console.error('getSession error:', getErr);
             setHeaderStatus(
               'Could not validate session. Please request a new password reset.'
             );
@@ -181,8 +143,14 @@ export default function ResetPasswordScreen() {
             setHeaderStatus('Enter a new password to complete your reset.');
           }
         }
+
+        // Optional: clean the URL on web
+        if (Platform.OS === 'web') {
+          const clean = `${window.location.origin}${window.location.pathname}`;
+          window.history.replaceState({}, '', clean);
+        }
       } catch (e: any) {
-        console.error('Reset password initialization error:', e);
+        console.error('Reset password init error:', e);
         setHeaderStatus(
           'Could not validate the reset link. Please request a new password reset.'
         );
@@ -193,28 +161,28 @@ export default function ResetPasswordScreen() {
     })();
   }, []);
 
-  // Handle deep links on native
+  // Handle deep links on native while the app is already open
   useEffect(() => {
     if (Platform.OS === 'web') return;
 
     const handleDeepLink = async ({ url }: { url: string }) => {
       try {
         const { code, access_token, refresh_token } = parseTokensFromUrl(url);
+        if (!code && !(access_token && refresh_token)) return;
 
-        if (code) {
-          const { data, error } = await AuthService.exchangeCodeForSession(url);
-          if (error) {
-            setHeaderStatus(
-              'This reset link is invalid or expired. Please request a new password reset.'
-            );
-            setMode('request');
-            return;
-          }
-          if (data?.session) {
-            setUserEmail(data.session.user?.email || null);
-            setMode('reset');
-            setHeaderStatus('Enter a new password to complete your reset.');
-          }
+        const { data, error } = await AuthService.exchangeCodeForSession(url);
+        if (error) {
+          console.error('Deep link exchange error:', error);
+          setHeaderStatus(
+            'This reset link is invalid or expired. Please request a new password reset.'
+          );
+          setMode('request');
+          return;
+        }
+        if (data?.session) {
+          setUserEmail(data.session.user?.email || null);
+          setMode('reset');
+          setHeaderStatus('Enter a new password to complete your reset.');
         }
       } catch (e) {
         console.error('Deep link handling failed:', e);
@@ -230,7 +198,6 @@ export default function ResetPasswordScreen() {
   }, []);
 
   const onSave = async () => {
-    // clear previous field error
     setFieldError(null);
 
     if (!password || !password2) {
@@ -251,11 +218,10 @@ export default function ResetPasswordScreen() {
       const { error } = await AuthService.updatePassword(password);
       if (error) throw error;
 
-      // Auto-login the user with their new password
+      // Optional: auto-sign-in so you can route back to the app immediately.
       if (userEmail) {
         const { error: signInError } = await signIn(userEmail, password);
         if (signInError) {
-          // If auto-login fails, show success but suggest manual login
           setModalInfo({
             visible: true,
             title: 'Password Updated 🔐',
@@ -264,12 +230,10 @@ export default function ResetPasswordScreen() {
             emoji: '✅',
           });
         } else {
-          // Success! User is now logged in, redirect to app
           router.replace('/(tabs)');
           return;
         }
       } else {
-        // No email available for auto-login
         setModalInfo({
           visible: true,
           title: 'Password Updated 🔐',
@@ -284,7 +248,6 @@ export default function ResetPasswordScreen() {
       setShowPass(false);
       setShowConfirm(false);
     } catch (e: any) {
-      // Show API failure in a modal (separate from inline validation)
       setModalInfo({
         visible: true,
         title: 'Error',
@@ -299,7 +262,6 @@ export default function ResetPasswordScreen() {
   };
 
   const handleModalClose = () => {
-    // No navigation/redirect — just close.
     setModalInfo((m) => ({ ...m, visible: false }));
   };
 
@@ -313,7 +275,6 @@ export default function ResetPasswordScreen() {
     );
   }
 
-  // If we're in request mode, show a message to go back to forgot password
   if (mode === 'request') {
     return (
       <SafeAreaView style={styles.container}>
@@ -411,7 +372,7 @@ export default function ResetPasswordScreen() {
             </View>
 
             <View style={styles.form}>
-              {/* New Password with eye toggle */}
+              {/* New Password */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>New Password</Text>
                 <View style={styles.passwordRow}>
@@ -441,7 +402,7 @@ export default function ResetPasswordScreen() {
                 </View>
               </View>
 
-              {/* Confirm with eye toggle */}
+              {/* Confirm */}
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Confirm New Password</Text>
                 <View style={styles.passwordRow}>
@@ -470,7 +431,6 @@ export default function ResetPasswordScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Live match hint */}
                 {showMatchHint && (
                   <Text
                     style={
@@ -483,7 +443,6 @@ export default function ResetPasswordScreen() {
                   </Text>
                 )}
 
-                {/* Inline validation/API error (no redirect) */}
                 {!!fieldError && (
                   <Text style={styles.errorText}>{fieldError}</Text>
                 )}
@@ -566,11 +525,13 @@ const getStyles = (theme: ThemeColors) =>
       textAlign: 'center',
       paddingHorizontal: Spacing.md,
     },
+    formContainer: {
+      marginTop: Spacing.md,
+    },
     form: {
       marginTop: Spacing.md,
       width: '100%',
     },
-
     inputContainer: {
       marginBottom: Spacing.lg,
     },
@@ -580,7 +541,6 @@ const getStyles = (theme: ThemeColors) =>
       color: theme.accentDark,
       marginBottom: Spacing.xs,
     },
-
     passwordRow: { position: 'relative', width: '100%' },
     input: {
       minHeight: 48,
@@ -593,7 +553,7 @@ const getStyles = (theme: ThemeColors) =>
       fontSize: FontSizes.md,
       backgroundColor: theme.backgroundLight,
       width: '100%',
-      paddingRight: 44, // room for eye toggle
+      paddingRight: 44,
       color: theme.textPrimary,
     },
     eyeBtn: {
@@ -602,8 +562,6 @@ const getStyles = (theme: ThemeColors) =>
       top: 10,
       padding: 8,
     },
-
-    // Inline hints/errors under inputs
     matchOk: {
       marginTop: Spacing.xs,
       fontFamily: Fonts.body,
@@ -622,7 +580,6 @@ const getStyles = (theme: ThemeColors) =>
       fontSize: FontSizes.sm,
       color: theme.error,
     },
-
     button: {
       backgroundColor: theme.primary,
       height: 54,
@@ -636,7 +593,6 @@ const getStyles = (theme: ThemeColors) =>
       fontFamily: Fonts.bodyBold,
       fontSize: FontSizes.md,
     },
-
     footer: {
       flexDirection: 'row',
       justifyContent: 'center',
@@ -653,8 +609,6 @@ const getStyles = (theme: ThemeColors) =>
       fontSize: FontSizes.md,
       color: theme.primary,
     },
-
-    // Modal
     modalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.4)',
