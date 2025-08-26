@@ -36,7 +36,6 @@ export function getSupabase(): SupabaseClient {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: Platform.OS === 'web',
-      lock: processLock,
       flowType: Platform.OS === 'web' ? 'implicit' : 'pkce',
     },
     // optional: a tiny bit of app metadata on requests
@@ -61,7 +60,6 @@ export function getSupabaseEmail(): SupabaseClient {
       autoRefreshToken: true,
       detectSessionInUrl: Platform.OS === 'web', // true on web only
       flowType: Platform.OS === 'web' ? 'implicit' : 'pkce',
-      lock: processLock, // if you use tab-locking, otherwise remove
     },
     global: { headers: { 'x-application-name': 'smartbites' } },
   });
