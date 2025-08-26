@@ -56,6 +56,7 @@ export default function ForgotPasswordScreen() {
       ? 'http://localhost:8081/reset-password' // Simulator / cable-tether tests
       : Linking.createURL('/reset-password'), // smartbites://reset-password
   })!;
+
   const handleSendEmail = async () => {
     const trimmed = email.trim();
 
