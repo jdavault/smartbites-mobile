@@ -257,13 +257,13 @@ export default function SearchScreen() {
       width: '100%',
       maxWidth: 1034, // same cap as your sections
       alignSelf: 'center',
-      paddingHorizontal: 24, // 👈 force match card layout
+      paddingHorizontal: 12, // 👈 reduced from 24 to 12
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 24,
+      paddingHorizontal: 12,
       paddingTop: 4,
       paddingBottom: 4,
       backgroundColor: colors.surface,

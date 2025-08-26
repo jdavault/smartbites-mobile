@@ -19,7 +19,7 @@ export default function RestaurantsScreen() {
       backgroundColor: colors.background,
     },
     header: {
-      paddingHorizontal: 24,
+      paddingHorizontal: 12,
       paddingTop: 4,
       paddingBottom: 4,
       backgroundColor: colors.surface,
@@ -49,7 +49,7 @@ export default function RestaurantsScreen() {
     },
     content: {
       flex: 1,
-      paddingHorizontal: 24,
+      paddingHorizontal: 12,
     },
     contentContainer: {
       width: '100%',
