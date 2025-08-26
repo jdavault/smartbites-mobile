@@ -278,7 +278,7 @@ export default function SearchScreen() {
       marginLeft: 16,
     },
     title: {
-      fontSize: 22,
+      fontSize: 20,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
       marginBottom: 4,
@@ -290,7 +290,7 @@ export default function SearchScreen() {
     },
     searchContainer: {
       //paddingHorizontal: 24,
-      marginBottom: 8,
+      marginBottom: 6,
     },
     searchInputContainer: {
       flexDirection: 'row',
