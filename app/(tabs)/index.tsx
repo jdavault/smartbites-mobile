@@ -78,7 +78,7 @@ export default function SearchScreen() {
 
   const { width } = useWindowDimensions();
   const containerMax = 1024;
-  const padX = 0; // Remove all outer padding for search and filters
+  const padX = 6; // Just a tiny bit of padding for search and filters
 
   const openModal = (info: Omit<ModalInfo, 'visible'>) =>
     setModalInfo({ ...info, visible: true });
