@@ -296,7 +296,7 @@ export default function SearchScreen() {
       alignItems: 'center',
       backgroundColor: colors.surface,
       borderRadius: 12,
-      paddingHorizontal: 14,
+      paddingHorizontal: 10,
       paddingVertical: 8,
       borderWidth: 1,
       borderColor: colors.border,
