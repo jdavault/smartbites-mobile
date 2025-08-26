@@ -78,7 +78,7 @@ export default function SearchScreen() {
 
   const { width } = useWindowDimensions();
   const containerMax = 1024;
-  const padX = width <= 360 ? 16 : width <= 690 ? 20 : 24; // matches your section spacing scale
+  const padX = 0; // Remove all outer padding for search and filters
 
   const openModal = (info: Omit<ModalInfo, 'visible'>) =>
     setModalInfo({ ...info, visible: true });
@@ -255,9 +255,9 @@ export default function SearchScreen() {
     },
     responsiveShell: {
       width: '100%',
-      maxWidth: 1034, // same cap as your sections
+      maxWidth: '100%', // Allow full width
       alignSelf: 'center',
-      paddingHorizontal: 1, // minimal padding for search/filters
+      paddingHorizontal: 0, // No padding at all
     },
     header: {
       flexDirection: 'row',
