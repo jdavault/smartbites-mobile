@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "smartbites",
-    "schemes": ["smartbites"],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "web": {
@@ -33,7 +32,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.allergy-aware-recipe-finder",
-      "buildNumber": "45",
+      "buildNumber": "51",
       "associatedDomains": ["applinks:smartbites.food"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,

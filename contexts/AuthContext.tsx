@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
+import { useRouter } from 'expo-router';
 import { AuthService } from '@/services/authService';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -37,15 +38,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Redirect URI used for Google & email links
+  // Redirect URI used for Google OAuth only (not for Supabase email links)
   const redirectUri = makeRedirectUri({
-    scheme: 'smartbites', // must match your app.json/app.config
-    path: 'auth',
-    preferLocalhost: true, // nicer for web dev
+    scheme: 'smartbites', // must match app.json/app.config
+    preferLocalhost: true,
   });
 
   // ---- Google sign-in (Expo AuthSession)
@@ -60,11 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (response?.type === 'success') {
-      let idToken: string | null = null;
-      if (response.authentication?.idToken)
-        idToken = response.authentication.idToken;
-      else if (response.params?.id_token) idToken = response.params.id_token;
-
+      const idToken =
+        response.authentication?.idToken ?? response.params?.id_token ?? null;
       if (idToken) handleGoogleSignIn(idToken);
       else console.error('No ID token found in Google response');
     }
@@ -80,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // ---- Restore session & subscribe to auth changes
+  // ---- Initial session restore + subscribe to auth changes
   useEffect(() => {
     let mounted = true;
 
@@ -91,9 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (error) {
           console.error('getSession error:', error);
-          // Clear invalid refresh tokens
-          if (error.message?.includes('refresh_token_not_found') || 
-              error.message?.includes('Invalid Refresh Token')) {
+          // If refresh token is borked, clear it
+          if (
+            error.message?.includes('refresh_token_not_found') ||
+            error.message?.includes('Invalid Refresh Token')
+          ) {
             await AuthService.signOut();
           }
           setUser(null);
@@ -120,99 +121,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
-      sub.subscription.unsubscribe();
+      // guard for older SDKs
+      sub?.subscription?.unsubscribe?.();
     };
   }, []);
 
-  // ---- Handle auth links on WEB (OAuth / email confirmations)
+  // ---- Handle auth links on WEB (just route to reset-password; let that screen do the exchange)
   useEffect(() => {
     if (Platform.OS !== 'web') return;
 
-    // Check if this is a recovery link
     const url = window.location.href;
-    const isRecoveryLink = url.includes('type=recovery');
-    const hasAuthParams = url.includes('code=') || url.includes('access_token=') || url.includes('refresh_token=');
+    const hasRecovery = url.includes('type=recovery');
+    const hasTokens =
+      url.includes('code=') ||
+      url.includes('access_token=') ||
+      url.includes('refresh_token=');
 
-    if (!hasAuthParams) return;
-
-    // If it's a recovery link, redirect to reset-password without exchanging tokens
-    if (isRecoveryLink) {
+    if (hasRecovery || hasTokens) {
+      // Send the user to the reset-password screen; it will parse & exchange.
       try {
-        window.location.href = '/reset-password' + window.location.hash;
+        // Preserve query/hash so the screen can read them
+        const qs = window.location.search || '';
+        const hash = window.location.hash || '';
+        window.location.replace(`/reset-password${qs}${hash}`);
       } catch {}
-      return;
     }
-
-    (async () => {
-      try {
-        const { data, error } = await AuthService.exchangeCodeForSession(url);
-        if (error) {
-          console.warn('exchangeCodeForSession (web) error:', error);
-        } else if (data?.session) {
-          setUser(data.session.user);
-          setSession(data.session);
-        }
-      } catch (e) {
-        console.warn('Web exchange failed:', e);
-      } finally {
-        // Clean the URL so we don't re-process on refresh
-        try {
-          const clean = window.location.origin + window.location.pathname;
-          window.history.replaceState({}, document.title, clean);
-        } catch {}
-      }
-    })();
   }, []);
 
-  // ---- Handle auth links on NATIVE (Expo deep links)
+  // ---- Handle auth links on NATIVE (deep links): route to reset-password; let that screen do the work
   useEffect(() => {
     if (Platform.OS === 'web') return;
 
-    const handleDeepLink = async ({ url }: { url: string }) => {
-      console.log('🔗 Deep link received:', url);
-      
-      // Check if this is a recovery link
-      const isRecoveryLink = url.includes('type=recovery');
-      
-      // If it's a recovery link, redirect to reset-password without exchanging tokens
-      if (isRecoveryLink) {
-        console.log('🔗 Recovery link detected, navigating to reset-password');
-        router.replace('/reset-password');
-        return;
-      }
+    const forwardToResetIfAuthLink = (incomingUrl: string) => {
+      const isAuthish =
+        incomingUrl.includes('type=recovery') ||
+        incomingUrl.includes('code=') ||
+        incomingUrl.includes('access_token=') ||
+        incomingUrl.includes('refresh_token=');
 
-      try {
-        const { data, error } = await AuthService.exchangeCodeForSession(url);
-        if (error) {
-          console.warn('exchangeCodeForSession (native) error:', error);
-        } else if (data?.session) {
-          console.log('🔗 Session established from deep link');
-          setUser(data.session.user);
-          setSession(data.session);
-        }
-      } catch (e) {
-        console.warn('Deep link handling failed:', e);
+      if (isAuthish) {
+        // Always route to reset screen. It will parse & exchange using the full URL.
+        router.replace('/reset-password');
+        return true;
       }
+      return false;
     };
 
     // cold start
     Linking.getInitialURL().then((url) => {
-      if (url) {
-        console.log('🔗 Initial URL:', url);
-        const isRecoveryLink = url.includes('type=recovery');
-        if (isRecoveryLink) {
-          console.log('🔗 Initial recovery link, navigating to reset-password');
-          router.replace('/reset-password');
-        } else {
-          handleDeepLink({ url });
-        }
-      }
+      if (url) forwardToResetIfAuthLink(url);
     });
 
-    // foreground links
-    const sub = Linking.addEventListener('url', handleDeepLink);
+    // foreground
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      forwardToResetIfAuthLink(url);
+    });
+
     return () => sub.remove();
-  }, []);
+  }, [router]);
 
   // ---- Public API
   const signUp = async (
@@ -240,11 +206,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setSession(null);
 
-      // Sign out from Supabase (if there was a session)
       const { error } = await AuthService.signOut();
       if (error) console.error('signOut error:', error);
 
-      // Web-only: clear browser storage/cookies (optional but thorough)
       if (Platform.OS === 'web') {
         try {
           localStorage.clear();
@@ -258,7 +222,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (e) {
       console.error('Sign out exception:', e);
-      // Force clear local state even on error
       setUser(null);
       setSession(null);
     }

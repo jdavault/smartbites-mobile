@@ -54,7 +54,7 @@ export default function ForgotPasswordScreen() {
         : 'https://smartbites.food/reset-password',
     default: __DEV__
       ? 'http://localhost:8081/reset-password' // Simulator / cable-tether tests
-      : Linking.createURL('/reset-password'), // smartbites://reset-password
+      : 'smartbites://reset-password', // ← force scheme on iOS/Android //Linking.createURL('/reset-password'), // smartbites://reset-password
   })!;
 
   const handleSendEmail = async () => {
@@ -82,6 +82,7 @@ export default function ForgotPasswordScreen() {
     setSending(true);
     try {
       // This triggers Supabase to send a magic recovery link that lands on RESET_REDIRECT
+      console.log(`RESET_REDIRECT to ${RESET_REDIRECT}`);
       const { error } = await AuthService.resetPasswordForEmail(
         trimmed,
         RESET_REDIRECT
