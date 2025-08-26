@@ -290,15 +290,15 @@ export default function SearchScreen() {
     },
     searchContainer: {
       //paddingHorizontal: 24,
-      marginBottom: 16,
+      marginBottom: 8,
     },
     searchInputContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: colors.surface,
       borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
       borderWidth: 1,
       borderColor: colors.border,
     },
