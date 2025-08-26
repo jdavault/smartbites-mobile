@@ -65,13 +65,13 @@ export default function RecipeSection({
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
       marginBottom: 12,
-      paddingHorizontal: 24,
+      paddingHorizontal: 12,
     },
     horizontalScrollContainer: {
-      paddingLeft: 24,
+      paddingLeft: 12,
     },
     verticalContainer: {
-      paddingHorizontal: 24,
+      paddingHorizontal: 12,
       alignItems: 'center',
       width: '100%',
     },
