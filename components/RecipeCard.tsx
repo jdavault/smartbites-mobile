@@ -56,8 +56,8 @@ export default function RecipeCard({
       const baseUrl = process.env.EXPO_PUBLIC_RECIPE_IMAGES!; // define it in your .env
       return `${baseUrl}/${recipe.id}/${recipe.image}`;
     }
-
-    return 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+    // Return null if no image available
+    return null;
   };
 
   const handleCardPress = () => {
@@ -160,7 +160,9 @@ export default function RecipeCard({
   // Show full version with image for saved recipes
   return (
     <TouchableOpacity style={styles.card} onPress={handleCardPress}>
-      <Image source={{ uri: getImageUrl() }} style={styles.image} />
+      {getImageUrl() && (
+        <Image source={{ uri: getImageUrl()! }} style={styles.image} />
+      )}
 
       <View style={styles.content}>
         <View style={styles.header}>

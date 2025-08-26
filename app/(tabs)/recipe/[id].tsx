@@ -65,8 +65,8 @@ export default function RecipeDetailScreen() {
         return `${baseUrl}/${recipe.id}/${recipe.image}`;
       }
     }
-    // Fallback to default image
-    return DEFAULT_IMAGE_URL;
+    // Return null if no image - we'll handle this in the UI
+    return null;
   };
 
   const handleBack = () => {
@@ -123,11 +123,13 @@ export default function RecipeDetailScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Image
-          source={{ uri: getImageUrl() }}
-          style={styles.image}
-          resizeMode="cover"
-        />
+        {getImageUrl() && (
+          <Image
+            source={{ uri: getImageUrl()! }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        )}
 
         <View style={styles.content}>
           <Text style={styles.title}>{recipe.title}</Text>
