@@ -58,7 +58,7 @@ export default function RecipeSection({
 
   const styles = StyleSheet.create({
     section: {
-      marginBottom: 16,
+      marginBottom: 8,
     },
     sectionTitle: {
       fontSize: 20,
