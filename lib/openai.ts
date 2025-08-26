@@ -448,8 +448,6 @@ export async function generateRecipes(
       );
     });
 
-    return result.length
-      ? result
     if (result.length === 0) {
       throw new Error('No recipes were generated. Please try again later.');
     }
