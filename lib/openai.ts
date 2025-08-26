@@ -450,10 +450,14 @@ export async function generateRecipes(
 
     return result.length
       ? result
-      : [generateMockRecipe(query, allergens, dietaryPrefs)];
+    if (result.length === 0) {
+      throw new Error('No recipes were generated. Please try again later.');
+    }
+    
+    return result;
   } catch (err) {
     console.error('Error generating recipes:', err);
-    return [generateMockRecipe(query, allergens, dietaryPrefs)];
+    throw new Error('Failed to generate recipes. Please try again later.');
   }
 }
 
@@ -464,7 +468,7 @@ export async function generateRecipeImage(title: string): Promise<string> {
     return `GENERATE_IMAGE:${title}`;
   } catch (err) {
     console.error('Error generating recipe image:', err);
-    return DEFAULT_IMG;
+    throw new Error('Failed to generate recipe image. Please try again later.');
   }
 }
 
@@ -510,40 +514,3 @@ async function fetchWithRateLimitRetry(
   throw new Error('OpenAI image error: retries exhausted');
 }
 
-function generateMockRecipe(
-  query: string,
-  allergens: string[],
-  dietaryPrefs: string[]
-): GeneratedRecipe {
-  return {
-    title: `Delicious ${query}`,
-    headNote: `A wonderful take on ${query} that's both flavorful and satisfying.`,
-    description: `This ${query} recipe combines fresh ingredients with simple cooking techniques to create a memorable meal.`,
-    ingredients: [
-      '2 cups fresh ingredients',
-      '1 tablespoon olive oil',
-      '1 teaspoon salt',
-      '1/2 teaspoon black pepper',
-      '2 cloves garlic, minced',
-    ],
-    instructions: [
-      'Prepare all ingredients by washing and chopping as needed.',
-      'Heat olive oil in a large skillet over medium heat.',
-      'Add garlic and cook for 1 minute until fragrant.',
-      'Add main ingredients and season with salt and pepper.',
-      'Cook for 15-20 minutes until tender and golden.',
-      'Serve immediately while hot.',
-    ],
-    prepTime: '15 minutes',
-    cookTime: '25 minutes',
-    servings: 4,
-    difficulty: 'easy' as const,
-    tags: ['quick', 'healthy', 'family-friendly'],
-    searchQuery: query,
-    allergens: [],
-    dietaryPrefs: dietaryPrefs,
-    notes: 'Feel free to substitute ingredients based on your preferences.',
-    nutritionInfo: 'Approximately 250 calories per serving',
-    allergensIncluded: [],
-  };
-}

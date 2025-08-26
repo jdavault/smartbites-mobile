@@ -404,6 +404,7 @@ export class RecipeService {
           }
         } catch (imageError) {
           console.warn('🖼️ Error persisting image (continuing without image):', imageError);
+          // Don't throw here - we can save the recipe without an image
         }
 
         // Insert allergen relationships
@@ -571,12 +572,13 @@ export class RecipeService {
 
       if (updateError) {
         console.error('🖼️ DB update error:', updateError);
+        throw new Error('Failed to save recipe image. Please try again later.');
       }
 
       return result.publicUrl || DEFAULT_RECIPE_IMAGE;
     } catch (imageGenError) {
       console.error('🖼️ Image generation failed:', imageGenError);
-      return DEFAULT_RECIPE_IMAGE;
+      throw new Error('Failed to generate recipe image. Please try again later.');
     }
   }
 }
