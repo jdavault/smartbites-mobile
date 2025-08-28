@@ -1,7 +1,6 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const corsHeaders: Record<string, string> = {
-  // For dev: allow any origin. In prod, set to your domain: 'https://smartbites.food'
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
     'authorization, x-client-info, apikey, content-type',
@@ -9,17 +8,29 @@ const corsHeaders: Record<string, string> = {
 };
 
 Deno.serve(async (req) => {
-  // 1) CORS preflight
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // 2) Verify JWT & get user
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    // Get environment variables with validation
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+      console.error('Missing required environment variables');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Verify JWT & get user
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: req.headers.get('Authorization')! } },
     });
@@ -30,17 +41,21 @@ Deno.serve(async (req) => {
     } = await supabase.auth.getUser();
 
     if (userErr || !user) {
+      console.error('Auth error:', userErr);
       return new Response(
         JSON.stringify({ error: 'Unauthorized or no user' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
 
-    // 3) Use ADMIN client to delete user data and account
-    const admin = createClient(supabaseUrl, supabaseServiceKey);
-    
     console.log(`Deleting account for user: ${user.id}`);
 
+    // Use admin client to delete user data and account
+    const admin = createClient(supabaseUrl, supabaseServiceKey);
+    
     // Delete user data from all tables in the correct order
     // Delete user dietary preferences
     const { error: dietaryError } = await admin
@@ -100,7 +115,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    console.error('deleteUserAccount error', e);
+    console.error('deleteUserAccount error:', e);
     return new Response(JSON.stringify({ error: 'Server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
