@@ -10,6 +10,7 @@ import type { User, Session } from '@supabase/supabase-js';
 import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
 import { ResponseType } from 'expo-auth-session';
+import { isAuthLink } from '@/utils/authLink';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -90,7 +91,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (error) {
           console.error('getSession error:', error);
-          // If refresh token is borked, clear it
           if (
             error.message?.includes('refresh_token_not_found') ||
             error.message?.includes('Invalid Refresh Token')
@@ -121,26 +121,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
-      // guard for older SDKs
       sub?.subscription?.unsubscribe?.();
     };
   }, []);
 
-  // ---- Handle auth links on WEB (just route to reset-password; let that screen do the exchange)
+  // ---- Handle auth links on WEB: forward to reset-password WITH original params; screen will exchange & strip
   useEffect(() => {
     if (Platform.OS !== 'web') return;
 
     const url = window.location.href;
-    const hasRecovery = url.includes('type=recovery');
-    const hasTokens =
-      url.includes('code=') ||
-      url.includes('access_token=') ||
-      url.includes('refresh_token=');
-
-    if (hasRecovery || hasTokens) {
-      // Send the user to the reset-password screen; it will parse & exchange.
+    if (isAuthLink(url)) {
       try {
-        // Preserve query/hash so the screen can read them
         const qs = window.location.search || '';
         const hash = window.location.hash || '';
         window.location.replace(`/reset-password${qs}${hash}`);
@@ -148,23 +139,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // ---- Handle auth links on NATIVE (deep links): route to reset-password; let that screen do the work
+  // ---- Handle auth links on NATIVE: forward the FULL url to reset-password via param
   useEffect(() => {
     if (Platform.OS === 'web') return;
 
     const forwardToResetIfAuthLink = (incomingUrl: string) => {
-      const isAuthish =
-        incomingUrl.includes('type=recovery') ||
-        incomingUrl.includes('code=') ||
-        incomingUrl.includes('access_token=') ||
-        incomingUrl.includes('refresh_token=');
+      if (!isAuthLink(incomingUrl)) return false;
 
-      if (isAuthish) {
-        // Always route to reset screen. It will parse & exchange using the full URL.
-        router.replace('/reset-password');
-        return true;
-      }
-      return false;
+      router.replace({
+        pathname: '/reset-password',
+        params: { url: encodeURIComponent(incomingUrl) },
+      });
+      return true;
     };
 
     // cold start
@@ -202,7 +188,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Optimistically clear local state
       setUser(null);
       setSession(null);
 

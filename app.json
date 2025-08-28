@@ -5,7 +5,7 @@
     "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "smartbites",
+    "schemes": ["smartbites"],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "web": {
@@ -50,6 +50,14 @@
           "action": "VIEW",
           "category": ["BROWSABLE", "DEFAULT"],
           "data": [{ "scheme": "smartbites" }]
+        }
+      ],
+      "action": "VIEW",
+      "category": ["BROWSABLE", "DEFAULT"],
+      "data": [
+        {
+          "scheme": "https",
+          "host": "smartbites.food"
         }
       ],
       "adaptiveIcon": {
