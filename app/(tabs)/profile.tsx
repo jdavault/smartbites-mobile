@@ -468,7 +468,7 @@ export default function ProfileScreen() {
                   <Sun size={20} color={colors.text} />
                 )}
                 <Text style={styles.themeText}>
-                  {isDark ? 'Dark Mode' : 'Light Mode'}
+                  {isDark ? 'Dark' : 'Light'}
                 </Text>
               </View>
               <Switch
