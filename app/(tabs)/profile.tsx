@@ -289,90 +289,6 @@ export default function ProfileScreen() {
                 autoCapitalize="words"
               />
 
-              {/* Address */}
-              <TextInput
-                style={styles.input}
-                value={profile.address1}
-                onChangeText={(text) =>
-                  setProfile((prev) => ({ ...prev, address1: text }))
-                }
-                placeholder="Address line 1"
-                placeholderTextColor={colors.textSecondary}
-                autoCapitalize="words"
-              />
-              <TextInput
-                style={styles.input}
-                value={profile.address2}
-                onChangeText={(text) =>
-                  setProfile((prev) => ({ ...prev, address2: text }))
-                }
-                placeholder="Address line 2 (optional)"
-                placeholderTextColor={colors.textSecondary}
-                autoCapitalize="words"
-              />
-
-              <View className="city-state-row" style={styles.row}>
-                <TextInput
-                  style={[styles.input, styles.flex2]}
-                  value={profile.city}
-                  onChangeText={(text) =>
-                    setProfile((prev) => ({ ...prev, city: text }))
-                  }
-                  placeholder="City"
-                  placeholderTextColor={colors.textSecondary}
-                  autoCapitalize="words"
-                />
-
-                {/* NEW: State selector as modal trigger (no inline dropdown) */}
-                <TouchableOpacity
-                  style={[styles.input, styles.stateSelectButton, styles.flex1]}
-                  onPress={() => setShowStates(true)}
-                >
-                  <Text
-                    style={[
-                      styles.stateButtonText,
-                      {
-                        color: profile.state
-                          ? colors.text
-                          : colors.textSecondary,
-                      },
-                    ]}
-                  >
-                    {profile.state || 'State'}
-                  </Text>
-                  <ChevronDown size={16} color={colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.row}>
-                <View style={styles.zipContainer}>
-                  <TextInput
-                    style={styles.input}
-                    value={profile.zip}
-                    onChangeText={(text) =>
-                      setProfile((prev) => ({ ...prev, zip: text }))
-                    }
-                    placeholder="ZIP"
-                    placeholderTextColor={colors.textSecondary}
-                    keyboardType="number-pad"
-                    maxLength={10}
-                  />
-                </View>
-                <View style={styles.phoneContainer}>
-                  <TextInput
-                    style={styles.input}
-                    value={profile.phone}
-                    onChangeText={(text) => {
-                      const formatted = formatPhoneNumber(text);
-                      setProfile((prev) => ({ ...prev, phone: formatted }));
-                    }}
-                    placeholder="Phone"
-                    placeholderTextColor={colors.textSecondary}
-                    keyboardType="phone-pad"
-                    maxLength={14}
-                  />
-                </View>
-              </View>
             </View>
           </View>
 
@@ -655,8 +571,8 @@ const getStyles = (colors: ThemeColors) =>
       marginBottom: 16,
     },
     chip: {
-      paddingVertical: 6,
-      paddingHorizontal: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
       borderRadius: 999,
       borderWidth: 1,
       borderColor: colors.border,
