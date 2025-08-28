@@ -425,6 +425,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     googleButtonText: {
       color: colors.textSecondary,
       fontFamily: Fonts.heading,
+    },
 
     appleButton: {
       backgroundColor: Colors.ironBlack[400],
@@ -464,7 +465,9 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     },
     signupRow: {
       flexDirection: 'row',
-      backgroundColor: colors.surface,
+      alignItems: 'center',
+    },
+    footerText: {
       fontSize: 14,
       fontFamily: 'Inter-Regular',
       color: colors.textSecondary,
@@ -507,8 +510,8 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     },
     modalContent: {
       backgroundColor: '#FFFFFF',
-      flex: 1,
-      paddingVertical: 12,
+      paddingHorizontal: 24,
+      paddingVertical: 32,
       borderRadius: 12,
       width: '80%',
       maxWidth: 420,
