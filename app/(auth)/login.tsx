@@ -21,7 +21,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
+import { useTheme, ThemeColors, Colors } from '@/contexts/ThemeContext';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import { Spacing } from '@/constants/Spacing';
 import { Fonts, FontSizes } from '@/constants/Typography';
@@ -435,7 +435,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       alignItems: 'center',
       borderWidth: 1,
       borderColor: colors.border,
-      backgroundColor: colors.ironBlack[400],
+      backgroundColor: Colors.ironBlack[400],
     },
     appleButtonText: {
       color: '#FFFFFF',
