@@ -280,7 +280,7 @@ export default function RegisterScreen() {
 
     setLoading(true);
 
-    const { error: signErr } = await signUp(email, password, {
+    const { error: signErr, data } = await signUp(email, password, {
       first_name: firstName,
       last_name: lastName,
       address1,
@@ -313,6 +313,26 @@ export default function RegisterScreen() {
           : undefined,
       });
       return;
+    }
+
+    // Save allergens and dietary preferences after successful registration
+    if (data.user) {
+      try {
+        // Save selected allergens
+        if (selectedAllergenIds.size > 0) {
+          const selectedAllergenObjects = allergens.filter(a => selectedAllergenIds.has(a.id));
+          await AllergenService.setUserAllergens(data.user.id, selectedAllergenObjects.map(a => ({ $id: a.id, name: a.name })));
+        }
+
+        // Save selected dietary preferences
+        if (selectedPrefIds.size > 0) {
+          const selectedDietaryObjects = dietPrefs.filter(d => selectedPrefIds.has(d.id));
+          await DietaryService.setUserDietaryPrefs(data.user.id, selectedDietaryObjects.map(d => ({ $id: d.id, name: d.name })));
+        }
+      } catch (preferencesError) {
+        console.error('Error saving user preferences during registration:', preferencesError);
+        // Don't fail the registration if preferences fail to save
+      }
     }
 
     setLoading(false);
