@@ -466,6 +466,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     signupRow: {
       flexDirection: 'row',
       alignItems: 'center',
+     justifyContent: 'center',
     },
     footerText: {
       fontSize: 14,
