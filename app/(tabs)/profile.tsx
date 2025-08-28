@@ -522,27 +522,6 @@ export default function ProfileScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-            <View
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
-            >
-              {isDark ? (
-                <Moon size={20} color={colors.text} />
-              ) : (
-                <Sun size={20} color={colors.text} />
-              )}
-              <Text style={styles.themeText}>
-                {isDark ? 'Dark Mode' : 'Light Mode'}
-              </Text>
-            </View>
-            <Switch
-              value={isDark}
-              onValueChange={toggleTheme}
-              trackColor={{ false: '#e6e2d6', true: colors.primary }}
-              thumbColor="#FFFFFF"
-            />
-          </View>
-
-          <View style={styles.buttonRow}>
 
           {/* About / Legal Section (collapsible) */}
           <View>
