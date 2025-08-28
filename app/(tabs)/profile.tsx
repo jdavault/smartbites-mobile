@@ -192,38 +192,26 @@ export default function ProfileScreen() {
     closeModal();
 
     try {
-      // Delete user data from all tables
-      await Promise.all([
-        // Delete user dietary preferences
-        supabase
-          .from('user_dietary_prefs')
-          .delete()
-          .eq('user_id', user.id),
-        
-        // Delete user allergens
-        supabase
-          .from('user_allergens')
-          .delete()
-          .eq('user_id', user.id),
-        
-        // Delete user recipes
-        supabase
-          .from('user_recipes')
-          .delete()
-          .eq('user_id', user.id),
-        
-        // Delete user profile
-        supabase
-          .from('user_profiles')
-          .delete()
-          .eq('user_id', user.id),
-      ]);
-
-      // Delete the auth user (this will also sign them out)
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+      // Call the Edge Function to securely delete the account
+      const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (deleteError) {
-        throw deleteError;
+      if (!session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/deleteUserAccount`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error || 'Failed to delete account');
       }
 
       // Sign out and redirect
