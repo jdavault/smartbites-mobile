@@ -89,6 +89,13 @@ export class AuthService {
   static async signOut(): Promise<{ error: any }> {
     try {
       const { error } = await supabase.auth.signOut();
+      
+      // Handle the case where session is already invalid on server
+      if (error && error.message && error.message.includes('Session from session_id claim in JWT does not exist')) {
+        // Session is already invalid, treat as successful logout
+        return { error: null };
+      }
+      
       if (error) console.error('signOut error:', error);
       return { error };
     } catch (error) {
