@@ -745,7 +745,7 @@ const getStyles = (colors: ThemeColors) =>
     themeText: {
       fontSize: 16,
       fontFamily: 'Inter-Medium',
-      color: colors.accentDark,
+      color: colors.text,
     },
 
     // Buttons
