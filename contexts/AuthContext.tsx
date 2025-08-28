@@ -14,6 +14,47 @@ import { isAuthLink } from '@/utils/authLink';
 
 WebBrowser.maybeCompleteAuthSession();
 
+// Thread safety helpers
+const onMain = (fn: () => void) => {
+  if (Platform.OS === 'ios') {
+    setTimeout(fn, 0);
+  } else {
+    fn();
+  }
+};
+
+// Safe URL validation and opening
+const safeOpenURL = async (raw: string | null | undefined) => {
+  if (!raw || typeof raw !== 'string') return;
+  try {
+    const parsed = raw.trim();
+    if (!/^([a-zA-Z][a-zA-Z0-9+\-.]*):/.test(parsed)) {
+      console.warn('Invalid URL scheme:', parsed);
+      return;
+    }
+    onMain(() => {
+      try {
+        Linking.openURL(parsed);
+      } catch (e) {
+        console.warn('Linking.openURL failed:', e);
+      }
+    });
+  } catch (e) {
+    console.warn('safeOpenURL failed:', e);
+  }
+};
+
+// Safe router navigation
+const safeRouterReplace = (router: any, path: string) => {
+  onMain(() => {
+    try {
+      router.replace(path);
+    } catch (e) {
+      console.warn('Router replace failed:', e);
+    }
+  });
+};
+
 const iosClientId =
   '1010197305867-f3kuf70gl65tapvmj3kouiaff9bt36tb.apps.googleusercontent.com';
 const androidClientId =
@@ -95,7 +136,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             error.message?.includes('refresh_token_not_found') ||
             error.message?.includes('Invalid Refresh Token')
           ) {
-            await AuthService.signOut();
+            try {
+              await AuthService.signOut();
+            } catch (signOutError) {
+              console.error('Sign out during error recovery failed:', signOutError);
+            }
           }
           setUser(null);
           setSession(null);
@@ -129,13 +174,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (Platform.OS !== 'web') return;
 
-    const url = window.location.href;
-    if (isAuthLink(url)) {
-      try {
-        const qs = window.location.search || '';
-        const hash = window.location.hash || '';
-        window.location.replace(`/reset-password${qs}${hash}`);
-      } catch {}
+    try {
+      const url = window.location.href;
+      if (url && isAuthLink(url)) {
+        console.log('🔗 Web auth link detected:', url.replace(/(token|code|access_token)=([^&#]+)/g, '$1=***'));
+        try {
+          const qs = window.location.search || '';
+          const hash = window.location.hash || '';
+          window.location.replace(`/reset-password${qs}${hash}`);
+        } catch (e) {
+          console.error('Web redirect failed:', e);
+        }
+      }
+    } catch (e) {
+      console.error('Web auth link handling failed:', e);
     }
   }, []);
 
@@ -143,23 +195,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (Platform.OS === 'web') return;
 
-    const forwardToResetIfAuthLink = (incomingUrl: string) => {
-      if (!isAuthLink(incomingUrl)) return false;
+    // Track last processed URL to prevent re-processing
+    let lastProcessedUrl: string | null = null;
 
-      router.replace({
-        pathname: '/reset-password',
-        params: { url: encodeURIComponent(incomingUrl) },
-      });
-      return true;
+    const forwardToResetIfAuthLink = (incomingUrl: string) => {
+      try {
+        if (!incomingUrl || typeof incomingUrl !== 'string') return false;
+        
+        // Prevent re-processing the same URL
+        if (lastProcessedUrl === incomingUrl) {
+          console.log('🔗 Skipping duplicate URL:', incomingUrl.replace(/(token|code|access_token)=([^&#]+)/g, '$1=***'));
+          return false;
+        }
+        
+        if (!isAuthLink(incomingUrl)) return false;
+        
+        lastProcessedUrl = incomingUrl;
+        console.log('🔗 Native auth link detected:', incomingUrl.replace(/(token|code|access_token)=([^&#]+)/g, '$1=***'));
+
+        safeRouterReplace(router, `/reset-password?url=${encodeURIComponent(incomingUrl)}`);
+        return true;
+      } catch (e) {
+        console.error('forwardToResetIfAuthLink failed:', e);
+        return false;
+      }
     };
 
     // cold start
-    Linking.getInitialURL().then((url) => {
-      if (url) forwardToResetIfAuthLink(url);
-    });
+    Linking.getInitialURL()
+      .then((url) => {
+        if (url) {
+          console.log('🔗 Initial URL:', url.replace(/(token|code|access_token)=([^&#]+)/g, '$1=***'));
+          forwardToResetIfAuthLink(url);
+        }
+      })
+      .catch((e) => {
+        console.error('getInitialURL failed:', e);
+      });
 
     // foreground
     const sub = Linking.addEventListener('url', ({ url }) => {
+      console.log('🔗 Foreground URL:', url.replace(/(token|code|access_token)=([^&#]+)/g, '$1=***'));
       forwardToResetIfAuthLink(url);
     });
 
@@ -203,7 +279,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .replace(/^ +/, '')
               .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
           });
-        } catch {}
+        } catch (e) {
+          console.warn('Web storage cleanup failed:', e);
+        }
       }
     } catch (e) {
       console.error('Sign out exception:', e);
@@ -213,15 +291,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    if (request) {
-      await promptAsync();
-      return { error: null };
+    try {
+      if (request) {
+        await promptAsync();
+        return { error: null };
+      }
+      return { error: { message: 'Google sign-in not ready' } };
+    } catch (error) {
+      console.error('signInWithGoogle failed:', error);
+      return { error: { message: 'Google sign-in failed' } };
     }
-    return { error: { message: 'Google sign-in not ready' } };
   };
 
   const promptGoogleAsync = async () => {
-    if (request) await promptAsync();
+    try {
+      if (request) await promptAsync();
+    } catch (error) {
+      console.error('promptGoogleAsync failed:', error);
+    }
   };
 
   return (

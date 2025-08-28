@@ -28,6 +28,26 @@ import {
   stripAuthParamsFromWebLocation,
 } from '@/utils/authLink';
 
+// Thread safety helpers
+const onMain = (fn: () => void) => {
+  if (Platform.OS === 'ios') {
+    setTimeout(fn, 0);
+  } else {
+    fn();
+  }
+};
+
+// Safe router navigation
+const safeRouterReplace = (router: any, path: string) => {
+  onMain(() => {
+    try {
+      router.replace(path);
+    } catch (e) {
+      console.warn('Router replace failed:', e);
+    }
+  });
+};
+
 type ModalInfo = {
   visible: boolean;
   title: string;
@@ -71,10 +91,13 @@ export default function ResetPasswordScreen() {
     const processUrl = async (rawUrl: string | null) => {
       if (!isMounted || !rawUrl) return;
 
+      // Prevent re-processing the same URL
       if (lastProcessedUrlRef.current === rawUrl) return;
       lastProcessedUrlRef.current = rawUrl;
 
       try {
+        console.log('🔄 Processing reset URL:', rawUrl.replace(/(token|code|access_token)=([^&#]+)/g, '$1=***'));
+        
         const { code, access_token, refresh_token } =
           parseTokensFromUrl(rawUrl);
 
@@ -82,32 +105,64 @@ export default function ResetPasswordScreen() {
 
         // If Supabase sent tokens (PKCE code or implicit tokens), exchange the ORIGINAL url
         if (code || (access_token && refresh_token)) {
-          const { data, error } = await AuthService.exchangeCodeForSession(
-            rawUrl
-          );
-          if (error) {
-            console.error('exchangeCodeForSession error:', error);
+          try {
+            const { data, error } = await AuthService.exchangeCodeForSession(
+              rawUrl
+            );
+            if (error) {
+              console.error('exchangeCodeForSession error:', error);
+              if (!isMounted) return;
+              setHeaderStatus(
+                'This reset link is invalid or expired. Please request a new password reset.'
+              );
+              setMode('request');
+              return;
+            }
+            if (data?.session) {
+              sessionEstablished = true;
+              if (!isMounted) return;
+              setUserEmail(data.session.user?.email || null);
+              setMode('reset');
+              setHeaderStatus('Enter a new password to complete your reset.');
+            }
+          } catch (exchangeError) {
+            console.error('exchangeCodeForSession threw:', exchangeError);
             if (!isMounted) return;
             setHeaderStatus(
-              'This reset link is invalid or expired. Please request a new password reset.'
+              'Could not validate the reset link. Please request a new password reset.'
             );
             setMode('request');
             return;
-          }
-          if (data?.session) {
-            sessionEstablished = true;
-            if (!isMounted) return;
-            setUserEmail(data.session.user?.email || null);
-            setMode('reset');
-            setHeaderStatus('Enter a new password to complete your reset.');
           }
         }
 
         // If we didn’t get a session from tokens, check existing session
         if (!sessionEstablished) {
-          const { session, error: getErr } = await AuthService.getSession();
-          if (getErr) {
-            console.error('getSession error:', getErr);
+          try {
+            const { session, error: getErr } = await AuthService.getSession();
+            if (getErr) {
+              console.error('getSession error:', getErr);
+              if (!isMounted) return;
+              setHeaderStatus(
+                'Could not validate session. Please request a new password reset.'
+              );
+              setMode('request');
+              return;
+            }
+            if (!session) {
+              if (!isMounted) return;
+              setHeaderStatus(
+                'This reset link is invalid or expired. Please request a new password reset from the Forgot Password page.'
+              );
+              setMode('request');
+            } else {
+              if (!isMounted) return;
+              setUserEmail(session.user?.email || null);
+              setMode('reset');
+              setHeaderStatus('Enter a new password to complete your reset.');
+            }
+          } catch (sessionError) {
+            console.error('getSession threw:', sessionError);
             if (!isMounted) return;
             setHeaderStatus(
               'Could not validate session. Please request a new password reset.'
@@ -115,23 +170,15 @@ export default function ResetPasswordScreen() {
             setMode('request');
             return;
           }
-          if (!session) {
-            if (!isMounted) return;
-            setHeaderStatus(
-              'This reset link is invalid or expired. Please request a new password reset from the Forgot Password page.'
-            );
-            setMode('request');
-          } else {
-            if (!isMounted) return;
-            setUserEmail(session.user?.email || null);
-            setMode('reset');
-            setHeaderStatus('Enter a new password to complete your reset.');
-          }
         }
 
         // Clean auth params from the address bar on web so refresh won’t re-process
         if (Platform.OS === 'web') {
-          stripAuthParamsFromWebLocation();
+          try {
+            stripAuthParamsFromWebLocation();
+          } catch (stripError) {
+            console.warn('stripAuthParamsFromWebLocation failed:', stripError);
+          }
         }
       } catch (e) {
         console.error('Reset password link handling error:', e);
@@ -147,21 +194,37 @@ export default function ResetPasswordScreen() {
 
     // 1) Initial URL (web or native cold start)
     if (Platform.OS === 'web') {
-      processUrl(window.location.href);
+      try {
+        processUrl(window.location.href);
+      } catch (e) {
+        console.error('Web URL processing failed:', e);
+        if (isMounted) setInitializing(false);
+      }
     } else {
       const paramUrl =
         typeof urlParam === 'string' ? decodeURIComponent(urlParam) : null;
       if (paramUrl) {
         processUrl(paramUrl);
       } else {
-        Linking.getInitialURL().then((url) => processUrl(url));
+        Linking.getInitialURL()
+          .then((url) => processUrl(url))
+          .catch((e) => {
+            console.error('getInitialURL failed:', e);
+            if (isMounted) setInitializing(false);
+          });
       }
     }
 
     // 2) Native runtime deep links
     let sub: { remove: () => void } | undefined;
     if (Platform.OS !== 'web') {
-      sub = Linking.addEventListener('url', ({ url }) => processUrl(url));
+      sub = Linking.addEventListener('url', ({ url }) => {
+        try {
+          processUrl(url);
+        } catch (e) {
+          console.error('Runtime deep link processing failed:', e);
+        }
+      });
     }
 
     return () => {
@@ -193,10 +256,15 @@ export default function ResetPasswordScreen() {
 
       // Optional: auto-sign-in so you can route back immediately
       if (userEmail) {
-        const { error: signInError } = await signIn(userEmail, password);
-        if (!signInError) {
-          router.replace('/(tabs)');
-          return;
+        try {
+          const { error: signInError } = await signIn(userEmail, password);
+          if (!signInError) {
+            safeRouterReplace(router, '/(tabs)');
+            return;
+          }
+        } catch (signInError) {
+          console.warn('Auto sign-in failed:', signInError);
+          // Continue to show success modal
         }
       }
 
@@ -213,6 +281,7 @@ export default function ResetPasswordScreen() {
       setShowPass(false);
       setShowConfirm(false);
     } catch (e: any) {
+      console.error('Password update failed:', e);
       setModalInfo({
         visible: true,
         title: 'Error',
