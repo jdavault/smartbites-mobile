@@ -185,28 +185,42 @@ export default function ProfileScreen() {
     await signOut();
   };
 
-  const handleDeleteAccount = async () => {
+ const handleDeleteAccount = async () => {
     if (!user) return;
 
     setLoading(true);
     closeModal();
 
     try {
-      // The supabase client will attach the user's access token automatically.
-      const { data, error } = await supabase.functions.invoke('deleteUserAccount', {
-        method: 'POST',
-        body: {}, // nothing to send
-      });
+      console.log('Attempting to delete account for user:', user.id);
+
+      const { data, error } = await supabase.functions.invoke(
+        'deleteUserAccount',
+        {
+          method: 'POST',
+          body: {}, // empty body is fine
+        }
+      );
+
+      console.log('Delete function response:', { data, error });
 
       if (error) {
+        console.error('Supabase function error:', error);
         throw new Error(error.message || 'Failed to delete account');
       }
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Account deletion failed');
+      }
+
+      console.log('Account deleted successfully');
 
       // Sign out and redirect
       await signOut();
       router.replace('/(auth)');
     } catch (error: any) {
       console.error('Error deleting account:', error);
+
       openModal({
         title: 'Delete Failed',
         subtitle:
