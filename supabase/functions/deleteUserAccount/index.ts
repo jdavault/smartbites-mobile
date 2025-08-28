@@ -1,124 +1,120 @@
-import { createClient } from 'npm:@supabase/supabase-js@2'
+// supabase/functions/deleteUserAccount/index.ts
 
-const corsHeaders: Record<string, string> = {
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
     'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-Deno.serve(async (req) => {
-  // Handle CORS preflight
+serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Get environment variables with validation
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    // Create a Supabase client with the service role key
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
 
-    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
-      console.error('Missing required environment variables');
-      return new Response(
-        JSON.stringify({ error: 'Server configuration error' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+    // Get the authorization header from the request
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
     }
 
-    // Verify JWT & get user
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: req.headers.get('Authorization')! } },
-    });
+    // Create a client to verify the user's token
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
+    );
 
+    // Get the current user from the token
     const {
       data: { user },
-      error: userErr,
-    } = await supabase.auth.getUser();
+      error: userError,
+    } = await supabaseClient.auth.getUser();
 
-    if (userErr || !user) {
-      console.error('Auth error:', userErr);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized or no user' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+    if (userError || !user) {
+      throw new Error('Invalid user token');
     }
 
-    console.log(`Deleting account for user: ${user.id}`);
+    const userId = user.id;
 
-    // Use admin client to delete user data and account
-    const admin = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Delete user data from all tables in the correct order
-    // Delete user dietary preferences
-    const { error: dietaryError } = await admin
-      .from('user_dietary_prefs')
-      .delete()
-      .eq('user_id', user.id);
+    console.log(`Attempting to delete account for user: ${userId}`);
 
-    if (dietaryError) {
-      console.error('Error deleting user dietary preferences:', dietaryError);
+    // Delete user data from your custom tables first
+    // Adjust these table names to match your schema
+    const tablesToCleanup = [
+      'user_profiles',
+      'user_allergens',
+      'user_dietary_preferences',
+      // Add any other tables that reference the user
+    ];
+
+    for (const table of tablesToCleanup) {
+      const { error: deleteError } = await supabaseAdmin
+        .from(table)
+        .delete()
+        .eq('user_id', userId);
+
+      if (deleteError) {
+        console.error(`Error deleting from ${table}:`, deleteError);
+        // Continue with other tables even if one fails
+      } else {
+        console.log(`Successfully deleted user data from ${table}`);
+      }
     }
 
-    // Delete user allergens
-    const { error: allergensError } = await admin
-      .from('user_allergens')
-      .delete()
-      .eq('user_id', user.id);
+    // Finally, delete the user from auth.users
+    const { error: deleteUserError } =
+      await supabaseAdmin.auth.admin.deleteUser(userId);
 
-    if (allergensError) {
-      console.error('Error deleting user allergens:', allergensError);
+    if (deleteUserError) {
+      throw new Error(`Failed to delete user: ${deleteUserError.message}`);
     }
 
-    // Delete user recipes
-    const { error: recipesError } = await admin
-      .from('user_recipes')
-      .delete()
-      .eq('user_id', user.id);
+    console.log(`Successfully deleted user account: ${userId}`);
 
-    if (recipesError) {
-      console.error('Error deleting user recipes:', recipesError);
-    }
-
-    // Delete user profile
-    const { error: profileError } = await admin
-      .from('user_profiles')
-      .delete()
-      .eq('user_id', user.id);
-
-    if (profileError) {
-      console.error('Error deleting user profile:', profileError);
-    }
-
-    // Finally, delete the auth user
-    const { error: delErr } = await admin.auth.admin.deleteUser(user.id);
-
-    if (delErr) {
-      console.error('Error deleting auth user:', delErr);
-      return new Response(JSON.stringify({ error: delErr.message }), {
-        status: 400,
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Account deleted successfully',
+      }),
+      {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+        status: 200,
+      }
+    );
+  } catch (error) {
+    console.error('Error in deleteUserAccount function:', error);
 
-    console.log(`Successfully deleted account for user: ${user.id}`);
-
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  } catch (e) {
-    console.error('deleteUserAccount error:', e);
-    return new Response(JSON.stringify({ error: 'Server error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        error: error.message || 'An unexpected error occurred',
+        success: false,
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      }
+    );
   }
 });
