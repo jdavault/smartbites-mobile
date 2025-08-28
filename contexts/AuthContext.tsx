@@ -248,14 +248,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     additionalData?: any
   ) => {
-    const { error } = await AuthService.signUp({
+    const { error, user, session } = await AuthService.signUp({
       email,
       password,
       firstName: additionalData?.first_name || '',
       lastName: additionalData?.last_name || '',
+      address1: additionalData?.address1,
+      address2: additionalData?.address2,
+      city: additionalData?.city,
+      state: additionalData?.state,
+      zip: additionalData?.zip,
+      phone: additionalData?.phone,
     });
 
-    return { error };
+    return { error, data: { user, session } };
   };
 
   const signIn = async (email: string, password: string) => {
