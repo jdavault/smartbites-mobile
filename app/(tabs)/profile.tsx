@@ -192,37 +192,26 @@ export default function ProfileScreen() {
     closeModal();
 
     try {
-      // Call the Edge Function to securely delete the account
-      const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.access_token) {
-        throw new Error('No valid session found');
-      }
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/deleteUserAccount`, {
+      // The supabase client will attach the user's access token automatically.
+      const { data, error } = await supabase.functions.invoke('deleteUserAccount', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({}),
+        body: {}, // nothing to send
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.error || 'Failed to delete account');
+      if (error) {
+        throw new Error(error.message || 'Failed to delete account');
       }
 
       // Sign out and redirect
       await signOut();
       router.replace('/(auth)');
-      
     } catch (error: any) {
       console.error('Error deleting account:', error);
       openModal({
         title: 'Delete Failed',
-        subtitle: error?.message || 'Failed to delete account. Please try again or contact support.',
+        subtitle:
+          error?.message ||
+          'Failed to delete account. Please try again or contact support.',
         emoji: '❌',
       });
     } finally {
