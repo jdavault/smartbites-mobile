@@ -234,39 +234,40 @@ export default function LoginScreen() {
                       <View style={styles.dividerLine} />
                     </View>
 
-                    {/* Google -> temp modal */}
-                    <TouchableOpacity
-                      style={styles.googleButton}
-                      onPress={() =>
-                        openModal({
-                          title: 'Google Login Not Available',
-                          subtitle: "We're working on it — coming soon!",
-                          emoji: '😔',
-                        })
-                      }
-                      disabled={loading}
-                    >
-                      <Text style={styles.googleButtonText}>
-                        Google SignIn
-                      </Text>
-                    </TouchableOpacity>
+                    {/* Social signin buttons side by side */}
+                    <View style={styles.socialButtonsRow}>
+                      <TouchableOpacity
+                        style={styles.googleButton}
+                        onPress={() =>
+                          openModal({
+                            title: 'Google Login Not Available',
+                            subtitle: "We're working on it — coming soon!",
+                            emoji: '😔',
+                          })
+                        }
+                        disabled={loading}
+                      >
+                        <Text style={styles.googleButtonText}>
+                          Google SignIn
+                        </Text>
+                      </TouchableOpacity>
 
-                    {/* Apple -> temp modal */}
-                    <TouchableOpacity
-                      style={styles.appleButton}
-                      onPress={() =>
-                        openModal({
-                          title: 'Apple Login Not Available',
-                          subtitle: "We're working on it — coming soon!",
-                          emoji: '😔',
-                        })
-                      }
-                      disabled={loading}
-                    >
-                      <Text style={styles.appleButtonText}>
-                        Apple SignIn
-                      </Text>
-                    </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.appleButton}
+                        onPress={() =>
+                          openModal({
+                            title: 'Apple Login Not Available',
+                            subtitle: "We're working on it — coming soon!",
+                            emoji: '😔',
+                          })
+                        }
+                        disabled={loading}
+                      >
+                        <Text style={styles.appleButtonText}>
+                          Apple SignIn
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
 
                     {/* Sign up */}
                     <View style={styles.signupRow}>
@@ -428,17 +429,18 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     },
 
     appleButton: {
-      paddingVertical: 16,
+      flex: 1,
+      paddingVertical: 12,
       borderRadius: 12,
       alignItems: 'center',
       borderWidth: 1,
       borderColor: colors.border,
-      backgroundColor: '#000000',
+      backgroundColor: colors.ironBlack[400],
     },
     appleButtonText: {
       color: '#FFFFFF',
       fontFamily: Fonts.heading,
-      fontSize: FontSizes.md,
+      fontSize: 14,
     },
 
     divider: {
@@ -454,6 +456,10 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       marginHorizontal: Spacing.md,
     },
 
+    socialButtonsRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
     signupRow: {
       flexDirection: 'row',
       justifyContent: 'center',
@@ -503,7 +509,8 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     },
     modalContent: {
       backgroundColor: '#FFFFFF',
-      padding: 24,
+      flex: 1,
+      paddingVertical: 12,
       borderRadius: 12,
       width: '80%',
       maxWidth: 420,
@@ -523,7 +530,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     },
     modalSubtitle: {
       fontFamily: Fonts.body,
-      fontSize: FontSizes.md,
+      fontSize: 14,
       color: '#555',
       textAlign: 'center',
     },
