@@ -468,8 +468,8 @@ export default function RegisterScreen() {
           paddingHorizontal: 16,
         },
         chip: {
-          paddingVertical: 6,
-          paddingHorizontal: 10,
+          paddingVertical: 12,
+          paddingHorizontal: 16,
           borderRadius: 999,
           borderWidth: 1,
           borderColor: colors.border,
@@ -832,88 +832,6 @@ export default function RegisterScreen() {
                       autoComplete="family-name"
                     />
                   </View>
-                  {/* Address */}
-                  <TextInput
-                    style={styles.input}
-                    value={address1}
-                    onChangeText={setAddress1}
-                    placeholder="Address line 1"
-                    placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    textContentType="fullStreetAddress"
-                    autoComplete="street-address"
-                  />
-                  <TextInput
-                    style={styles.input}
-                    value={address2}
-                    onChangeText={setAddress2}
-                    placeholder="Address line 2 (optional)"
-                    placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                  />
-                  <View style={styles.row}>
-                    <TextInput
-                      style={[styles.input, styles.flex2]}
-                      value={city}
-                      onChangeText={setCity}
-                      placeholder="City"
-                      placeholderTextColor={colors.textSecondary}
-                      autoCapitalize="words"
-                      autoCorrect={false}
-                      textContentType="addressCity"
-                      returnKeyType="next"
-                      onSubmitEditing={() => setShowStates(true)}
-                    />
-                    <TouchableOpacity
-                      style={[styles.input, styles.flex1, styles.stateButton]}
-                      onPress={() => openStates()}
-                    >
-                      <Text style={styles.stateButtonText}>
-                        {state || 'State'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.row}>
-                    <View style={styles.zipContainer}>
-                      <TextInput
-                        style={styles.input}
-                        value={zip}
-                        onChangeText={setZip}
-                        placeholder="ZIP"
-                        placeholderTextColor={colors.textSecondary}
-                        keyboardType="number-pad"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        maxLength={10}
-                        textContentType="postalCode"
-                        returnKeyType="next"
-                        onSubmitEditing={() => openStates()}
-                      />
-                    </View>
-                    <View style={styles.phoneContainer}>
-                      <TextInput
-                        style={styles.input}
-                        value={phone}
-                        onChangeText={(text) => {
-                          const formatted = formatPhoneNumber(text);
-                          setPhone(formatted);
-                        }}
-                        placeholder="Phone"
-                        placeholderTextColor={colors.textSecondary}
-                        keyboardType="phone-pad"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        maxLength={14}
-                        textContentType="telephoneNumber"
-                        autoComplete="tel"
-                        returnKeyType="done"
-                      />
-                    </View>
-                  </View>
-
                   {/* Allergens */}
                   <Text style={styles.sectionTitle}>Allergens</Text>
                   {loadingTaxonomies ? (
