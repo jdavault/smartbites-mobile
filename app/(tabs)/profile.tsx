@@ -114,6 +114,7 @@ export default function ProfileScreen() {
       if (profileData) {
         setProfile((prev) => ({
           ...prev,
+          email: user?.email || '',
           firstName: profileData.firstName,
           lastName: profileData.lastName,
           address1: profileData.address1 || '',
@@ -122,6 +123,12 @@ export default function ProfileScreen() {
           state: profileData.state || '',
           zip: profileData.zip || '',
           phone: profileData.phone ? formatPhoneNumber(profileData.phone) : '',
+        }));
+      } else if (user) {
+        // If no profile data but user exists, at least set the email
+        setProfile((prev) => ({
+          ...prev,
+          email: user.email || '',
         }));
       }
     } catch (err) {
@@ -365,6 +372,16 @@ export default function ProfileScreen() {
         <View style={styles.contentContainer}>
           <View style={styles.formCard}>
             <View style={styles.form}>
+              {/* Email (read-only) */}
+              <TextInput
+                style={[styles.input, styles.readOnlyInput]}
+                value={profile.email}
+                placeholder="Email"
+                placeholderTextColor={colors.textSecondary}
+                editable={false}
+                selectTextOnFocus={false}
+              />
+              
               {/* Names */}
               <TextInput
                 style={styles.input}
@@ -705,6 +722,11 @@ const getStyles = (colors: ThemeColors) =>
     },
     chipText: { fontSize: 12, fontFamily: 'Inter-Medium', color: colors.text },
     chipTextSelected: { color: '#fff' },
+
+    readOnlyInput: {
+      backgroundColor: colors.backgroundLight,
+      opacity: 0.7,
+    },
 
     // Theme toggle
     settingsRow: {
