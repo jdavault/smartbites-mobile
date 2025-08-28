@@ -1,5 +1,5 @@
 // app/(auth)/reset-password.tsx
-import React, { useEffect, useMemo, useState, Fragment } from 'react';
+import React, { useEffect, useMemo, useState, Fragment, useRef } from 'react';
 import {
   ActivityIndicator,
   Keyboard,
@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import * as Linking from 'expo-linking';
-import { useRouter, Link } from 'expo-router';
+import { useRouter, Link, useLocalSearchParams } from 'expo-router';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +23,10 @@ import { Spacing } from '@/constants/Spacing';
 import { Fonts, FontSizes } from '@/constants/Typography';
 import ThemedText from '@/components/ThemedText';
 import { AuthService } from '@/services/authService';
+import {
+  parseTokensFromUrl,
+  stripAuthParamsFromWebLocation,
+} from '@/utils/authLink';
 
 type ModalInfo = {
   visible: boolean;
@@ -34,39 +38,9 @@ type ModalInfo = {
 const DismissWrapper =
   Platform.OS === 'web' ? (Fragment as any) : TouchableWithoutFeedback;
 
-/**
- * Parse both query (?code=...) and hash (#access_token=...) params from:
- * - Web URLs (https://domain/reset-password?...#...)
- * - Deep links (smartbites://reset-password?...#...)
- * We DO NOT rewrite the scheme; we just parse strings safely.
- */
-function parseTokensFromUrl(rawUrl: string | null) {
-  if (!rawUrl) return { code: null, access_token: null, refresh_token: null };
-  try {
-    const qIndex = rawUrl.indexOf('?');
-    const hIndex = rawUrl.indexOf('#');
-
-    const queryStr =
-      qIndex >= 0
-        ? rawUrl.slice(qIndex + 1, hIndex >= 0 ? hIndex : undefined)
-        : '';
-    const hashStr = hIndex >= 0 ? rawUrl.slice(hIndex + 1) : '';
-
-    const q = new URLSearchParams(queryStr);
-    const h = new URLSearchParams(hashStr);
-
-    const code = q.get('code') || h.get('code');
-    const access_token = h.get('access_token') || q.get('access_token');
-    const refresh_token = h.get('refresh_token') || q.get('refresh_token');
-
-    return { code, access_token, refresh_token };
-  } catch {
-    return { code: null, access_token: null, refresh_token: null };
-  }
-}
-
 export default function ResetPasswordScreen() {
   const router = useRouter();
+  const { url: urlParam } = useLocalSearchParams<{ url?: string }>();
   const { colors: theme } = useTheme();
   const { signIn } = useAuth();
   const styles = useMemo(() => getStyles(theme), [theme]);
@@ -87,27 +61,33 @@ export default function ResetPasswordScreen() {
     title: '',
   });
 
-  // --- Initialization: check URL for tokens and exchange into session ---
-  useEffect(() => {
-    (async () => {
-      try {
-        const initialUrl =
-          Platform.OS === 'web'
-            ? window.location.href
-            : (await Linking.getInitialURL()) ?? '';
+  // Track last processed URL to avoid double-processing (cold start + event)
+  const lastProcessedUrlRef = useRef<string | null>(null);
 
+  // --- Initialization + runtime deep links: parse → exchange → set session ---
+  useEffect(() => {
+    let isMounted = true;
+
+    const processUrl = async (rawUrl: string | null) => {
+      if (!isMounted || !rawUrl) return;
+
+      if (lastProcessedUrlRef.current === rawUrl) return;
+      lastProcessedUrlRef.current = rawUrl;
+
+      try {
         const { code, access_token, refresh_token } =
-          parseTokensFromUrl(initialUrl);
+          parseTokensFromUrl(rawUrl);
 
         let sessionEstablished = false;
 
-        // Exchange if Supabase provided PKCE code or implicit tokens
+        // If Supabase sent tokens (PKCE code or implicit tokens), exchange the ORIGINAL url
         if (code || (access_token && refresh_token)) {
           const { data, error } = await AuthService.exchangeCodeForSession(
-            initialUrl
+            rawUrl
           );
           if (error) {
             console.error('exchangeCodeForSession error:', error);
+            if (!isMounted) return;
             setHeaderStatus(
               'This reset link is invalid or expired. Please request a new password reset.'
             );
@@ -116,17 +96,19 @@ export default function ResetPasswordScreen() {
           }
           if (data?.session) {
             sessionEstablished = true;
+            if (!isMounted) return;
             setUserEmail(data.session.user?.email || null);
             setMode('reset');
             setHeaderStatus('Enter a new password to complete your reset.');
           }
         }
 
-        // If no tokens present, see if we already have a session
+        // If we didn’t get a session from tokens, check existing session
         if (!sessionEstablished) {
           const { session, error: getErr } = await AuthService.getSession();
           if (getErr) {
             console.error('getSession error:', getErr);
+            if (!isMounted) return;
             setHeaderStatus(
               'Could not validate session. Please request a new password reset.'
             );
@@ -134,69 +116,59 @@ export default function ResetPasswordScreen() {
             return;
           }
           if (!session) {
+            if (!isMounted) return;
             setHeaderStatus(
               'This reset link is invalid or expired. Please request a new password reset from the Forgot Password page.'
             );
             setMode('request');
           } else {
+            if (!isMounted) return;
             setUserEmail(session.user?.email || null);
             setMode('reset');
             setHeaderStatus('Enter a new password to complete your reset.');
           }
         }
 
-        // Clean the URL on web to avoid re-processing on refresh
+        // Clean auth params from the address bar on web so refresh won’t re-process
         if (Platform.OS === 'web') {
-          const clean = `${window.location.origin}${window.location.pathname}`;
-          window.history.replaceState({}, '', clean);
+          stripAuthParamsFromWebLocation();
         }
-      } catch (e: any) {
-        console.error('Reset password init error:', e);
+      } catch (e) {
+        console.error('Reset password link handling error:', e);
+        if (!isMounted) return;
         setHeaderStatus(
           'Could not validate the reset link. Please request a new password reset.'
         );
         setMode('request');
       } finally {
-        setInitializing(false);
-      }
-    })();
-  }, []);
-
-  // --- Native deep link handling while app is open ---
-  useEffect(() => {
-    if (Platform.OS === 'web') return;
-
-    const handleDeepLink = async ({ url }: { url: string }) => {
-      try {
-        const { code, access_token, refresh_token } = parseTokensFromUrl(url);
-        if (!code && !(access_token && refresh_token)) return;
-
-        const { data, error } = await AuthService.exchangeCodeForSession(url);
-        if (error) {
-          console.error('Deep link exchange error:', error);
-          setHeaderStatus(
-            'This reset link is invalid or expired. Please request a new password reset.'
-          );
-          setMode('request');
-          return;
-        }
-        if (data?.session) {
-          setUserEmail(data.session.user?.email || null);
-          setMode('reset');
-          setHeaderStatus('Enter a new password to complete your reset.');
-        }
-      } catch (e) {
-        console.error('Deep link handling failed:', e);
-        setHeaderStatus(
-          'Could not validate the reset link. Please request a new password reset.'
-        );
-        setMode('request');
+        if (isMounted) setInitializing(false);
       }
     };
 
-    const sub = Linking.addEventListener('url', handleDeepLink);
-    return () => sub.remove();
-  }, []);
+    // 1) Initial URL (web or native cold start)
+    if (Platform.OS === 'web') {
+      processUrl(window.location.href);
+    } else {
+      const paramUrl =
+        typeof urlParam === 'string' ? decodeURIComponent(urlParam) : null;
+      if (paramUrl) {
+        processUrl(paramUrl);
+      } else {
+        Linking.getInitialURL().then((url) => processUrl(url));
+      }
+    }
+
+    // 2) Native runtime deep links
+    let sub: { remove: () => void } | undefined;
+    if (Platform.OS !== 'web') {
+      sub = Linking.addEventListener('url', ({ url }) => processUrl(url));
+    }
+
+    return () => {
+      isMounted = false;
+      sub?.remove?.();
+    };
+  }, [urlParam]);
 
   const onSave = async () => {
     setFieldError(null);
@@ -258,7 +230,6 @@ export default function ResetPasswordScreen() {
     setModalInfo((m) => ({ ...m, visible: false }));
   };
 
-  // ✅ restore your live match hint
   const showMatchHint = password.length > 0 && password2.length > 0;
 
   if (initializing) {
@@ -426,7 +397,7 @@ export default function ResetPasswordScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* ✅ live match hint restored */}
+                {/* live match hint */}
                 {showMatchHint && (
                   <Text
                     style={

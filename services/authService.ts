@@ -139,14 +139,49 @@ export class AuthService {
     }
   }
 
+  /**
+   * Exchanges a Supabase auth URL (web or deep link) for a session.
+   * Safe-guards:
+   * - No-ops if the URL has no auth params (avoids pointless RPCs).
+   * - Logs a compact, redacted URL for debugging.
+   */
   static async exchangeCodeForSession(
     url: string
   ): Promise<{ data: any; error: any }> {
     try {
+      if (!url || typeof url !== 'string') {
+        return { data: null, error: new Error('No URL provided') };
+      }
+
+      // Quick check to avoid calling Supabase with a bare path
+      const hasAuthBits =
+        url.includes('code=') ||
+        url.includes('access_token=') ||
+        url.includes('refresh_token=') ||
+        url.includes('token='); // covers recovery-style links on some setups
+
+      if (!hasAuthBits) {
+        // Nothing to exchange; let the caller fall back to getSession()
+        return { data: null, error: new Error('No auth params found in URL') };
+      }
+
+      // Helpful log without dumping the whole token to console
+      const redacted = url.replace(
+        /(access_token|refresh_token|code|token)=([^&#]+)/g,
+        (_m, k) => `${k}=***`
+      );
+      console.log('🔄 exchangeCodeForSession ->', redacted);
+
+      // Supabase v2 supports passing the raw URL (works for https and custom schemes)
       const { data, error } = await supabase.auth.exchangeCodeForSession(url);
-      return { data, error };
+
+      if (error) {
+        console.error('exchangeCodeForSession: Supabase error:', error);
+        return { data: null, error };
+      }
+      return { data, error: null };
     } catch (error) {
-      console.error('exchangeCodeForSession error:', error);
+      console.error('exchangeCodeForSession: unexpected exception:', error);
       return { data: null, error };
     }
   }
