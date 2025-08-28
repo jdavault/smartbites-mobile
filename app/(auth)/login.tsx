@@ -237,7 +237,7 @@ export default function LoginScreen() {
                     {/* Social signin buttons side by side */}
                     <View style={styles.socialButtonsRow}>
                       <TouchableOpacity
-                        style={styles.googleButton}
+                        style={[styles.socialButton, styles.googleButton]}
                         onPress={() =>
                           openModal({
                             title: 'Google Login Not Available',
@@ -247,13 +247,13 @@ export default function LoginScreen() {
                         }
                         disabled={loading}
                       >
-                        <Text style={styles.googleButtonText}>
+                        <Text style={[styles.socialButtonText, styles.googleButtonText]}>
                           Google SignIn
                         </Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        style={styles.appleButton}
+                        style={[styles.socialButton, styles.appleButton]}
                         onPress={() =>
                           openModal({
                             title: 'Apple Login Not Available',
@@ -263,7 +263,7 @@ export default function LoginScreen() {
                         }
                         disabled={loading}
                       >
-                        <Text style={styles.appleButtonText}>
+                        <Text style={[styles.socialButtonText, styles.appleButtonText]}>
                           Apple SignIn
                         </Text>
                       </TouchableOpacity>
@@ -425,22 +425,12 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     googleButtonText: {
       color: colors.textSecondary,
       fontFamily: Fonts.heading,
-      fontSize: FontSizes.md,
-    },
 
     appleButton: {
-      flex: 1,
-      paddingVertical: 12,
-      borderRadius: 12,
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: colors.border,
       backgroundColor: Colors.ironBlack[400],
     },
     appleButtonText: {
       color: '#FFFFFF',
-      fontFamily: Fonts.heading,
-      fontSize: 14,
     },
 
     divider: {
@@ -460,13 +450,21 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       flexDirection: 'row',
       gap: 12,
     },
+    socialButton: {
+      flex: 1,
+      paddingVertical: 16,
+      borderRadius: 12,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    socialButtonText: {
+      fontFamily: Fonts.heading,
+      fontSize: FontSizes.md,
+    },
     signupRow: {
       flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: Spacing.md,
-    },
-    footerText: {
+      backgroundColor: colors.surface,
       fontSize: 14,
       fontFamily: 'Inter-Regular',
       color: colors.textSecondary,
