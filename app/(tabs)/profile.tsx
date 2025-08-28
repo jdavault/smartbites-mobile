@@ -20,6 +20,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
+import { supabase } from '@/lib/supabase';
 import { useAllergens, ALLERGENS } from '@/contexts/AllergensContext';
 import { useDietary, DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 import { UserService } from '@/services/userService';
@@ -42,6 +43,8 @@ type ModalInfo = {
   title: string;
   subtitle?: string;
   emoji?: string;
+  primary?: { label: string; onPress?: () => void };
+  secondary?: { label: string; onPress?: () => void };
 };
 
 export default function ProfileScreen() {
@@ -175,6 +178,63 @@ export default function ProfileScreen() {
     await signOut();
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    closeModal();
+
+    try {
+      // Delete user data from all tables
+      await Promise.all([
+        // Delete user dietary preferences
+        supabase
+          .from('user_dietary_prefs')
+          .delete()
+          .eq('user_id', user.id),
+        
+        // Delete user allergens
+        supabase
+          .from('user_allergens')
+          .delete()
+          .eq('user_id', user.id),
+        
+        // Delete user recipes
+        supabase
+          .from('user_recipes')
+          .delete()
+          .eq('user_id', user.id),
+        
+        // Delete user profile
+        supabase
+          .from('user_profiles')
+          .delete()
+          .eq('user_id', user.id),
+      ]);
+
+      // Delete the auth user (this will also sign them out)
+      const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+      
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      // Sign out and redirect
+      await signOut();
+      router.replace('/(auth)');
+      
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      openModal({
+        title: 'Delete Failed',
+        subtitle: error?.message || 'Failed to delete account. Please try again or contact support.',
+        emoji: '❌',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const styles = getStyles(colors);
 
   return (
@@ -196,6 +256,44 @@ export default function ProfileScreen() {
                 <Text style={styles.modalTitle}>{modalInfo.title}</Text>
                 {!!modalInfo.subtitle && (
                   <Text style={styles.modalSubtitle}>{modalInfo.subtitle}</Text>
+                )}
+                
+                {(modalInfo.primary || modalInfo.secondary) && (
+                  <View style={styles.modalButtons}>
+                    {modalInfo.secondary && (
+                      <TouchableOpacity 
+                        style={styles.modalButton} 
+                        onPress={() => {
+                          if (modalInfo.secondary?.onPress) {
+                            modalInfo.secondary.onPress();
+                          } else {
+                            closeModal();
+                          }
+                        }}
+                      >
+                        <Text style={styles.modalButtonText}>
+                          {modalInfo.secondary.label}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                    
+                    {modalInfo.primary && (
+                      <TouchableOpacity 
+                        style={[styles.modalButton, styles.modalButtonPrimary]} 
+                        onPress={() => {
+                          if (modalInfo.primary?.onPress) {
+                            modalInfo.primary.onPress();
+                          } else {
+                            closeModal();
+                          }
+                        }}
+                      >
+                        <Text style={[styles.modalButtonText, styles.modalButtonTextPrimary]}>
+                          {modalInfo.primary.label}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 )}
               </View>
             </View>
@@ -359,7 +457,71 @@ export default function ProfileScreen() {
             </View>
           )}
 
-          <View style={styles.themeContainer}>
+          <View style={styles.settingsRow}>
+            <View style={styles.themeContainer}>
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+              >
+                {isDark ? (
+                  <Moon size={20} color={colors.text} />
+                ) : (
+                  <Sun size={20} color={colors.text} />
+                )}
+                <Text style={styles.themeText}>
+                  {isDark ? 'Dark Mode' : 'Light Mode'}
+                </Text>
+              </View>
+              <Switch
+                value={isDark}
+                onValueChange={toggleTheme}
+                trackColor={{ false: '#e6e2d6', true: colors.primary }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.deleteAccountButton}
+              onPress={() => openModal({
+                title: 'Delete Account',
+                subtitle: 'Are you sure you want to permanently delete your account? This action cannot be undone.',
+                emoji: '⚠️',
+                primary: { 
+                  label: 'Yes, Delete', 
+                  onPress: handleDeleteAccount 
+                },
+                secondary: { 
+                  label: 'Cancel' 
+                }
+              })}
+            >
+              <Text style={styles.deleteAccountText}>Delete Account</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                styles.saveButton,
+                loading && { opacity: 0.6 },
+              ]}
+              onPress={saveProfile}
+              disabled={loading}
+            >
+              <Text style={[styles.buttonText, styles.saveButtonText]}>
+                {loading ? 'Saving...' : 'Save'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, styles.signOutButton]}
+              onPress={handleSignOut}
+            >
+              <Text style={[styles.buttonText, styles.signOutButtonText]}>
+                Log Out
+              </Text>
+            </TouchableOpacity>
+          </View>
             <View
               style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
             >
@@ -381,30 +543,6 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.buttonRow}>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.saveButton,
-                styles.halfButton,
-                loading && { opacity: 0.6 },
-              ]}
-              onPress={saveProfile}
-              disabled={loading}
-            >
-              <Text style={[styles.buttonText, styles.saveButtonText]}>
-                {loading ? 'Saving...' : 'Save'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, styles.signOutButton, styles.halfButton]}
-              onPress={handleSignOut}
-            >
-              <Text style={[styles.buttonText, styles.signOutButtonText]}>
-                Log Out
-              </Text>
-            </TouchableOpacity>
-          </View>
 
           {/* About / Legal Section (collapsible) */}
           <View>
@@ -590,19 +728,40 @@ const getStyles = (colors: ThemeColors) =>
     chipTextSelected: { color: '#fff' },
 
     // Theme toggle
+    settingsRow: {
+      flexDirection: 'row',
+      paddingHorizontal: 12,
+      gap: 12,
+      marginBottom: 8,
+      marginTop: 4,
+    },
     themeContainer: {
-      paddingHorizontal: 12, // keep reduced for body content
+      flex: 1,
+      paddingHorizontal: 12,
       paddingVertical: 8,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       backgroundColor: colors.backgroundLight,
-      marginHorizontal: 12, // keep reduced for body content
       borderRadius: 12,
-      marginBottom: 8,
-      marginTop: 4,
       borderWidth: 1,
       borderColor: colors.accent,
+    },
+    deleteAccountButton: {
+      flex: 1,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: colors.error,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.error,
+    },
+    deleteAccountText: {
+      fontSize: 16,
+      fontFamily: 'Inter-Medium',
+      color: '#FFFFFF',
     },
     themeText: {
       fontSize: 16,
@@ -625,14 +784,18 @@ const getStyles = (colors: ThemeColors) =>
       marginTop: 8,
       marginBottom: 12,
     },
-    halfButton: { flex: 1 },
     saveButton: {
+      flex: 1,
       backgroundColor: colors.primary,
       borderColor: colors.primary,
     },
     buttonText: { fontSize: 14, fontFamily: 'Inter-SemiBold' },
     saveButtonText: { color: '#FFFFFF' },
-    signOutButton: { backgroundColor: colors.backgroundLight, borderColor: colors.error },
+    signOutButton: { 
+      flex: 1,
+      backgroundColor: colors.backgroundLight, 
+      borderColor: colors.error 
+    },
     signOutButtonText: { color: colors.error },
 
     aboutToggle: { alignItems: 'center', paddingVertical: 6, marginBottom: 4 },
@@ -723,6 +886,36 @@ const getStyles = (colors: ThemeColors) =>
       marginBottom: 16,
     },
     modalEmoji: { fontSize: 40, marginBottom: 12 },
+
+    // Modal buttons
+    modalButtons: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 16,
+      width: '100%',
+    },
+    modalButton: {
+      flex: 1,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+      backgroundColor: colors.backgroundLight,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    modalButtonPrimary: {
+      backgroundColor: colors.error,
+      borderColor: colors.error,
+    },
+    modalButtonText: {
+      fontSize: 14,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.text,
+    },
+    modalButtonTextPrimary: {
+      color: '#FFFFFF',
+    },
 
     // NEW: Dropdown modal (portal) styles
     dropdownOverlay: {
