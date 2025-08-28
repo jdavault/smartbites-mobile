@@ -247,7 +247,24 @@ export default function LoginScreen() {
                       disabled={loading}
                     >
                       <Text style={styles.googleButtonText}>
-                        Continue with Google
+                        Google SignIn
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Apple -> temp modal */}
+                    <TouchableOpacity
+                      style={styles.appleButton}
+                      onPress={() =>
+                        openModal({
+                          title: 'Apple Login Not Available',
+                          subtitle: "We're working on it — coming soon!",
+                          emoji: '😔',
+                        })
+                      }
+                      disabled={loading}
+                    >
+                      <Text style={styles.appleButtonText}>
+                        Apple SignIn
                       </Text>
                     </TouchableOpacity>
 
@@ -406,6 +423,20 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     },
     googleButtonText: {
       color: colors.textSecondary,
+      fontFamily: Fonts.heading,
+      fontSize: FontSizes.md,
+    },
+
+    appleButton: {
+      paddingVertical: 16,
+      borderRadius: 12,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: '#000000',
+    },
+    appleButtonText: {
+      color: '#FFFFFF',
       fontFamily: Fonts.heading,
       fontSize: FontSizes.md,
     },
