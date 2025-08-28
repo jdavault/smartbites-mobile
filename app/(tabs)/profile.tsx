@@ -688,8 +688,8 @@ const getStyles = (colors: ThemeColors) =>
       marginBottom: 16,
     },
     chip: {
-      paddingVertical: 16,
-      paddingHorizontal: 20,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
       borderRadius: 999,
       borderWidth: 1,
       borderColor: colors.border,
