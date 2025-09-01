@@ -2,10 +2,11 @@
   "expo": {
     "name": "SmartBites",
     "slug": "allergy-aware-recipe-finder",
-    "version": "1.0.8",
+    "runtimeVersion": "1.0.9",
+    "version": "1.0.9",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "schemes": ["smartbites"],
+    "scheme": "smartbites",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "web": {
@@ -13,13 +14,19 @@
       "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "cover",
       "backgroundColor": "#f9f8f2"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "androidStatusBar": {
       "backgroundColor": "#f9f8f2",
       "barStyle": "dark-content",
@@ -32,32 +39,40 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.allergy-aware-recipe-finder",
-      "buildNumber": "51",
-      "associatedDomains": ["applinks:smartbites.food"],
+      "buildNumber": "56",
+      "associatedDomains": [
+        "applinks:smartbites.food"
+      ],
+      "urlSchemes": [
+        "smartbites"
+      ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "This app uses the camera to scan items for allergy-friendly recipes.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         }
-      }
+      },
+      "appleTeamId": "GEVW9YV737"
     },
     "android": {
-      "versionCode": 16,
+      "versionCode": 20,
       "package": "cooking.safeplate.allergyawarerecipefinder",
       "intentFilters": [
         {
           "action": "VIEW",
-          "category": ["BROWSABLE", "DEFAULT"],
-          "data": [{ "scheme": "smartbites" }]
-        }
-      ],
-      "action": "VIEW",
-      "category": ["BROWSABLE", "DEFAULT"],
-      "data": [
-        {
-          "scheme": "https",
-          "host": "smartbites.food"
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "smartbites.food",
+              "pathPrefix": "/reset-password"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "adaptiveIcon": {
@@ -86,9 +101,6 @@
       "eas": {
         "projectId": "a54493c7-fc4d-4aea-a8e9-7773401420b1"
       }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
     },
     "updates": {
       "url": "https://u.expo.dev/a54493c7-fc4d-4aea-a8e9-7773401420b1"

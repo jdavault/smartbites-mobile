@@ -1,6 +1,13 @@
-import { supabase, supabaseEmail } from '@/lib/supabase';
+// services/authService.ts
+import { supabase } from '@/lib/supabase';
 import { UserService } from './userService';
 import type { User, Session } from '@supabase/supabase-js';
+import {
+  APP_URL,
+  isDevelopment,
+  RESET_PASSWORD_ROUTE,
+} from '@/config/constants';
+import { Platform } from 'react-native';
 
 export interface SignUpData {
   email: string;
@@ -17,8 +24,8 @@ export interface SignUpData {
 
 export interface AuthResult {
   error: any;
-  user?: User;
-  session?: Session;
+  user: User | null;
+  session: Session | null;
 }
 
 export class AuthService {
@@ -67,7 +74,7 @@ export class AuthService {
       return { error, user: data.user, session: data.session };
     } catch (error) {
       console.error('signUp error:', error);
-      return { error };
+      return { error, user: null, session: null };
     }
   }
 
@@ -82,24 +89,17 @@ export class AuthService {
       return { error, user: data.user, session: data.session };
     } catch (error) {
       console.error('Unexpected signIn error:', error);
-      return { error };
+      return { error, user: null, session: null };
     }
   }
 
-  static async signOut(): Promise<{ error: any }> {
+  static async signOut() {
     try {
       const { error } = await supabase.auth.signOut();
-      
-      // Handle the case where session is already invalid on server
-      if (error && error.message && error.message.includes('Session from session_id claim in JWT does not exist')) {
-        // Session is already invalid, treat as successful logout
-        return { error: null };
-      }
-      
-      if (error) console.error('signOut error:', error);
-      return { error };
+      if (error) throw error;
+      return { error: null };
     } catch (error) {
-      console.error('Sign out exception:', error);
+      console.error('Sign out error:', error);
       return { error };
     }
   }
@@ -117,78 +117,69 @@ export class AuthService {
       return { error, user: data.user, session: data.session };
     } catch (error) {
       console.error('signInWithIdToken error:', error);
-      return { error };
+      return { error, user: null, session: null };
     }
   }
 
-  static async resetPasswordForEmail(
-    email: string,
-    redirectTo: string
-  ): Promise<{ error: any }> {
+  static async resetPasswordForEmail(email: string) {
     try {
-      const { error } = await supabaseEmail.auth.resetPasswordForEmail(email, {
+      // if (Platform.OS === 'web') {
+      //   // Web always goes to APP_URL (ngrok, localhost, or prod domain)
+      //   redirectTo = `${APP_URL}${RESET_PASSWORD_ROUTE}`;
+      // } else if (isDevelopment) {
+      //   // Force deep link scheme in dev for reliable testing on devices/simulators
+      //   redirectTo = `smartbites://reset-password`;
+      // } else {
+      //   // Production/staging: use real Universal/App Links
+      //   redirectTo = `${APP_URL}${RESET_PASSWORD_ROUTE}`;
+      // }
+      // Always use HTTPS URLs - they work with Universal Links
+      const redirectTo = `${APP_URL}${RESET_PASSWORD_ROUTE}`;
+      console.log('Requesting password reset with redirectTo:', redirectTo);
+
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo,
       });
-      return { error };
+
+      if (error) {
+        console.error('Reset password error:', error);
+        return { error };
+      }
+
+      return { data, error: null };
     } catch (error) {
-      console.error('resetPasswordForEmail error:', error);
+      console.error('Reset password exception:', error);
       return { error };
     }
   }
 
-  static async updatePassword(password: string): Promise<{ error: any }> {
+  static async updatePassword(newPassword: string) {
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      return { error };
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+      return { data, error: null };
     } catch (error) {
-      console.error('updatePassword error:', error);
-      return { error };
+      console.error('Update password error:', error);
+      return { data: null, error };
     }
   }
 
-  /**
-   * Exchanges a Supabase auth URL (web or deep link) for a session.
-   * Safe-guards:
-   * - No-ops if the URL has no auth params (avoids pointless RPCs).
-   * - Logs a compact, redacted URL for debugging.
-   */
-  static async exchangeCodeForSession(
-    url: string
-  ): Promise<{ data: any; error: any }> {
+  static async exchangeCodeForSession(url: string) {
     try {
-      if (!url || typeof url !== 'string') {
-        return { data: null, error: new Error('No URL provided') };
-      }
-
-      // Quick check to avoid calling Supabase with a bare path
-      const hasAuthBits =
-        url.includes('code=') ||
-        url.includes('access_token=') ||
-        url.includes('refresh_token=') ||
-        url.includes('token='); // covers recovery-style links on some setups
-
-      if (!hasAuthBits) {
-        // Nothing to exchange; let the caller fall back to getSession()
-        return { data: null, error: new Error('No auth params found in URL') };
-      }
-
-      // Helpful log without dumping the whole token to console
-      const redacted = url.replace(
-        /(access_token|refresh_token|code|token)=([^&#]+)/g,
-        (_m, k) => `${k}=***`
-      );
-      console.log('🔄 exchangeCodeForSession ->', redacted);
-
-      // Supabase v2 supports passing the raw URL (works for https and custom schemes)
+      console.log('Exchanging url for session...');
       const { data, error } = await supabase.auth.exchangeCodeForSession(url);
 
       if (error) {
-        console.error('exchangeCodeForSession: Supabase error:', error);
+        console.error('Exchange url error:', error);
         return { data: null, error };
       }
+
       return { data, error: null };
     } catch (error) {
-      console.error('exchangeCodeForSession: unexpected exception:', error);
+      console.error('Exchange url exception:', error);
       return { data: null, error };
     }
   }
@@ -213,5 +204,28 @@ export class AuthService {
     callback: (event: string, session: Session | null) => void
   ) {
     return supabase.auth.onAuthStateChange(callback);
+  }
+
+  static async verifyOtpToken(
+    token: string,
+    type: 'recovery' | 'invite' = 'recovery'
+  ) {
+    try {
+      console.log('Verifying OTP token...');
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: type,
+      });
+
+      if (error) {
+        console.error('Verify OTP error:', error);
+        return { data: null, error };
+      }
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Verify OTP exception:', error);
+      return { data: null, error };
+    }
   }
 }

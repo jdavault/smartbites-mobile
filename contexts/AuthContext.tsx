@@ -10,50 +10,8 @@ import type { User, Session } from '@supabase/supabase-js';
 import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
 import { ResponseType } from 'expo-auth-session';
-import { isAuthLink } from '@/utils/authLink';
 
 WebBrowser.maybeCompleteAuthSession();
-
-// Thread safety helpers
-const onMain = (fn: () => void) => {
-  if (Platform.OS === 'ios') {
-    setTimeout(fn, 0);
-  } else {
-    fn();
-  }
-};
-
-// Safe URL validation and opening
-const safeOpenURL = async (raw: string | null | undefined) => {
-  if (!raw || typeof raw !== 'string') return;
-  try {
-    const parsed = raw.trim();
-    if (!/^([a-zA-Z][a-zA-Z0-9+\-.]*):/.test(parsed)) {
-      console.warn('Invalid URL scheme:', parsed);
-      return;
-    }
-    onMain(() => {
-      try {
-        Linking.openURL(parsed);
-      } catch (e) {
-        console.warn('Linking.openURL failed:', e);
-      }
-    });
-  } catch (e) {
-    console.warn('safeOpenURL failed:', e);
-  }
-};
-
-// Safe router navigation
-const safeRouterReplace = (router: any, path: string) => {
-  onMain(() => {
-    try {
-      router.replace(path);
-    } catch (e) {
-      console.warn('Router replace failed:', e);
-    }
-  });
-};
 
 const iosClientId =
   '1010197305867-f3kuf70gl65tapvmj3kouiaff9bt36tb.apps.googleusercontent.com';
@@ -70,7 +28,7 @@ interface AuthContextType {
     email: string,
     password: string,
     additionalData?: Record<string, any>
-  ) => Promise<{ error: any }>;
+  ) => Promise<{ error: any; data?: { user: any; session: any } }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<{ error: any }>;
@@ -78,6 +36,16 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Simple helper to check if URL contains auth parameters
+const isAuthURL = (url: string): boolean => {
+  return (
+    url.includes('type=recovery') ||
+    url.includes('code=') ||
+    url.includes('access_token=') ||
+    url.includes('refresh_token=')
+  );
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -132,15 +100,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (error) {
           console.error('getSession error:', error);
+          // If refresh token is borked, clear it
           if (
             error.message?.includes('refresh_token_not_found') ||
             error.message?.includes('Invalid Refresh Token')
           ) {
-            try {
-              await AuthService.signOut();
-            } catch (signOutError) {
-              console.error('Sign out during error recovery failed:', signOutError);
-            }
+            await AuthService.signOut();
           }
           setUser(null);
           setSession(null);
@@ -166,80 +131,90 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
+      // guard for older SDKs
       sub?.subscription?.unsubscribe?.();
     };
   }, []);
 
-  // ---- Handle auth links on WEB: forward to reset-password WITH original params; screen will exchange & strip
+  // ---- Handle auth links on WEB (simplified)
   useEffect(() => {
     if (Platform.OS !== 'web') return;
 
-    try {
-      const url = window.location.href;
-      if (url && isAuthLink(url)) {
-        console.log('🔗 Web auth link detected:', url.replace(/(token|code|access_token)=([^&#]+)/g, '$1=***'));
-        try {
-          const qs = window.location.search || '';
-          const hash = window.location.hash || '';
-          window.location.replace(`/reset-password${qs}${hash}`);
-        } catch (e) {
-          console.error('Web redirect failed:', e);
-        }
+    const url = window.location.href;
+    if (isAuthURL(url)) {
+      try {
+        // For web, the reset-password page handles its own URL parsing
+        console.log('Web auth URL detected, letting reset-password handle it');
+      } catch (e) {
+        console.error('Web auth redirect failed:', e);
       }
-    } catch (e) {
-      console.error('Web auth link handling failed:', e);
     }
   }, []);
 
-  // ---- Handle auth links on NATIVE: forward the FULL url to reset-password via param
+  // ---- Handle auth links on NATIVE (simplified - direct to reset screen)
   useEffect(() => {
     if (Platform.OS === 'web') return;
 
-    // Track last processed URL to prevent re-processing
-    let lastProcessedUrl: string | null = null;
+    const handleAuthLink = (incomingUrl: string) => {
+      console.log('🔗 URL received in AuthContext:', incomingUrl);
 
-    const forwardToResetIfAuthLink = (incomingUrl: string) => {
+      // Log URL details for debugging
       try {
-        if (!incomingUrl || typeof incomingUrl !== 'string') return false;
-        
-        // Prevent re-processing the same URL
-        if (lastProcessedUrl === incomingUrl) {
-          console.log('🔗 Skipping duplicate URL:', incomingUrl.replace(/(token|code|access_token)=([^&#]+)/g, '$1=***'));
-          return false;
+        let url: URL;
+        if (incomingUrl.startsWith('smartbites://')) {
+          // Custom scheme deeplink
+          url = new URL(
+            incomingUrl.replace('smartbites://', 'https://temp.com/')
+          );
+        } else {
+          // Universal link
+          url = new URL(incomingUrl);
         }
-        
-        if (!isAuthLink(incomingUrl)) return false;
-        
-        lastProcessedUrl = incomingUrl;
-        console.log('🔗 Native auth link detected:', incomingUrl.replace(/(token|code|access_token)=([^&#]+)/g, '$1=***'));
 
-        safeRouterReplace(router, `/reset-password?url=${encodeURIComponent(incomingUrl)}`);
-        return true;
+        console.log('🔍 URL pathname:', url.pathname);
+        console.log('🔍 URL params:', Object.fromEntries(url.searchParams));
+        console.log('🔍 URL hash:', url.hash);
       } catch (e) {
-        console.error('forwardToResetIfAuthLink failed:', e);
-        return false;
+        console.log('Could not parse URL for logging:', e);
       }
+
+      // Check if it's an auth-related URL
+      if (isAuthURL(incomingUrl)) {
+        console.log('✅ Detected as auth URL, routing to reset-password');
+
+        // Navigate to reset-password and pass the original URL
+        router.replace({
+          pathname: '/reset-password',
+          params: { originalUrl: encodeURIComponent(incomingUrl) },
+        });
+        return true;
+      } else {
+        console.log('❌ Not detected as auth URL');
+      }
+      return false;
     };
 
-    // cold start
+    // Handle cold start (app opens from link)
     Linking.getInitialURL()
       .then((url) => {
         if (url) {
-          console.log('🔗 Initial URL:', url.replace(/(token|code|access_token)=([^&#]+)/g, '$1=***'));
-          forwardToResetIfAuthLink(url);
+          console.log('🚀 App cold start with URL:', url);
+          handleAuthLink(url);
+        } else {
+          console.log('🚀 App cold start with no URL');
         }
       })
       .catch((e) => {
-        console.error('getInitialURL failed:', e);
+        console.error('Failed to get initial URL:', e);
       });
 
-    // foreground
-    const sub = Linking.addEventListener('url', ({ url }) => {
-      console.log('🔗 Foreground URL:', url.replace(/(token|code|access_token)=([^&#]+)/g, '$1=***'));
-      forwardToResetIfAuthLink(url);
+    // Handle warm start (app already running)
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      console.log('📱 App received URL while running:', url);
+      handleAuthLink(url);
     });
 
-    return () => sub.remove();
+    return () => subscription.remove();
   }, [router]);
 
   // ---- Public API
@@ -270,6 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Optimistically clear local state
       setUser(null);
       setSession(null);
 
@@ -285,9 +261,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .replace(/^ +/, '')
               .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
           });
-        } catch (e) {
-          console.warn('Web storage cleanup failed:', e);
-        }
+        } catch {}
       }
     } catch (e) {
       console.error('Sign out exception:', e);
@@ -297,24 +271,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    try {
-      if (request) {
-        await promptAsync();
-        return { error: null };
-      }
-      return { error: { message: 'Google sign-in not ready' } };
-    } catch (error) {
-      console.error('signInWithGoogle failed:', error);
-      return { error: { message: 'Google sign-in failed' } };
+    if (request) {
+      await promptAsync();
+      return { error: null };
     }
+    return { error: { message: 'Google sign-in not ready' } };
   };
 
   const promptGoogleAsync = async () => {
-    try {
-      if (request) await promptAsync();
-    } catch (error) {
-      console.error('promptGoogleAsync failed:', error);
-    }
+    if (request) await promptAsync();
   };
 
   return (

@@ -15,6 +15,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { ArrowLeft, Clock, Users, ChefHat } from 'lucide-react-native';
+import {
+  SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE,
+  SUPABASE_URL,
+} from '@/config/constants';
 
 const DEFAULT_IMAGE_URL =
   'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
@@ -61,7 +65,7 @@ export default function RecipeDetailScreen() {
     if (recipe?.image) {
       // Get from Supabase storage using user_id/recipe_id/filename structure
       if (recipe.id && user?.id) {
-        const baseUrl = process.env.EXPO_PUBLIC_RECIPE_IMAGES!;
+        const baseUrl = `${SUPABASE_URL}${SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE}`;
         return `${baseUrl}/${recipe.id}/${recipe.image}`;
       }
     }
@@ -86,7 +90,7 @@ export default function RecipeDetailScreen() {
     }
   };
 
- const styles = getStyles(colors);
+  const styles = getStyles(colors);
 
   if (!recipe) {
     return (
@@ -143,7 +147,10 @@ export default function RecipeDetailScreen() {
           <View style={styles.metadata}>
             <View style={styles.metadataItem}>
               <Clock size={16} color={colors.text} />
-              <Text style={styles.metadataText}>{recipe.prepTime.replace('minutes', 'min')} + {recipe.cookTime.replace('minutes', 'min')}</Text>
+              <Text style={styles.metadataText}>
+                {recipe.prepTime.replace('minutes', 'min')} +{' '}
+                {recipe.cookTime.replace('minutes', 'min')}
+              </Text>
             </View>
 
             <View style={styles.metadataItem}>

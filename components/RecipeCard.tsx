@@ -20,6 +20,10 @@ import {
   ChefHat,
   Trash2,
 } from 'lucide-react-native';
+import {
+  SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE,
+  SUPABASE_URL,
+} from '@/config/constants';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -53,7 +57,7 @@ export default function RecipeCard({
   // Get the image URL - either from Supabase storage or fallback
   const getImageUrl = () => {
     if (recipe.image && recipe.id) {
-      const baseUrl = process.env.EXPO_PUBLIC_RECIPE_IMAGES!; // define it in your .env
+      const baseUrl = `${SUPABASE_URL}${SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE}`;
       return `${baseUrl}/${recipe.id}/${recipe.image}`;
     }
     // Return null if no image available

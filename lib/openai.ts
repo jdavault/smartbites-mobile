@@ -23,7 +23,6 @@ export type ChatMessage = {
   role: 'system' | 'user' | 'assistant';
   content: string;
 };
-
 const IMAGE_MODEL = 'dall-e-3';
 const IMAGE_SIZE = '1024x1024'; // was "1024x1024" — smaller helps under tight limits
 const DEFAULT_IMG =
@@ -295,7 +294,7 @@ export async function generateRecipes(
     ];
 
     const data = await callOpenAI(messages, {
-      model: 'gpt-4o-mini',
+      model: DEFAULT_MODEL,
       temperature: 0.3,
       max_tokens: 1400,
       seed: 7,
@@ -451,7 +450,7 @@ export async function generateRecipes(
     if (result.length === 0) {
       throw new Error('No recipes were generated. Please try again later.');
     }
-    
+
     return result;
   } catch (err) {
     console.error('Error generating recipes:', err);
@@ -511,4 +510,3 @@ async function fetchWithRateLimitRetry(
   }
   throw new Error('OpenAI image error: retries exhausted');
 }
-
