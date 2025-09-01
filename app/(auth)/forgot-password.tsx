@@ -21,6 +21,7 @@ import { Spacing } from '@/constants/Spacing';
 import { Fonts, FontSizes } from '@/constants/Typography';
 import ThemedText from '@/components/ThemedText';
 import { AuthService } from '@/services/authService';
+import { REDIRECT_URLS } from '@/config/constants';
 
 type ModalInfo = {
   visible: boolean;
@@ -47,20 +48,22 @@ export default function ForgotPasswordScreen() {
   });
 
   // Replace the RESET_REDIRECT block with this:
-  const RESET_REDIRECT = Platform.select({
-    web:
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/reset-password`
-        : 'https://smartbites.food/reset-password',
-    default: __DEV__
-      ? 'http://localhost:8081/reset-password' // Simulator / cable-tether tests
-      : 'smartbites://reset-password', // ← force scheme on iOS/Android //Linking.createURL('/reset-password'), // smartbites://reset-password
-  })!;
+  // const RESET_REDIRECT = Platform.select({
+  //   web:
+  //     typeof window !== 'undefined'
+  //       ? `${window.location.origin}/reset-password`
+  //       : 'https://smartbites.food/reset-password',
+  //   default: __DEV__exchangeCodeForSession(a
+  //     ? 'http://localhost:8081/reset-password' // Simulator / cable-tether tests
+  //     : 'smartbites://reset-password', // ← force scheme on iOS/Android //Linking.createURL('/reset-password'), // smartbites://reset-password
+  // })!;
+
+  const RESET_REDIRECT = REDIRECT_URLS.resetPassword;
 
   const handleSendEmail = async () => {
-    const trimmed = email.trim();
+    const trimmedEmail = email.trim();
 
-    if (!trimmed) {
+    if (!trimmedEmail) {
       setModalInfo({
         visible: true,
         title: 'Missing Email',
@@ -69,7 +72,7 @@ export default function ForgotPasswordScreen() {
       });
       return;
     }
-    if (!emailRegex.test(trimmed)) {
+    if (!emailRegex.test(trimmedEmail)) {
       setModalInfo({
         visible: true,
         title: 'Invalid Email',
@@ -83,10 +86,7 @@ export default function ForgotPasswordScreen() {
     try {
       // This triggers Supabase to send a magic recovery link that lands on RESET_REDIRECT
       console.log(`RESET_REDIRECT to ${RESET_REDIRECT}`);
-      const { error } = await AuthService.resetPasswordForEmail(
-        trimmed,
-        RESET_REDIRECT
-      );
+      const { error } = await AuthService.resetPasswordForEmail(trimmedEmail);
       if (error) throw error;
 
       setModalInfo({
