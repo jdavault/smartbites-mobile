@@ -17,5 +17,12 @@ export const REDIRECT_URLS = {
   signIn: `${APP_URL}${LOGIN_ROUTE}`,
 };
 
-export const isDevelopment = __DEV__;
-export const isProduction = !__DEV__;
+export const DEBUG_APP =
+  (typeof process !== 'undefined' &&
+    process?.env?.EXPO_PUBLIC_DEBUG_APP === 'true') ||
+  false;
+
+export const isDevelopment =
+  (typeof __DEV__ !== 'undefined' && __DEV__) || false;
+
+export const isProduction = !isDevelopment;
