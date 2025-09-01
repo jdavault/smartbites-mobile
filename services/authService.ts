@@ -1,3 +1,4 @@
+import { Redirect } from 'expo-router';
 // services/authService.ts
 import { supabase } from '@/lib/supabase';
 import { UserService } from './userService';
@@ -123,18 +124,20 @@ export class AuthService {
 
   static async resetPasswordForEmail(email: string) {
     try {
-      // if (Platform.OS === 'web') {
-      //   // Web always goes to APP_URL (ngrok, localhost, or prod domain)
-      //   redirectTo = `${APP_URL}${RESET_PASSWORD_ROUTE}`;
-      // } else if (isDevelopment) {
-      //   // Force deep link scheme in dev for reliable testing on devices/simulators
-      //   redirectTo = `smartbites://reset-password`;
-      // } else {
-      //   // Production/staging: use real Universal/App Links
-      //   redirectTo = `${APP_URL}${RESET_PASSWORD_ROUTE}`;
-      // }
-      // Always use HTTPS URLs - they work with Universal Links
-      const redirectTo = `${APP_URL}${RESET_PASSWORD_ROUTE}`;
+      const isDev = __DEV__; // Expo sets this true in dev
+
+      const isExpoDevClient =
+        typeof navigator !== 'undefined' &&
+        navigator.userAgent?.toLowerCase().includes('expo');
+
+      // // Web uses Universal Links, Mobile uses Deep Links
+      const redirectTo =
+        Platform.OS === 'web' && !isDev
+          ? `${APP_URL}${RESET_PASSWORD_ROUTE}` // real web users
+          : isExpoDevClient
+          ? 'smartbites://reset-password' // force deeplink when running dev client on device
+          : 'smartbites://reset-password'; // normal native builds
+      // const redirectTo = 'smartbites://reset-password';
       console.log('Requesting password reset with redirectTo:', redirectTo);
 
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {

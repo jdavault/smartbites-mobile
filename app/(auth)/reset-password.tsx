@@ -25,8 +25,9 @@ import { Fonts, FontSizes } from '@/constants/Typography';
 import ThemedText from '@/components/ThemedText';
 import { AuthService } from '@/services/authService';
 import { stripAuthParamsFromWebLocation } from '@/utils/authLink';
-import { supabase } from '@/lib/supabase';
-import { isDevelopment } from '@/config/constants';
+import { supabase, supabaseWeb, supabaseMobile } from '@/lib/supabase';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { APP_URL, isDevelopment, DEBUG_APP } from '@/config/constants';
 
 type ModalInfo = {
   visible: boolean;
@@ -69,23 +70,24 @@ export default function ResetPasswordScreen() {
     let isMounted = true;
 
     const processReset = async () => {
+      // ---- Debug helpers (env-gated) ----
+      const DEBUG =
+        (typeof DEBUG_APP !== 'undefined' && DEBUG_APP) || isDevelopment;
       const debugMessages: string[] = [];
+      const pushDbg = (line: string) => {
+        debugMessages.push(line);
+        if (DEBUG) console.log('[RESET]', line);
+      };
 
       try {
-        debugMessages.push('=== Reset Password Process Started ===');
-        debugMessages.push(`Platform.OS: ${Platform.OS}`);
-
-        // Check for existing session FIRST - this is the key fix
-        debugMessages.push('=== Checking for existing session first ===');
+        // 0) Existing session?
         try {
           const { session, error: sessionError } =
             await AuthService.getSession();
           if (session && !sessionError) {
-            debugMessages.push('✓ Found existing session!');
-            debugMessages.push(`Session user: ${session.user?.email}`);
-            debugMessages.push(
-              `Session established: ${new Date().toISOString()}`
-            );
+            pushDbg('✓ Found existing session!');
+            pushDbg(`Session user: ${session.user?.email}`);
+            pushDbg(`Session established: ${new Date().toISOString()}`);
 
             if (isMounted) {
               setUserEmail(session.user?.email || null);
@@ -93,28 +95,28 @@ export default function ResetPasswordScreen() {
               setHeaderStatus('Enter a new password to complete your reset.');
               setDebugInfo(debugMessages.join('\n'));
               setInitializing(false);
-              setShowDebug(true);
+              setShowDebug(DEBUG);
             }
-            return; // Exit early - we have a session
+            return; // We already have a session
           }
-          debugMessages.push(
+          pushDbg(
             `No existing session found. Error: ${
               sessionError?.message || 'none'
             }`
           );
-          debugMessages.push('Proceeding with URL parsing...');
+          pushDbg('Proceeding with URL parsing...');
         } catch (e: any) {
-          debugMessages.push(`Session check error: ${e?.message}`);
+          pushDbg(`Session check error: ${e?.message}`);
         }
 
-        // 1. Figure out current URL
+        // 1) Determine current URL (web vs native)
         let currentUrl: string | null = null;
         if (Platform.OS === 'web' && typeof window !== 'undefined') {
           currentUrl = window.location.href;
-          debugMessages.push(`Web URL: ${currentUrl}`);
+          pushDbg(`Web URL: ${currentUrl}`);
         } else {
           const initialUrl = await Linking.getInitialURL();
-          debugMessages.push(`Initial URL: ${initialUrl || 'none'}`);
+          pushDbg(`Initial URL: ${initialUrl || 'none'}`);
 
           if (initialUrl) {
             currentUrl = initialUrl;
@@ -123,26 +125,64 @@ export default function ResetPasswordScreen() {
               currentUrl = decodeURIComponent(
                 routerParams.originalUrl as string
               );
-              debugMessages.push(`Decoded from router: ${currentUrl}`);
+              pushDbg(`Decoded from router: ${currentUrl}`);
             } catch (e) {
-              debugMessages.push(`Decode error: ${e}`);
+              pushDbg(`Decode error: ${e}`);
             }
           }
         }
 
         if (!currentUrl) {
-          debugMessages.push('ERROR: No URL found from any source');
+          pushDbg('ERROR: No URL found from any source');
           if (isMounted) {
             setDebugInfo(debugMessages.join('\n'));
             setHeaderStatus('No reset link found. Please request a new one.');
             setMode('request');
             setInitializing(false);
-            setShowDebug(true);
+            setShowDebug(DEBUG);
           }
           return;
         }
 
-        // 2. Parse URL + extract params
+        // 1a) Web fallback for custom scheme
+        if (!currentUrl.startsWith('http') && Platform.OS === 'web') {
+          currentUrl = currentUrl.replace(/^smartbites:\/\/[^/]+/, APP_URL);
+          pushDbg(`Converted deep link to web fallback: ${currentUrl}`);
+        }
+
+        // 2) Pick client
+        let supabaseClient: SupabaseClient<any, 'public', 'public', any, any>;
+        if (currentUrl.startsWith('smartbites://')) {
+          pushDbg('Deep link detected - forcing mobile client');
+          supabaseClient = supabaseMobile;
+        } else {
+          const isActuallyMobile =
+            Platform.OS !== 'web' ||
+            (typeof window !== 'undefined' &&
+              window.navigator?.userAgent?.includes('Mobile'));
+          supabaseClient = isActuallyMobile ? supabaseMobile : supabaseWeb;
+        }
+
+        // (Optional) extra flag for logs
+        const isActuallyMobile =
+          Platform.OS !== 'web' ||
+          (typeof window !== 'undefined' &&
+            window.navigator?.userAgent?.includes('Mobile'));
+
+        pushDbg('=== Reset Password Process Started ===');
+        pushDbg(`Platform.OS: ${Platform.OS}`);
+        pushDbg(`Detected as mobile: ${isActuallyMobile}`);
+        pushDbg(
+          `Using client: ${isActuallyMobile ? 'supabaseMobile' : 'supabaseWeb'}`
+        );
+        try {
+          pushDbg(`Client config exists: ${!!supabaseClient}`);
+          pushDbg(`Auth config exists: ${!!supabaseClient.auth}`);
+        } catch (e) {
+          pushDbg(`Client debug error: ${e}`);
+        }
+
+        // 3) Parse URL
         let urlObj: URL;
         try {
           if (currentUrl.startsWith('smartbites://')) {
@@ -152,28 +192,28 @@ export default function ResetPasswordScreen() {
           } else {
             urlObj = new URL(currentUrl);
           }
-          debugMessages.push('URL parsed successfully');
-          // Add these lines:
-          debugMessages.push(`Current timestamp: ${Date.now()}`);
-          debugMessages.push(`URL length: ${currentUrl.length}`);
-          debugMessages.push(
+          pushDbg('URL parsed successfully');
+          pushDbg(`Current timestamp: ${Date.now()}`);
+          pushDbg(`URL length: ${currentUrl.length}`);
+          pushDbg(
             `Contains duplicate params: ${
               currentUrl.includes('?error=access_denied') &&
               currentUrl.includes('#error=access_denied')
             }`
           );
         } catch (e) {
-          debugMessages.push(`URL parse error: ${e}`);
+          pushDbg(`URL parse error: ${e}`);
           if (isMounted) {
             setDebugInfo(debugMessages.join('\n'));
             setHeaderStatus('Invalid reset link format.');
             setMode('request');
             setInitializing(false);
-            setShowDebug(true);
+            setShowDebug(DEBUG);
           }
           return;
         }
 
+        // 3a) Extract params (search + hash)
         const params = {
           code: urlObj.searchParams.get('code'),
           token: urlObj.searchParams.get('token'),
@@ -183,7 +223,6 @@ export default function ResetPasswordScreen() {
           error: urlObj.searchParams.get('error'),
           error_code: urlObj.searchParams.get('error_code'),
         };
-
         if (urlObj.hash) {
           const hashParams = new URLSearchParams(urlObj.hash.substring(1));
           params.access_token =
@@ -197,13 +236,13 @@ export default function ResetPasswordScreen() {
           params.error_code = params.error_code || hashParams.get('error_code');
         }
 
-        debugMessages.push('=== Parameters Found ===');
+        pushDbg('=== Parameters Found ===');
         Object.entries(params).forEach(([k, v]) =>
-          debugMessages.push(
+          pushDbg(
             `${k}: ${
               v
                 ? k.includes('token')
-                  ? v.substring(0, 20) + '...'
+                  ? String(v).substring(0, 20) + '...'
                   : v
                 : 'null'
             }`
@@ -211,9 +250,7 @@ export default function ResetPasswordScreen() {
         );
 
         if (params.error || params.error_code) {
-          debugMessages.push(
-            `ERROR in URL: ${params.error || params.error_code}`
-          );
+          pushDbg(`ERROR in URL: ${params.error || params.error_code}`);
           if (isMounted) {
             setDebugInfo(debugMessages.join('\n'));
             setHeaderStatus(
@@ -221,87 +258,25 @@ export default function ResetPasswordScreen() {
             );
             setMode('request');
             setInitializing(false);
-            setShowDebug(true);
+            setShowDebug(DEBUG);
           }
           return;
         }
 
+        // 4) Establish session
         let sessionEstablished = false;
 
-        // 3. Try code exchange first, but handle PKCE vs implicit flows differently
-        if (params.code) {
-          debugMessages.push('=== Attempting exchangeCodeForSession ===');
-          try {
-            const { data, error } = await supabase.auth.exchangeCodeForSession(
-              currentUrl
-            );
-            if (error) {
-              debugMessages.push(`✗ Exchange failed: ${error.message}`);
-              // 🔽 Always try verifyOtp fallback on native
-              if (Platform.OS !== 'web') {
-                debugMessages.push(
-                  '=== Trying verifyOtp fallback for native code ==='
-                );
-                try {
-                  debugMessages.push(
-                    `verifyOtp params → token_hash=${(
-                      params.token || params.code
-                    )?.substring(0, 12)}..., type=recovery`
-                  );
-
-                  const { data: otpData, error: otpError } =
-                    await supabase.auth.verifyOtp({
-                      token_hash: params.code,
-                      type: 'recovery',
-                    });
-                  if (!otpError && otpData?.session) {
-                    debugMessages.push('✓ OTP verification successful!');
-                    sessionEstablished = true;
-                    if (isMounted) {
-                      setUserEmail(otpData.session.user?.email || null);
-                      setMode('reset');
-                      setHeaderStatus(
-                        'Enter a new password to complete your reset.'
-                      );
-                    }
-                  } else {
-                    debugMessages.push(
-                      `✗ OTP fallback failed: ${otpError?.message}`
-                    );
-                  }
-                } catch (e: any) {
-                  debugMessages.push(`✗ OTP fallback exception: ${e?.message}`);
-                }
-              }
-            } else if (data?.session) {
-              debugMessages.push('✓ Code exchange successful!');
-              sessionEstablished = true;
-              if (isMounted) {
-                setUserEmail(data.session.user?.email || null);
-                setMode('reset');
-                setHeaderStatus('Enter a new password to complete your reset.');
-              }
-            }
-          } catch (e: any) {
-            debugMessages.push(`✗ Exchange exception: ${e?.message}`);
-          }
-        }
-
-        // 4. Fallback: verifyOtp (Supabase recovery tokens)
-        // if (!sessionEstablished && params.token && params.type === 'recovery') {
-        if (!sessionEstablished && (params.token || params.code)) {
-          debugMessages.push('=== Trying verifyOtp fallback ===');
-          try {
-            //const tokenHash = params.token ?? params.code;
-            //const tokenHash = params.token;
-
-            if (params.token) {
-              const { data, error } = await supabase.auth.verifyOtp({
+        if (Platform.OS === 'web') {
+          // Prefer token on web (bridge path), else fall back to PKCE exchange
+          if (params.token && (params.type === 'recovery' || !params.type)) {
+            pushDbg('=== Web: verifyOtp with token ===');
+            try {
+              const { data, error } = await supabaseClient.auth.verifyOtp({
                 token_hash: params.token,
                 type: 'recovery',
               });
               if (!error && data?.session) {
-                debugMessages.push('✓ OTP verification successful!');
+                pushDbg('✓ Web OTP verification successful!');
                 sessionEstablished = true;
                 if (isMounted) {
                   setUserEmail(data.session.user?.email || null);
@@ -311,30 +286,85 @@ export default function ResetPasswordScreen() {
                   );
                 }
               } else {
-                debugMessages.push(`✗ OTP failed: ${error?.message}`);
+                pushDbg(`✗ Web OTP failed: ${error?.message}`);
               }
-            } else {
-              debugMessages.push('✗ No valid token for verifyOtp fallback.');
+            } catch (e: any) {
+              pushDbg(`✗ Web OTP exception: ${e?.message}`);
             }
-          } catch (e: any) {
-            debugMessages.push(`✗ OTP exception: ${e?.message}`);
+          } else if (params.code) {
+            pushDbg('=== Web: exchangeCodeForSession (PKCE) ===');
+            try {
+              const { data, error } =
+                await supabaseClient.auth.exchangeCodeForSession(currentUrl);
+              if (error) {
+                pushDbg(`✗ Web exchange failed: ${error.message}`);
+              } else if (data?.session) {
+                pushDbg('✓ Web code exchange successful!');
+                sessionEstablished = true;
+                if (isMounted) {
+                  setUserEmail(data.session.user?.email || null);
+                  setMode('reset');
+                  setHeaderStatus(
+                    'Enter a new password to complete your reset.'
+                  );
+                }
+              }
+            } catch (e: any) {
+              pushDbg(`✗ Web exchange exception: ${e?.message}`);
+            }
+          } else {
+            pushDbg('Web: no token or code found.');
+          }
+        } else {
+          // Mobile: always verify via OTP; accept token or code (Supabase may rewrite token→code)
+          const tokenHash = params.token ?? params.code;
+          if (tokenHash) {
+            pushDbg(
+              `=== Mobile: verifyOtp with token_hash=${tokenHash.substring(
+                0,
+                12
+              )}... ===`
+            );
+            try {
+              const { data, error } = await supabaseClient.auth.verifyOtp({
+                token_hash: tokenHash,
+                type: 'recovery',
+              });
+              if (!error && data?.session) {
+                pushDbg('✓ Mobile OTP verification successful!');
+                sessionEstablished = true;
+                if (isMounted) {
+                  setUserEmail(data.session.user?.email || null);
+                  setMode('reset');
+                  setHeaderStatus(
+                    'Enter a new password to complete your reset.'
+                  );
+                }
+              } else {
+                pushDbg(`✗ Mobile OTP failed: ${error?.message}`);
+              }
+            } catch (e: any) {
+              pushDbg(`✗ Mobile OTP exception: ${e?.message}`);
+            }
+          } else {
+            pushDbg('Mobile: no token/code found for verifyOtp.');
           }
         }
 
-        // 5. Fallback: setSession (implicit flow tokens)
+        // 5) Fallback: implicit flow tokens (rare but safe to keep)
         if (
           !sessionEstablished &&
           params.access_token &&
           params.refresh_token
         ) {
-          debugMessages.push('=== Attempting token-based session ===');
+          pushDbg('=== Attempting token-based session ===');
           try {
-            const { data, error } = await supabase.auth.setSession({
+            const { data, error } = await supabaseClient.auth.setSession({
               access_token: params.access_token,
               refresh_token: params.refresh_token,
             });
             if (!error && data?.session) {
-              debugMessages.push('✓ Token session successful!');
+              pushDbg('✓ Token session successful!');
               sessionEstablished = true;
               if (isMounted) {
                 setUserEmail(data.session.user?.email || null);
@@ -342,18 +372,20 @@ export default function ResetPasswordScreen() {
                 setHeaderStatus('Enter a new password to complete your reset.');
               }
             } else {
-              debugMessages.push(`✗ Token session failed: ${error?.message}`);
+              pushDbg(`✗ Token session failed: ${error?.message}`);
             }
           } catch (e: any) {
-            debugMessages.push(`✗ Token session exception: ${e?.message}`);
+            pushDbg(`✗ Token session exception: ${e?.message}`);
           }
         }
 
-        // 6. Finalize
-        debugMessages.push('=== Final Result ===');
-        debugMessages.push(
-          sessionEstablished ? '✓ SESSION ESTABLISHED' : '✗ NO SESSION'
-        );
+        // 6) Finalize
+        pushDbg('=== Final Result ===');
+        pushDbg(sessionEstablished ? '✓ SESSION ESTABLISHED' : '✗ NO SESSION');
+
+        if (DEBUG) {
+          console.log('[DEBUG RESET FLOW]\n' + debugMessages.join('\n'));
+        }
 
         if (isMounted) {
           setDebugInfo(debugMessages.join('\n'));
@@ -362,7 +394,7 @@ export default function ResetPasswordScreen() {
               'This reset link is invalid or expired. Please request a new password reset.'
             );
             setMode('request');
-            setShowDebug(true);
+            setShowDebug(DEBUG);
           }
           setInitializing(false);
         }
@@ -377,6 +409,11 @@ export default function ResetPasswordScreen() {
       } catch (e: any) {
         debugMessages.push('=== FATAL ERROR ===');
         debugMessages.push(e?.message || 'Unknown error');
+
+        if (DEBUG) {
+          console.log('[DEBUG RESET FLOW]\n' + debugMessages.join('\n'));
+        }
+
         if (isMounted) {
           setDebugInfo(debugMessages.join('\n'));
           setHeaderStatus(
@@ -384,7 +421,7 @@ export default function ResetPasswordScreen() {
           );
           setMode('request');
           setInitializing(false);
-          setShowDebug(true);
+          setShowDebug(DEBUG);
         }
       }
     };
@@ -499,7 +536,9 @@ export default function ResetPasswordScreen() {
               <View style={styles.debugBox}>
                 <Text style={styles.debugTitle}>Debug Information:</Text>
                 <ScrollView style={{ maxHeight: 200 }}>
-                  <Text style={styles.debugText}>{debugInfo}</Text>
+                  <Text selectable style={styles.debugText}>
+                    {debugInfo}
+                  </Text>
                 </ScrollView>
                 <TouchableOpacity
                   onPress={() => Alert.alert('Debug Info', debugInfo)}
