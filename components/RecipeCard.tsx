@@ -234,7 +234,7 @@ export default function RecipeCard({
           </View>
 
           <View style={styles.metadataItem}>
-            <Users size={14} color={colors.textSecondary} />
+             {recipe.servings} serv
             <Text style={styles.metadataText}>{recipe.servings} servings</Text>
           </View>
 
@@ -249,6 +249,23 @@ export default function RecipeCard({
               {recipe.difficulty}
             </Text>
           </View>
+
+          {recipe.method && (
+            <View style={styles.method}>
+              <ChefHat
+                size={16}
+                color={colors.accent}
+              />
+              <Text
+                style={[
+                  styles.previewMetadataText,
+                  { color: colors.accent },
+                ]}
+              >
+                {recipe.method}
+              </Text>
+            </View>
+          )}
 
           {recipe.method && (
             <View style={styles.method}>
