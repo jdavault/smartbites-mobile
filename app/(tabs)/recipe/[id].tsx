@@ -340,6 +340,16 @@ const getStyles = (colors: ThemeColors) =>
       fontFamily: 'Inter-Medium',
       textTransform: 'capitalize',
     },
+    method: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    methodText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+      color: colors.textSecondary,
+    },
     sectionTitle: {
       fontSize: 20,
       fontFamily: 'Inter-SemiBold',
