@@ -449,17 +449,7 @@ const getStyles = (colors: ThemeColors) =>
       borderRadius: 18,
       justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
-      elevation: 4,
-    },
-    saveCornerButton: {
-      backgroundColor: colors.primary,
-    },
-    favoriteCornerButton: {
-      backgroundColor: colors.error,
+      backgroundColor: colors.background,
     },
     description: {
       fontSize: 15,
