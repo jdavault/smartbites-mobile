@@ -138,6 +138,23 @@ export default function RecipeCard({
                {recipe.difficulty}
              </Text>
            </View>
+
+           {recipe.method && (
+             <View style={styles.previewMetadataItem}>
+               <ChefHat
+                 size={16}
+                 color={colors.accent}
+               />
+               <Text
+                 style={[
+                   styles.previewMetadataText,
+                   { color: colors.accent },
+                 ]}
+               >
+                 {recipe.method}
+               </Text>
+             </View>
+           )}
           </View>
 
           <View style={styles.previewTags}>
