@@ -249,6 +249,37 @@ export default function RecipeCard({
               {recipe.difficulty}
             </Text>
           </View>
+
+          {recipe.method && (
+            <View style={styles.method}>
+              <ChefHat size={14} color={colors.accent} />
+              <Text
+                style={[
+                  styles.methodText,
+                  { color: colors.accent },
+                ]}
+              >
+                {recipe.method}
+              </Text>
+            </View>
+          )}
+
+          {recipe.method && (
+            <View style={styles.method}>
+              <ChefHat
+                size={16}
+                color={colors.accent}
+              />
+              <Text
+                style={[
+                  styles.previewMetadataText,
+                  { color: colors.accent },
+                ]}
+              >
+                {recipe.method}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Bottom content: fixed at bottom */}
@@ -460,7 +491,7 @@ const getStyles = (colors: ThemeColors) =>
     methodText: {
       fontSize: 12,
       fontFamily: 'Inter-Medium',
-      color: colors.textSecondary,
+      textTransform: 'capitalize',
     },
 
     tags: {
