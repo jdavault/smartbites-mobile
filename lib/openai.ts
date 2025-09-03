@@ -356,6 +356,23 @@ export async function generateRecipes(
                       type: 'string',
                       enum: ['easy', 'medium', 'hard'],
                     },
+                    "method": {
+                      type: 'string',
+                      enum: [
+                        'Bake',
+                        'Boil',
+                        'Grill',
+                        'Braise',
+                        'Steam',
+                        'Fry',
+                        'Stew',
+                        'Sous vide',
+                        'Slow cooker',
+                        'Instant Pot',
+                        'Microwave',
+                        'Air Fryer',
+                      ],
+                    },
                     tags: {
                       type: 'array',
                       items: { type: 'string' },
