@@ -328,6 +328,7 @@ export async function generateRecipes(
                     'cookTime',
                     'servings',
                     'difficulty',
+                    'method',
                     'tags',
                     'searchQuery',
                     'allergens',
