@@ -65,14 +65,21 @@ export default function RecipeCard({
   };
 
   const handleCardPress = () => {
-    // For search results (showSaveButton), don't navigate - let user use save buttons
-    if (showSaveButton) {
-      return;
-    }
-
-    // For saved/featured recipes, navigate to details
-    if (recipe.id) {
-      router.push(`/recipe/${recipe.id}`);
+    // Always allow navigation to details, whether saved or search result
+    if (recipe.id || showSaveButton) {
+      // For search results, we'll pass the recipe data as params
+      if (showSaveButton) {
+        router.push({
+          pathname: '/recipe/search-result',
+          params: {
+            recipeData: JSON.stringify(recipe),
+            fromSearch: 'true'
+          }
+        });
+      } else {
+        // For saved/featured recipes, use the normal ID route
+        router.push(`/recipe/${recipe.id}`);
+      }
     }
   };
 
