@@ -241,6 +241,7 @@ export async function generateRecipes(
             "cookTime": string,        // e.g. "15 minutes"
             "servings": integer,
             "difficulty": "easy"|"medium"|"hard",
+            "method": string,          // cooking method from enum
             "tags": string[],          // <=6 (e.g., quick, no-bake, one-pot)
             "searchQuery": string,
             "allergens": string[],     // Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten) AVOIDED in recipe

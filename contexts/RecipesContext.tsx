@@ -15,6 +15,7 @@ export interface Recipe {
   cookTime: string;
   servings: number;
   difficulty: 'easy' | 'medium' | 'hard';
+  method: string;
   tags: string[];
   searchQuery: string;
   searchKey: string;
