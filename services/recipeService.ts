@@ -251,8 +251,25 @@ export class RecipeService {
         return [];
       }
 
-      // Select up to 10 recipes
-      const selectedRecipes = filtered.slice(0, 10);
+      // Remove duplicates by title (case-insensitive)
+      const seenTitles = new Set<string>();
+      const uniqueRecipes = filtered.filter((recipe) => {
+        const normalizedTitle = recipe.title.toLowerCase().trim();
+        if (seenTitles.has(normalizedTitle)) {
+          return false;
+        }
+        seenTitles.add(normalizedTitle);
+        return true;
+      });
+
+      console.log(
+        `🔍 After deduplication: ${uniqueRecipes.length} (removed ${
+          filtered.length - uniqueRecipes.length
+        } duplicates)`
+      );
+
+      // Select up to 10 unique recipes
+      const selectedRecipes = uniqueRecipes.slice(0, 10);
 
       // Get allergen and dietary preference names for display
       const { data: allAllergens } = await supabase
