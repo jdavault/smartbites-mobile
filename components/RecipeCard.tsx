@@ -183,7 +183,7 @@ export default function RecipeCard({
                 {isSaving ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <BookmarkPlus size={18} color="#FFFFFF" />
+                  <BookmarkPlus size={18} color={colors.text} />
                 )}
               </TouchableOpacity>
             )}
@@ -197,7 +197,7 @@ export default function RecipeCard({
                 {isFavoriting ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Heart size={18} color="#FFFFFF" />
+                  <Heart size={18} color={colors.error} />
                 )}
               </TouchableOpacity>
             )}
