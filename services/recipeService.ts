@@ -327,20 +327,21 @@ export class RecipeService {
     const { recipe, userId, userAllergens, userDietaryPrefs, isFavorite = false } = data;
     
     try {
-      const searchKey = buildSearchKey({
+      // Create a content-based key for true deduplication
+      const contentKey = buildSearchKey({
         searchQuery: recipe.searchQuery,
-        userAllergens,
-        userDietaryPrefs,
+        userAllergens: [], // Don't include user-specific data in content key
+        userDietaryPrefs: [], // Don't include user-specific data in content key
         title: recipe.title,
         headNote: recipe.headNote,
         description: recipe.description,
       });
 
-      // Check if recipe already exists
+      // Check if recipe with same content already exists
       const { data: existingRecipes, error: checkError } = await supabase
         .from('recipes')
         .select('id, image')
-        .eq('search_key', searchKey);
+        .eq('search_key', contentKey);
 
       if (checkError) throw checkError;
 
@@ -348,13 +349,13 @@ export class RecipeService {
       let finalImageFilename = null;
 
       if (existingRecipes && existingRecipes.length > 0) {
-        // Recipe exists - use existing one
+        // Recipe with same content exists - reuse it
         recipeId = existingRecipes[0].id;
         finalImageFilename = existingRecipes[0].image;
-        console.log('Using existing recipe:', recipeId);
+        console.log('💾 Reusing existing recipe with same content:', recipeId);
       } else {
-        // Create new recipe
-        console.log('💾 Saving new recipe to DB:');
+        // Create new recipe with content-based key
+        console.log('💾 Creating new recipe in DB:');
         console.log('💾 recipe.allergensIncluded from OpenAI:', recipe.allergensIncluded);
         
         const allergensContained = Array.isArray(recipe.allergensIncluded) 
@@ -377,7 +378,7 @@ export class RecipeService {
             difficulty: recipe.difficulty,
             tags: recipe.tags,
             search_query: recipe.searchQuery,
-            search_key: searchKey,
+            search_key: contentKey,
             notes: recipe.notes,
             nutrition_info: recipe.nutritionInfo,
             allergens_included: allergensContained,
@@ -391,7 +392,7 @@ export class RecipeService {
         if (recipeError) throw recipeError;
         recipeId = recipeData.id;
 
-        // Generate and persist image
+        // Generate and persist image for new recipes only
         try {
           await this.persistRecipeImage({
             recipeTitle: recipe.title,
@@ -401,7 +402,7 @@ export class RecipeService {
             userId,
           });
           
-          // Wait for image processing
+          // Wait for image processing to complete
           let attempts = 0;
           const maxAttempts = 10;
           while (attempts < maxAttempts) {
@@ -421,10 +422,9 @@ export class RecipeService {
           }
         } catch (imageError) {
           console.warn('🖼️ Error persisting image (continuing without image):', imageError);
-          // Don't throw here - we can save the recipe without an image
         }
 
-        // Insert allergen relationships
+        // Insert allergen relationships for new recipes only
         if (recipe.allergens.length > 0) {
           const { data: allergenData, error: allergenError } = await supabase
             .from('allergens')
@@ -447,7 +447,7 @@ export class RecipeService {
           }
         }
 
-        // Insert dietary preference relationships
+        // Insert dietary preference relationships for new recipes only
         if (recipe.dietaryPrefs.length > 0) {
           const { data: dietaryData, error: dietaryError } = await supabase
             .from('dietary_prefs')
@@ -471,20 +471,47 @@ export class RecipeService {
         }
       }
 
-      // Create user-recipe relationship
-      const actions = isFavorite ? ['favorite'] : [];
-      const { error: userRecipeError } = await supabase
+      // Check if user already has this recipe saved
+      const { data: existingUserRecipe, error: userRecipeCheckError } = await supabase
         .from('user_recipes')
-        .upsert([{
-          user_id: userId,
-          recipe_id: recipeId,
-          actions,
-        }], {
-          onConflict: 'user_id,recipe_id'
-        });
+        .select('actions')
+        .eq('user_id', userId)
+        .eq('recipe_id', recipeId)
+        .maybeSingle();
 
-      if (userRecipeError) throw userRecipeError;
+      if (userRecipeCheckError) throw userRecipeCheckError;
+
+      const actions = isFavorite ? ['favorite'] : [];
       
+      if (existingUserRecipe) {
+        // Update existing user-recipe relationship
+        const currentActions = existingUserRecipe.actions || [];
+        const newActions = isFavorite && !currentActions.includes('favorite')
+          ? [...currentActions, 'favorite']
+          : currentActions;
+          
+        const { error: userRecipeError } = await supabase
+          .from('user_recipes')
+          .update({ actions: newActions })
+          .eq('user_id', userId)
+          .eq('recipe_id', recipeId);
+          
+        if (userRecipeError) throw userRecipeError;
+        console.log('💾 Updated existing user-recipe relationship');
+      } else {
+        // Create new user-recipe relationship
+        const { error: userRecipeError } = await supabase
+          .from('user_recipes')
+          .insert([{
+            user_id: userId,
+            recipe_id: recipeId,
+            actions,
+          }]);
+          
+        if (userRecipeError) throw userRecipeError;
+        console.log('💾 Created new user-recipe relationship');
+      }
+
       return recipeId;
     } catch (error) {
       console.error('Error saving recipe:', error);
