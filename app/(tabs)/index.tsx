@@ -114,9 +114,11 @@ export default function SearchScreen() {
     }
 
     setLoading(true);
+    const debugMessages: string[] = [];
     try {
       const allergenNames = selectedAllergens.map((a) => a.name);
       const dietaryNames = selectedDietary.map((d) => d.name);
+      debugMessages.push(`=== SEARCH DEBUG START ===`);
 
       const recipes = await generateRecipes(
         searchQuery,
@@ -124,8 +126,14 @@ export default function SearchScreen() {
         dietaryNames
       );
       setSearchResults(recipes);
+      debugMessages.push(`=== SEARCH DEBUG END (no error )===`);
     } catch (error) {
       console.error('Search error:', error);
+      debugMessages.push(
+        `Parsed recipeData: ${JSON.stringify(error).substring(0, 300)}...`
+      );
+
+      debugMessages.push(`=== SEARCH DEBUG END ( ERROR )===`);
 
       // Handle different types of errors with appropriate messages and emojis
       if (error instanceof Error) {
@@ -153,6 +161,7 @@ export default function SearchScreen() {
         });
       }
     } finally {
+      console.log('[SEARCH DEBUG]', debugMessages.join('\n'));
       setLoading(false);
     }
   };

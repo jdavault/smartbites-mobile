@@ -204,7 +204,12 @@ export async function generateRecipes(
   dietaryPrefs: string[] = []
 ): Promise<GeneratedRecipe[]> {
   try {
-    // Build constraint blocks
+    const debugMessages: string[] = [];
+    debugMessages.push(`=== generateRecipes START ===`);
+    debugMessages.push(`Query: "${query}"`);
+    debugMessages.push(`Allergens: ${JSON.stringify(allergens)}`);
+    debugMessages.push(`Dietary Prefs: ${JSON.stringify(dietaryPrefs)}`);
+
     const allergensBlock = allergens.length
       ? [
           `- Avoid these allergens: ${allergens.join(', ')}.`,
@@ -421,6 +426,13 @@ export async function generateRecipes(
       },
     });
 
+    debugMessages.push(`OpenAI Response received.`);
+    debugMessages.push(`Choices count: ${data.choices?.length || 0}`);
+    debugMessages.push(
+      `First choice snippet: ${
+        data.choices?.[0]?.message?.content?.substring(0, 200) || 'EMPTY'
+      }`
+    );
     const raw = data?.choices?.[0]?.message?.content ?? '{"recipes":[] }';
     let parsed: any;
     try {
@@ -451,6 +463,9 @@ export async function generateRecipes(
       throw new Error('No recipes were generated. Please try again later.');
     }
 
+    debugMessages.push(`=== generateRecipes END ===`);
+
+    console.log('[generateRecipes DEBUG]', debugMessages.join('\n'));
     return result;
   } catch (err) {
     console.error('Error generating recipes:', err);
