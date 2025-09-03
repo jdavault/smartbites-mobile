@@ -254,16 +254,22 @@ export class RecipeService {
       // Remove duplicates by title (case-insensitive)
       const seenTitles = new Set<string>();
       const uniqueRecipes = filtered.filter((recipe) => {
-        const normalizedTitle = recipe.title.toLowerCase().trim();
-        if (seenTitles.has(normalizedTitle)) {
+        // Create a composite key from title, headNote, and image for better deduplication
+        const compositeKey = [
+          recipe.title.toLowerCase().trim(),
+          (recipe.head_note || '').toLowerCase().trim(),
+          recipe.image || 'no-image'
+        ].join('|');
+        
+        if (seenTitles.has(compositeKey)) {
           return false;
         }
-        seenTitles.add(normalizedTitle);
+        seenTitles.add(compositeKey);
         return true;
       });
 
       console.log(
-        `🔍 After deduplication: ${uniqueRecipes.length} (removed ${
+        `🔍 After title+headNote+image deduplication: ${uniqueRecipes.length} (removed ${
           filtered.length - uniqueRecipes.length
         } duplicates)`
       );
