@@ -197,7 +197,7 @@ export default function RecipeDetailScreen() {
             </Text>
           ))}
 
-          <View style={{ marginBottom: 16 }} />
+          <View style={{ marginBottom: 24 }} />
 
           <Text style={styles.sectionTitle}>Instructions</Text>
           {recipe.instructions.map((instruction, index) => (
@@ -207,7 +207,7 @@ export default function RecipeDetailScreen() {
             </Text>
           ))}
 
-          <View style={{ marginBottom: 16 }} />
+          <View style={{ marginBottom: 24 }} />
 
           {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
             <>
