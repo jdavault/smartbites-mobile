@@ -227,7 +227,7 @@ export default function RecipeDetailScreen() {
 
           {recipe.tags.length > 0 && (
             <>
-              <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Tags</Text>
+              <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 8 }]}>Tags</Text>
               <View style={styles.tagsContainer}>
                 {recipe.tags.map((tag, index) => (
                   <View key={index} style={styles.tag}>
@@ -396,7 +396,8 @@ const getStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 8,
-      marginTop: 8,
+      marginTop: 4,
+      marginBottom: 8,
     },
     tag: {
       backgroundColor: '#8ec7df', // Colors.cerulean[200]
