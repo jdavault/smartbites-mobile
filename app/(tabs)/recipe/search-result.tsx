@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useRecipes } from '@/contexts/RecipesContext';
@@ -18,6 +20,8 @@ export default function SearchResultDetailScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const { saveRecipe, saveAndFavoriteRecipe } = useRecipes();
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveAction, setSaveAction] = useState<'save' | 'favorite'>('save');
 
   let recipe;
   try {
@@ -40,22 +44,30 @@ export default function SearchResultDetailScreen() {
   const handleSave = async () => {
     if (!recipe) return;
     try {
+      setShowSaveModal(true);
+      setSaveAction('save');
       await saveRecipe(recipe);
       // After saving, go back to search results
       router.back();
     } catch (error) {
       console.error('Error saving recipe:', error);
+    } finally {
+      setShowSaveModal(false);
     }
   };
 
   const handleSaveAndFavorite = async () => {
     if (!recipe) return;
     try {
+      setShowSaveModal(true);
+      setSaveAction('favorite');
       await saveAndFavoriteRecipe(recipe);
       // After saving, go back to search results
       router.back();
     } catch (error) {
       console.error('Error saving and favoriting recipe:', error);
+    } finally {
+      setShowSaveModal(false);
     }
   };
 
@@ -109,6 +121,27 @@ export default function SearchResultDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Save Loading Modal */}
+      {showSaveModal && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={showSaveModal}
+          onRequestClose={() => {}}
+        >
+          <View style={styles.saveModalOverlay}>
+            <View style={styles.saveModalContent}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[styles.saveModalText, styles.modalEmoji]}>🧠</Text>
+              <Text style={styles.saveModalText}>Generating image</Text>
+              <Text style={styles.saveModalText}>
+                {saveAction === 'favorite' ? 'Saving & Favoriting Recipe' : 'Saving Recipe'}
+              </Text>
+            </View>
+          </View>
+        </Modal>
+      )}
+
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <ArrowLeft size={24} color={colors.primary} />
@@ -482,5 +515,36 @@ const getStyles = (colors: ThemeColors) =>
       fontSize: 16,
       fontFamily: 'Inter-SemiBold',
       color: colors.primary,
+    },
+    saveModalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    saveModalContent: {
+      backgroundColor: colors.surface,
+      padding: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 5,
+      borderWidth: 1,
+      borderColor: colors.border,
+      minWidth: 280,
+    },
+    saveModalText: {
+      fontSize: 16,
+      fontFamily: 'Inter-Medium',
+      color: colors.text,
+      textAlign: 'center',
+      marginTop: 4,
+    },
+    modalEmoji: {
+      fontSize: 40,
+      marginBottom: 12,
     },
   });
