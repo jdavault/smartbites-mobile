@@ -223,7 +223,6 @@ export default function SearchResultDetailScreen() {
             </Text>
           ))}
 
-          <View style={{ marginBottom: 24 }} />
 
           <Text style={styles.sectionTitle}>Instructions</Text>
           {recipe.instructions?.map((instruction: string, index: number) => (
@@ -233,7 +232,6 @@ export default function SearchResultDetailScreen() {
             </Text>
           ))}
 
-          <View style={{ marginBottom: 24 }} />
 
           {(recipe.allergens?.length > 0 || recipe.dietaryPrefs?.length > 0) && (
             <>
@@ -392,8 +390,8 @@ const getStyles = (colors: ThemeColors) =>
       fontSize: 20,
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
-      marginBottom: 2,
-      marginTop: 8,
+      marginBottom: 12,
+      marginTop: 4,
     },
     ingredientItem: {
       fontSize: 15,
