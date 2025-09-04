@@ -138,6 +138,7 @@ export default function RecipeCard({
                {recipe.difficulty}
              </Text>
            </View>
+          </View>
 
         {showSaveButton && (
           <View style={styles.cornerActions}>
@@ -170,6 +171,7 @@ export default function RecipeCard({
             )}
           </View>
         )}
+        </View>
       </TouchableOpacity>
     );
   }
@@ -418,6 +420,8 @@ const getStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       backgroundColor: colors.background,
     },
+    saveCornerButton: {},
+    favoriteCornerButton: {},
     description: {
       fontSize: 15,
       fontFamily: 'Lato-Regular',
