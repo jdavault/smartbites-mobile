@@ -174,22 +174,20 @@ export default function RecipeDetailScreen() {
               </Text>
             </View>
 
-            {recipe.method && (
-              <View style={styles.method}>
-                <ChefHat
-                  size={16}
-                  color="#99523d"
-                />
-                <Text
-                  style={[
-                    styles.methodText,
-                    { color: "#99523d" },
-                  ]}
-                >
-                  {recipe.method}
-                </Text>
-              </View>
-            )}
+            <View style={styles.method}>
+              <ChefHat
+                size={16}
+                color="#99523d"
+              />
+              <Text
+                style={[
+                  styles.methodText,
+                  { color: "#99523d" },
+                ]}
+              >
+                {recipe.method || 'Bake'}
+              </Text>
+            </View>
           </View>
 
           <Text style={styles.sectionTitle}>Ingredients</Text>
