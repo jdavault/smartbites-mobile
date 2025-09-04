@@ -148,8 +148,8 @@ export default function RecipeDetailScreen() {
             <View style={styles.metadataItem}>
               <Clock size={16} color={colors.text} />
               <Text style={styles.metadataText}>
-                {recipe.prepTime.replace('minutes', 'min')} +{' '}
-                {recipe.cookTime.replace('minutes', 'min')}
+                {recipe.prepTime?.replace('minutes', 'min')} +{' '}
+                {recipe.cookTime?.replace('minutes', 'min')}
               </Text>
             </View>
 
