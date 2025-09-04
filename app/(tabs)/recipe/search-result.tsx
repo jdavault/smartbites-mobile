@@ -348,8 +348,8 @@ const getStyles = (colors: ThemeColors) =>
     },
     metadata: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 16,
+      justifyContent: 'space-between',
+      alignItems: 'center',
       marginBottom: 24,
       paddingVertical: 12,
       borderTopWidth: 1,
