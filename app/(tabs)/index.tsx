@@ -482,6 +482,19 @@ export default function SearchScreen() {
       textAlign: 'center',
       marginTop: 4, // small spacing between lines
     },
+    mobileBetaFooter: {
+      paddingHorizontal: 24,
+      paddingVertical: 8,
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    mobileBetaText: {
+      fontSize: 12,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
   });
 
   return (
@@ -696,6 +709,15 @@ export default function SearchScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Mobile Beta Footer */}
+      {Platform.OS !== 'web' && (
+        <View style={styles.mobileBetaFooter}>
+          <Text style={styles.mobileBetaText}>
+            Currently in beta — thanks for testing!
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

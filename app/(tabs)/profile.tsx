@@ -594,6 +594,15 @@ export default function ProfileScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Mobile Beta Footer */}
+      {Platform.OS !== 'web' && (
+        <View style={styles.mobileBetaFooter}>
+          <Text style={styles.mobileBetaText}>
+            Currently in beta — thanks for testing!
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -699,6 +708,19 @@ const getStyles = (colors: ThemeColors) =>
       marginBottom: 16,
       borderWidth: 1,
       borderColor: colors.border,
+    },
+    mobileBetaFooter: {
+      paddingHorizontal: 24,
+      paddingVertical: 8,
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    mobileBetaText: {
+      fontSize: 12,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
     },
 
     // Sections

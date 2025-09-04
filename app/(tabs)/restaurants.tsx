@@ -213,6 +213,19 @@ export default function RestaurantsScreen() {
     trademark: {
       fontFamily: 'Inter-Regular',
     },
+    mobileBetaFooter: {
+      paddingHorizontal: 24,
+      paddingVertical: 8,
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    mobileBetaText: {
+      fontSize: 12,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
     futureFeatures: {
       gap: 16,
       marginBottom: 16,
@@ -338,6 +351,15 @@ export default function RestaurantsScreen() {
         </Text>
         </View>
       </ScrollView>
+
+      {/* Mobile Beta Footer */}
+      {Platform.OS !== 'web' && (
+        <View style={styles.mobileBetaFooter}>
+          <Text style={styles.mobileBetaText}>
+            Currently in beta — thanks for testing!
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
