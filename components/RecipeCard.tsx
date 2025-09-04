@@ -138,6 +138,21 @@ export default function RecipeCard({
                {recipe.difficulty}
              </Text>
            </View>
+
+            <View style={styles.method}>
+              <ChefHat
+                size={16}
+                color="#99523d"
+              />
+              <Text
+                style={[
+                  styles.previewMetadataText,
+                  { color: "#99523d" },
+                ]}
+              >
+                {recipe.method || 'Bake'}
+              </Text>
+            </View>
           </View>
 
         {showSaveButton && (

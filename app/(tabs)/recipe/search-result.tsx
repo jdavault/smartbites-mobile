@@ -188,15 +188,15 @@ export default function SearchResultDetailScreen() {
             <View style={styles.difficulty}>
               <ChefHat
                 size={16}
-                color={getDifficultyColor(recipe.difficulty)}
+                color="#99523d"
               />
               <Text
                 style={[
                   styles.difficultyText,
-                  { color: getDifficultyColor(recipe.difficulty) },
+                  { color: "#99523d" },
                 ]}
               >
-                {recipe.difficulty}
+                {recipe.method || 'Bake'}
               </Text>
             </View>
 
