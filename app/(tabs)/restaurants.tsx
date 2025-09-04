@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
   Image,
+  Platform,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ChefHat, MapPin, Calendar, Globe, Star, Clock } from 'lucide-react-native';
@@ -31,10 +32,35 @@ export default function RestaurantsScreen() {
     headerContent: {
       flex: 1,
     },
+    headerLogoContainer: {
+      alignItems: 'center',
+      position: 'relative',
+    },
     headerLogo: {
       width: 72,
       height: 72,
       marginLeft: 16,
+    },
+    betaBadge: {
+      position: 'absolute',
+      top: -4,
+      right: -8,
+      backgroundColor: '#FF8866',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    betaBadgeText: {
+      fontSize: 10,
+      fontFamily: 'Inter-SemiBold',
+      color: '#FFFFFF',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
     },
     title: {
       fontSize: 28,
@@ -218,11 +244,18 @@ export default function RestaurantsScreen() {
           <Text style={styles.title}>Restaurants</Text>
           <Text style={styles.subtitle}>Find allergy-friendly dining options</Text>
         </View>
-        <Image
-          source={require('@/assets/images/smart-bites-logo.png')}
-          style={styles.headerLogo}
-          resizeMode="contain"
-        />
+        <View style={styles.headerLogoContainer}>
+          <Image
+            source={require('@/assets/images/smart-bites-logo.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
+          {Platform.OS !== 'web' && (
+            <View style={styles.betaBadge}>
+              <Text style={styles.betaBadgeText}>Beta</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
