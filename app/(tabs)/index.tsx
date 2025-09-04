@@ -635,7 +635,7 @@ export default function SearchScreen() {
 
               {recentRecipes.length > 0 && (
                 <RecipeSection
-                  title="🕑 Recently Added"
+                  title="📚 My Collection"
                   recipes={recentRecipes}
                   onToggleFavorite={toggleFavorite}
                   onDelete={deleteRecipe}
