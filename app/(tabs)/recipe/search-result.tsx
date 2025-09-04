@@ -13,7 +13,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useRecipes } from '@/contexts/RecipesContext';
 import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
-import { ArrowLeft, Clock, Users, ChefHat, BookmarkPlus, Heart } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, Zap, Flame, BookmarkPlus, Heart } from 'lucide-react-native';
 
 export default function SearchResultDetailScreen() {
   const { recipeData, fromSearch } = useLocalSearchParams();
@@ -186,22 +186,7 @@ export default function SearchResultDetailScreen() {
             </View>
 
             <View style={styles.difficulty}>
-              <ChefHat
-                size={16}
-                color="#99523d"
-              />
-              <Text
-                style={[
-                  styles.difficultyText,
-                  { color: "#99523d" },
-                ]}
-              >
-                {recipe.method || 'Bake'}
-              </Text>
-            </View>
-
-            <View style={styles.difficulty}>
-              <ChefHat
+              <Zap
                 size={16}
                 color={getDifficultyColor(recipe.difficulty)}
               />
@@ -216,7 +201,7 @@ export default function SearchResultDetailScreen() {
             </View>
 
             <View style={styles.method}>
-              <ChefHat
+              <Flame
                 size={16}
                 color="#99523d"
               />

@@ -14,7 +14,7 @@ import { useRecipes } from '@/contexts/RecipesContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Clock, Users, ChefHat } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, Zap, Flame } from 'lucide-react-native';
 import {
   SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE,
   SUPABASE_URL,
@@ -160,7 +160,7 @@ export default function RecipeDetailScreen() {
             </View>
 
             <View style={styles.difficulty}>
-              <ChefHat
+              <Zap
                 size={16}
                 color={getDifficultyColor(recipe.difficulty)}
               />
@@ -175,7 +175,7 @@ export default function RecipeDetailScreen() {
             </View>
 
             <View style={styles.method}>
-              <ChefHat
+              <Flame
                 size={16}
                 color="#99523d"
               />
