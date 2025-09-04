@@ -200,22 +200,35 @@ export default function SearchResultDetailScreen() {
               </Text>
             </View>
 
-            {recipe.method && (
-              <View style={styles.method}>
-                <ChefHat
-                  size={16}
-                  color={getMethodColor(recipe.method)}
-                />
-                <Text
-                  style={[
-                    styles.methodText,
-                    { color: getMethodColor(recipe.method) },
-                  ]}
-                >
-                  {recipe.method}
-                </Text>
-              </View>
-            )}
+            <View style={styles.difficulty}>
+              <ChefHat
+                size={16}
+                color={getDifficultyColor(recipe.difficulty)}
+              />
+              <Text
+                style={[
+                  styles.difficultyText,
+                  { color: getDifficultyColor(recipe.difficulty) },
+                ]}
+              >
+                {recipe.difficulty}
+              </Text>
+            </View>
+
+            <View style={styles.method}>
+              <ChefHat
+                size={16}
+                color="#99523d"
+              />
+              <Text
+                style={[
+                  styles.methodText,
+                  { color: "#99523d" },
+                ]}
+              >
+                {recipe.method || 'Bake'}
+              </Text>
+            </View>
           </View>
 
           <Text style={styles.sectionTitle}>Ingredients</Text>
