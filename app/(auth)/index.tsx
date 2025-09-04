@@ -36,15 +36,6 @@ export default function SplashScreen() {
   // Logo sizing: much smaller for mobile web, normal for everything else
   const logoSize = isMobileWeb ? 120 : isTabletWeb ? 180 : isNativeMobile ? 200 : 300;
 
-  // Responsive sizing for small mobile viewports
-  const isMobileWeb = Platform.OS === 'web' && width <= 480;
-  const isTabletWeb = Platform.OS === 'web' && width > 480 && width <= 768;
-  const isDesktopWeb = Platform.OS === 'web' && width > 768;
-  const isNativeMobile = Platform.OS !== 'web';
-  
-  // Logo sizing: much smaller for mobile web, normal for everything else
-  const logoSize = isMobileWeb ? 120 : isTabletWeb ? 180 : isNativeMobile ? 200 : 300;
-
   const logoAnim = useRef(new Animated.Value(0)).current;
   const buttonsAnim = useRef(new Animated.Value(0)).current;
 
