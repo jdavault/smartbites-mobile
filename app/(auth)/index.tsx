@@ -29,9 +29,15 @@ export default function WelcomeScreen() {
   const isTabletWeb = Platform.OS === 'web' && width > 480 && width <= 768;
   const isDesktopWeb = Platform.OS === 'web' && width > 768;
   const isNativeMobile = Platform.OS !== 'web';
-  
+
   // Logo sizing: much smaller for mobile web, normal for everything else
-  const logoSize = isMobileWeb ? 120 : isTabletWeb ? 180 : isNativeMobile ? 200 : 300;
+  const logoSize = isMobileWeb
+    ? 120
+    : isTabletWeb
+    ? 180
+    : isNativeMobile
+    ? 200
+    : 300;
 
   const logoAnim = useRef(new Animated.Value(0)).current;
   const buttonsAnim = useRef(new Animated.Value(0)).current;
@@ -123,7 +129,7 @@ export default function WelcomeScreen() {
                           { color: colors.textPrimary },
                         ]}
                       >
-                        📱 Download for iPhone
+                        📱 iPhone
                       </Text>
                     </TouchableOpacity>
 
@@ -144,11 +150,11 @@ export default function WelcomeScreen() {
                           { color: colors.textPrimary },
                         ]}
                       >
-                        🤖 Android (coming Sep 2025)
+                        🤖 Android (Alpha-Testers)
                       </Text>
                     </TouchableOpacity>
                   </View>
-                  
+
                   {Platform.OS === 'web' && (
                     <View style={styles.webBetaContainer}>
                       <View style={styles.webBetaBadge}>
@@ -204,7 +210,12 @@ export default function WelcomeScreen() {
   );
 }
 
-const getStyles = (colors: ThemeColors, height: number, width: number, insets: any) =>
+const getStyles = (
+  colors: ThemeColors,
+  height: number,
+  width: number,
+  insets: any
+) =>
   StyleSheet.create({
     // Restores the padding that used to live on the gradient
     content: {
@@ -293,9 +304,9 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
     },
 
     // Native CTA buttons (Sign In / Create Account)
-    buttonContainer: { 
-      width: '100%', 
-      gap: width <= 768 ? 12 : 16 
+    buttonContainer: {
+      width: '100%',
+      gap: width <= 768 ? 12 : 16,
     },
     responsiveContainer: {
       width: '100%',
