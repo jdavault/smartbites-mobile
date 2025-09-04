@@ -139,39 +139,6 @@ export default function RecipeCard({
              </Text>
            </View>
 
-           {recipe.method && (
-             <View style={styles.previewMetadataItem}>
-               <ChefHat
-                 size={16}
-                 color={colors.accent}
-               />
-               <Text
-                 style={[
-                   styles.previewMetadataText,
-                   { color: colors.accent },
-                 ]}
-               >
-                 {recipe.method}
-               </Text>
-             </View>
-           )}
-          </View>
-
-          <View style={styles.previewTags}>
-            {recipe.allergens.map((allergen, index) => (
-              <View key={`allergen-${index}`} style={styles.allergenTag}>
-                <Text style={styles.previewTagText}>🚫 {allergen}</Text>
-              </View>
-            ))}
-            {recipe.dietaryPrefs.map((dietary, index) => (
-              <View key={`dietary-${index}`} style={styles.dietaryTag}>
-                <Text style={styles.previewTagText}>🌱 {dietary}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Corner action buttons for search results */}
         {showSaveButton && (
           <View style={styles.cornerActions}>
             {onSave && (
