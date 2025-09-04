@@ -263,17 +263,6 @@ export default function RecipeCard({
             </Text>
           </View>
 
-          <View style={styles.method}>
-            <ChefHat size={14} color="#99523d" />
-            <Text
-              style={[
-                styles.methodText,
-                { color: "#99523d" },
-              ]}
-            >
-              {recipe.method || 'Bake'}
-            </Text>
-          </View>
         </View>
 
         {/* Bottom content: fixed at bottom */}
