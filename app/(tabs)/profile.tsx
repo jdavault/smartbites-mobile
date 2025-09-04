@@ -305,11 +305,18 @@ export default function ProfileScreen() {
           <Text style={styles.title}>Profile</Text>
           <Text style={styles.subtitle}>User preferences</Text>
         </View>
-        <Image
-          source={require('@/assets/images/smart-bites-logo.png')}
-          style={styles.headerLogo}
-          resizeMode="contain"
-        />
+        <View style={styles.headerLogoContainer}>
+          <Image
+            source={require('@/assets/images/smart-bites-logo.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
+          {Platform.OS !== 'web' && (
+            <View style={styles.betaBadge}>
+              <Text style={styles.betaBadgeText}>Beta</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* NEW: State picker modal (portal) */}
@@ -613,7 +620,32 @@ const getStyles = (colors: ThemeColors) =>
       marginBottom: 12,
     },
     headerContent: { flex: 1 },
+    headerLogoContainer: {
+      alignItems: 'center',
+      position: 'relative',
+    },
     headerLogo: { width: 72, height: 72, marginLeft: 16 },
+    betaBadge: {
+      position: 'absolute',
+      top: -4,
+      right: -8,
+      backgroundColor: '#FF8866',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    betaBadgeText: {
+      fontSize: 10,
+      fontFamily: 'Inter-SemiBold',
+      color: '#FFFFFF',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
     title: {
       fontSize: 28,
       fontFamily: 'Inter-Bold',
