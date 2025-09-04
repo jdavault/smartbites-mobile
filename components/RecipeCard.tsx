@@ -17,7 +17,8 @@ import {
   BookmarkPlus,
   Clock,
   Users,
-  ChefHat,
+  Zap,
+  Flame,
   Trash2,
 } from 'lucide-react-native';
 import {
@@ -125,7 +126,7 @@ export default function RecipeCard({
             </View>
 
            <View style={styles.difficulty}>
-             <ChefHat
+             <Zap
                size={16}
                color={getDifficultyColor(recipe.difficulty)}
              />
@@ -140,7 +141,7 @@ export default function RecipeCard({
            </View>
 
             <View style={styles.method}>
-              <ChefHat
+              <Flame
                 size={16}
                 color="#99523d"
               />
@@ -240,7 +241,7 @@ export default function RecipeCard({
           </View>
 
           <View style={styles.difficulty}>
-            <ChefHat size={14} color={getDifficultyColor(recipe.difficulty)} />
+            <Zap size={14} color={getDifficultyColor(recipe.difficulty)} />
             <Text
               style={[
                 styles.difficultyText,
@@ -252,7 +253,7 @@ export default function RecipeCard({
           </View>
 
           <View style={styles.method}>
-            <ChefHat size={14} color="#99523d" />
+            <Flame size={14} color="#99523d" />
             <Text
               style={[
                 styles.methodText,
