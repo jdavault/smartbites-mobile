@@ -28,8 +28,13 @@ export default function SplashScreen() {
   const styles = getStyles(colors, height, width, insets);
 
   // Responsive sizing for small mobile viewports
-  const isSmallMobile = width <= 768;
-  const logoSize = isSmallMobile ? 200 : 300;
+  const isMobileWeb = Platform.OS === 'web' && width <= 480;
+  const isTabletWeb = Platform.OS === 'web' && width > 480 && width <= 768;
+  const isDesktopWeb = Platform.OS === 'web' && width > 768;
+  const isNativeMobile = Platform.OS !== 'web';
+  
+  // Logo sizing: much smaller for mobile web, normal for everything else
+  const logoSize = isMobileWeb ? 120 : isTabletWeb ? 180 : isNativeMobile ? 200 : 300;
 
   const logoAnim = useRef(new Animated.Value(0)).current;
   const buttonsAnim = useRef(new Animated.Value(0)).current;
@@ -256,13 +261,13 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
     },
     appStoreTitle: {
       fontFamily: Fonts.heading,
-      fontSize: FontSizes.lg,
+      fontSize: isMobileWeb ? FontSizes.md : FontSizes.lg,
       textAlign: 'center',
       marginBottom: 4,
     },
     appStoreSubtitle: {
       fontFamily: Fonts.body,
-      fontSize: FontSizes.sm,
+      fontSize: isMobileWeb ? FontSizes.xs : FontSizes.sm,
       textAlign: 'center',
       marginBottom: 12,
     },
@@ -274,17 +279,17 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
       justifyContent: 'center',
     },
     storeButton: {
-      paddingVertical: width <= 768 ? 10 : Spacing.md,
-      paddingHorizontal: width <= 768 ? 14 : Spacing.lg,
+      paddingVertical: isMobileWeb ? 8 : width <= 768 ? 10 : Spacing.md,
+      paddingHorizontal: isMobileWeb ? 10 : width <= 768 ? 14 : Spacing.lg,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: colors.border,
-      minWidth: width <= 768 ? 130 : 160,
+      minWidth: isMobileWeb ? 110 : width <= 768 ? 130 : 160,
       alignItems: 'center',
     },
     storeButtonText: {
       fontFamily: Fonts.body,
-      fontSize: width <= 768 ? 12 : FontSizes.sm,
+      fontSize: isMobileWeb ? 10 : width <= 768 ? 12 : FontSizes.sm,
       textAlign: 'center',
     },
 
