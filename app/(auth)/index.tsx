@@ -18,6 +18,12 @@ import {
 
 import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import ThemedLogo from '@/components/ThemedLogo';
+
+export default function WelcomeScreen() {
+  const { colors } = useTheme();
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+
   // Responsive sizing for different viewports
   const isMobileWeb = Platform.OS === 'web' && width <= 480;
   const isTabletWeb = Platform.OS === 'web' && width > 480 && width <= 768;
@@ -44,6 +50,8 @@ import ThemedLogo from '@/components/ThemedLogo';
       }),
     ]).start();
   }, []);
+
+  const styles = getStyles(colors, height, width, insets);
 
   return (
     <View style={{ flex: 1 }}>
@@ -202,7 +210,7 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
     content: {
       flex: 1,
       paddingHorizontal: 32,
-      paddingTop: Spacing.md,
+      paddingTop: 16,
     },
 
     // Master vertical layout: top / middle / bottom
@@ -245,42 +253,42 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
     // Web-only app store section
     appStoreContainer: {
       width: '100%',
-      paddingHorizontal: Spacing.lg,
+      paddingHorizontal: 24,
       alignItems: 'center',
       marginTop: -8,
       marginBottom: 8,
     },
     appStoreTitle: {
-      fontFamily: Fonts.heading,
-      fontSize: isMobileWeb ? FontSizes.md : FontSizes.lg,
+      fontFamily: 'Inter-SemiBold',
+      fontSize: width <= 480 ? 16 : 18,
       textAlign: 'center',
       marginBottom: 4,
     },
     appStoreSubtitle: {
-      fontFamily: Fonts.body,
-      fontSize: isMobileWeb ? FontSizes.xs : FontSizes.sm,
+      fontFamily: 'Inter-Regular',
+      fontSize: width <= 480 ? 12 : 14,
       textAlign: 'center',
       marginBottom: 12,
     },
     storeButtonsContainer: {
       flexDirection: 'row',
-      gap: Spacing.md,
-      marginBottom: Platform.OS === 'web' ? Spacing.sm : Spacing.lg,
+      gap: 16,
+      marginBottom: Platform.OS === 'web' ? 12 : 24,
       flexWrap: 'wrap',
       justifyContent: 'center',
     },
     storeButton: {
-      paddingVertical: isMobileWeb ? 8 : width <= 768 ? 10 : Spacing.md,
-      paddingHorizontal: isMobileWeb ? 10 : width <= 768 ? 14 : Spacing.lg,
+      paddingVertical: width <= 480 ? 8 : width <= 768 ? 10 : 16,
+      paddingHorizontal: width <= 480 ? 10 : width <= 768 ? 14 : 24,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: colors.border,
-      minWidth: isMobileWeb ? 110 : width <= 768 ? 130 : 160,
+      minWidth: width <= 480 ? 110 : width <= 768 ? 130 : 160,
       alignItems: 'center',
     },
     storeButtonText: {
-      fontFamily: Fonts.body,
-      fontSize: isMobileWeb ? 10 : width <= 768 ? 12 : FontSizes.sm,
+      fontFamily: 'Inter-Regular',
+      fontSize: width <= 480 ? 10 : width <= 768 ? 12 : 14,
       textAlign: 'center',
     },
 
@@ -326,7 +334,7 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
       flexDirection: 'row',
       justifyContent: 'space-around',
       width: '100%',
-      paddingHorizontal: Spacing.xl,
+      paddingHorizontal: 32,
       paddingBottom: insets.bottom + 8,
     },
     footerLink: {
