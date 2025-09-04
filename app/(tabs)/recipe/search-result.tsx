@@ -223,7 +223,7 @@ export default function SearchResultDetailScreen() {
             </Text>
           ))}
 
-          <View style={{ marginBottom: 16 }} />
+          <View style={{ marginBottom: 24 }} />
 
           <Text style={styles.sectionTitle}>Instructions</Text>
           {recipe.instructions?.map((instruction: string, index: number) => (
@@ -233,7 +233,7 @@ export default function SearchResultDetailScreen() {
             </Text>
           ))}
 
-          <View style={{ marginBottom: 16 }} />
+          <View style={{ marginBottom: 24 }} />
 
           {(recipe.allergens?.length > 0 || recipe.dietaryPrefs?.length > 0) && (
             <>
