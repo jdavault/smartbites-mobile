@@ -236,19 +236,17 @@ export default function RecipeCard({
             </Text>
           </View>
 
-          {recipe.method && (
-            <View style={styles.method}>
-              <ChefHat size={14} color="#99523d" />
-              <Text
-                style={[
-                  styles.methodText,
-                  { color: "#99523d" },
-                ]}
-              >
-                {recipe.method}
-              </Text>
-            </View>
-          )}
+          <View style={styles.method}>
+            <ChefHat size={14} color="#99523d" />
+            <Text
+              style={[
+                styles.methodText,
+                { color: "#99523d" },
+              ]}
+            >
+              {recipe.method || 'Bake'}
+            </Text>
+          </View>
         </View>
 
         {/* Bottom content: fixed at bottom */}
@@ -405,7 +403,8 @@ const getStyles = (colors: ThemeColors) =>
     },
     metadata: {
       flexDirection: 'row',
-      gap: 16,
+      justifyContent: 'space-between',
+      alignItems: 'center',
       marginTop: 12,
     },
     previewMetadata: {
