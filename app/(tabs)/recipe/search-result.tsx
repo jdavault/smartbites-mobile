@@ -391,7 +391,7 @@ const getStyles = (colors: ThemeColors) =>
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
       marginBottom: 12,
-      marginTop: 4,
+      marginTop: 0,
     },
     ingredientItem: {
       fontSize: 15,
