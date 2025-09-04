@@ -238,45 +238,11 @@ export default function RecipeCard({
 
           {recipe.method && (
             <View style={styles.method}>
-              <ChefHat
-                size={16}
-                color={colors.accent}
-              />
-              <Text
-                style={[
-                  styles.previewMetadataText,
-                  { color: colors.accent },
-                ]}
-              >
-                {recipe.method}
-              </Text>
-            </View>
-          )}
-
-          {recipe.method && (
-            <View style={styles.method}>
-              <ChefHat size={14} color={colors.accent} />
+              <ChefHat size={14} color="#99523d" />
               <Text
                 style={[
                   styles.methodText,
-                  { color: colors.accent },
-                ]}
-              >
-                {recipe.method}
-              </Text>
-            </View>
-          )}
-
-          {recipe.method && (
-            <View style={styles.method}>
-              <ChefHat
-                size={16}
-                color={colors.accent}
-              />
-              <Text
-                style={[
-                  styles.previewMetadataText,
-                  { color: colors.accent },
+                  { color: "#99523d" },
                 ]}
               >
                 {recipe.method}
