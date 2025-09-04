@@ -209,7 +209,7 @@ export default function RecipeDetailScreen() {
 
           {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
             <>
-              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Dietary Information</Text>
+              <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Dietary Information</Text>
               <View style={styles.tagsContainer}>
                 {recipe.allergens.map((allergen, index) => (
                   <View key={`allergen-${index}`} style={styles.allergenTag}>
@@ -227,7 +227,7 @@ export default function RecipeDetailScreen() {
 
           {recipe.tags.length > 0 && (
             <>
-              <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 8 }]}>Tags</Text>
+              <Text style={[styles.sectionTitle, { marginTop: 28, marginBottom: 8 }]}>Tags</Text>
               <View style={styles.tagsContainer}>
                 {recipe.tags.map((tag, index) => (
                   <View key={index} style={styles.tag}>
