@@ -224,7 +224,7 @@ export default function SearchResultDetailScreen() {
           ))}
 
 
-          <Text style={styles.sectionTitle}>Instructions</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Instructions</Text>
           {recipe.instructions?.map((instruction: string, index: number) => (
             <Text key={index} style={styles.instructionItem}>
               <Text style={styles.instructionNumber}>{index + 1}.</Text>{' '}

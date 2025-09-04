@@ -198,7 +198,7 @@ export default function RecipeDetailScreen() {
           ))}
 
 
-          <Text style={styles.sectionTitle}>Instructions</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Instructions</Text>
           {recipe.instructions.map((instruction, index) => (
             <Text key={index} style={styles.instructionItem}>
               <Text style={styles.instructionNumber}>{index + 1}.</Text>{' '}
