@@ -174,6 +174,23 @@ export default function RecipeDetailScreen() {
                 {recipe.difficulty}
               </Text>
             </View>
+
+            {recipe.method && (
+              <View style={styles.method}>
+                <ChefHat
+                  size={16}
+                  color="#99523d"
+                />
+                <Text
+                  style={[
+                    styles.methodText,
+                    { color: "#99523d" },
+                  ]}
+                >
+                  {recipe.method}
+                </Text>
+              </View>
+            )}
           </View>
 
           <Text style={styles.sectionTitle}>Ingredients</Text>
@@ -313,7 +330,8 @@ const getStyles = (colors: ThemeColors) =>
     },
     metadata: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: 16,
       marginBottom: 24,
       paddingVertical: 12,
       borderTopWidth: 1,
@@ -348,7 +366,7 @@ const getStyles = (colors: ThemeColors) =>
     methodText: {
       fontSize: 14,
       fontFamily: 'Inter-Medium',
-      color: colors.textSecondary,
+      textTransform: 'capitalize',
     },
     sectionTitle: {
       fontSize: 20,
