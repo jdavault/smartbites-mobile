@@ -488,13 +488,11 @@ const getStyles = (colors: ThemeColors) =>
       fontFamily: 'Inter-Medium',
       textTransform: 'capitalize',
     },
-
     tags: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 8,
-      marginBottom: 8,
-      // no bottom margin needed; it's already at the bottom
+      marginBottom: 5,
     },
     previewTags: {
       flexDirection: 'row',
