@@ -18,16 +18,7 @@ import {
 
 import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import ThemedLogo from '@/components/ThemedLogo';
-import { Spacing } from '@/constants/Spacing';
-import { Fonts, FontSizes } from '@/constants/Typography';
-
-export default function SplashScreen() {
-  const { colors } = useTheme();
-  const { height, width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  const styles = getStyles(colors, height, width, insets);
-
-  // Responsive sizing for small mobile viewports
+  // Responsive sizing for different viewports
   const isMobileWeb = Platform.OS === 'web' && width <= 480;
   const isTabletWeb = Platform.OS === 'web' && width > 480 && width <= 768;
   const isDesktopWeb = Platform.OS === 'web' && width > 768;
