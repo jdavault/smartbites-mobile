@@ -148,8 +148,7 @@ export default function RecipeDetailScreen() {
             <View style={styles.metadataItem}>
               <Clock size={16} color={colors.text} />
               <Text style={styles.metadataText}>
-                {recipe.prepTime?.replace('minutes', 'min')} +{' '}
-                {recipe.cookTime?.replace('minutes', 'min')}
+                {recipe.prepTime?.replace('minutes', 'min')} + {recipe.cookTime?.replace('minutes', 'min')}
               </Text>
             </View>
 
@@ -331,7 +330,7 @@ const getStyles = (colors: ThemeColors) =>
     metadata: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 16,
+      gap: 20,
       marginBottom: 24,
       paddingVertical: 12,
       borderTopWidth: 1,
