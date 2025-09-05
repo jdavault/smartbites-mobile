@@ -281,18 +281,18 @@ export default function RecipeCard({
             </View>
           )}
 
-          {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
+          {(recipe.allergensToAvoid?.length > 0 || recipe.dietaryPrefs?.length > 0) && (
             <View style={styles.tags}>
-              {recipe.allergens.map((allergen, index) => (
+              {recipe.allergensToAvoid?.map((allergen, index) => (
                 <View key={`allergen-${index}`} style={styles.allergenTag}>
                   <Text style={styles.tagText}>🚫 {allergen}</Text>
                 </View>
-              ))}
-              {recipe.dietaryPrefs.map((dietary, index) => (
+              )) || []}
+              {recipe.dietaryPrefs?.map((dietary, index) => (
                 <View key={`dietary-${index}`} style={styles.dietaryTag}>
                   <Text style={styles.tagText}>🌱 {dietary}</Text>
                 </View>
-              ))}
+              )) || []}
               {recipe.allergensIncluded && recipe.allergensIncluded.length > 0 && 
                 recipe.allergensIncluded.map((allergen, index) => (
                   <View key={`included-${index}`} style={styles.allergenIncludedTag}>
