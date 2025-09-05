@@ -146,7 +146,7 @@ async function fetchWithRetry(
 
 async function getOpenAIHeaders() {
   const apiKey = await getOpenAIKey(); // your Edge function call (keeps key off device)
-  // Prefer pulling these from env/secrets so you don’t hard-code:
+  // Prefer pulling these from env/secrets so you don't hard-code:
   const org = 'org-pigNWK6KQYXhW9KadKfDpVGu'; //process.env.EXPO_PUBLIC_OPENAI_ORG_ID;
   const project = 'proj_WQLJGYZRj2GPZSmGchawQ5Bu'; //process.env.EXPO_PUBLIC_OPENAI_PROJECT;
 
@@ -216,7 +216,7 @@ export async function generateRecipes(
           `- Do not include any ingredients or instructions that contain the allergens above.`,
           `- In "allergens", list any and all allergens (especially those provided) that are avoided in the final recipe based on this list:`,
           `  Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)`,
-          `- In "allergensIncluded", list any and all allergens from the same list that ARE present in the recipe’s actual ingredients. This should be mutually exclusive from "allergens".`,
+          `- In "allergensIncluded", list any and all allergens from the same list that ARE present in the recipe's actual ingredients. This should be mutually exclusive from "allergens".`,
         ].join('\n')
       : '';
 
@@ -257,7 +257,7 @@ export async function generateRecipes(
       Final Recipe Rules:
         Allergens
           - "allergensToAvoid": Array of allergens that must be excluded from the recipe (from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)).
-          - "allergensIncluded": Array of allergens that ARE present in the recipe’s actual ingredients. REQUIRED. [] if none.
+          - "allergensIncluded": Array of allergens that ARE present in the recipe's actual ingredients. REQUIRED. [] if none.
           - You MUST scan the "ingredients" list and explicitly cross-check against this allergen list.
           - If any ingredient contains or implies one of these allergens, include it in "allergensIncluded".
             Examples:
@@ -343,7 +343,7 @@ export async function generateRecipes(
                     'method',
                     'tags',
                     'searchQuery',
-                    'allergens',
+                    'allergensToAvoid',
                     'dietaryPrefs',
                     'allergensIncluded',
                     'notes',
@@ -393,7 +393,7 @@ export async function generateRecipes(
                       maxItems: 6,
                     },
                     searchQuery: { type: 'string' },
-                    allergens: {
+                    allergensToAvoid: {
                       type: 'array',
                       description:
                         'Allergens that are explicitly avoided and NOT present.',
@@ -514,7 +514,8 @@ export async function generateRecipes(
       console.log(`🤖 DEBUG: Recipe ${index + 1} breakdown:`);
       console.log(`  - Title: "${recipe.title}"`);
       console.log(`  - Method: "${recipe.method}"`);
-      console.log(`  - Allergens (avoided):`, recipe.allergens);
+      console.log(`  - AllergensToAvoid:`, recipe.allergensToAvoid);
+      console.log(`  - AllergensToAvoid:`, recipe.allergensToAvoid);
       console.log(`  - AllergensIncluded:`, recipe.allergensIncluded);
       console.log(
         `  - AllergensIncluded type:`,
@@ -523,6 +524,7 @@ export async function generateRecipes(
       console.log(
         `  - AllergensIncluded isArray:`,
         Array.isArray(recipe.allergensIncluded)
+      );
       console.log(`  - Full recipe object:`, JSON.stringify(recipe, null, 2));
     });
 
