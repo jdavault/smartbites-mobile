@@ -473,6 +473,8 @@ export class RecipeService {
               .insert(allergenRelationships);
 
             if (allergenRelError) throw allergenRelError;
+            
+            console.log('💾 DEBUG: Inserted allergen relationships for allergensToAvoid:', recipe.allergensToAvoid);
           }
         }
 
