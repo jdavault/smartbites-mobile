@@ -500,6 +500,12 @@ const getStyles = (colors: ThemeColors) =>
       paddingVertical: 6,
       borderRadius: 12,
     },
+    allergenIncludedTag: {
+      backgroundColor: colors.warning,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+      borderRadius: 8,
+    },
     dietaryTag: {
       backgroundColor: colors.dietary,
       paddingHorizontal: 6, // Reduced padding to save space

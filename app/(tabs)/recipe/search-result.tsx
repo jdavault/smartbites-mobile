@@ -430,6 +430,12 @@ const getStyles = (colors: ThemeColors) =>
       paddingVertical: 6,
       borderRadius: 12,
     },
+    allergenIncludedTag: {
+      backgroundColor: colors.warning,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 12,
+    },
     dietaryTag: {
       backgroundColor: colors.dietary,
       paddingHorizontal: 12,
