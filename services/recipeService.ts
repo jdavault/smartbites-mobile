@@ -344,7 +344,7 @@ export class RecipeService {
     try {
       // Create a content-based key for true deduplication
       const contentKey = buildSearchKey({
-        allergens: recipe.allergens,
+        allergensToAvoid: recipe.allergensToAvoid,
         dietaryPrefs: recipe.dietaryPrefs,
         title: recipe.title,
         headNote: recipe.headNote,

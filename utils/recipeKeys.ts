@@ -1,13 +1,13 @@
 import { slugify, fnv1a32, normText, normList, textSignature } from './stringUtils';
 
 export function buildSearchKey(opts: {
-  allergens?: string[];
+  allergensToAvoid?: string[];
   dietaryPrefs?: string[];
   title: string;
   headNote?: string;
 }): string {
   const baseParts = [
-    `a:${normList(opts.allergens)}`,
+    `a:${normList(opts.allergensToAvoid)}`,
     `d:${normList(opts.dietaryPrefs)}`,
     `t:${normText(opts.title)}`,
     opts.headNote ? `hn:${normText(opts.headNote)}` : '',
