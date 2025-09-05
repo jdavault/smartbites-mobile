@@ -293,6 +293,13 @@ export default function RecipeCard({
                   <Text style={styles.tagText}>🌱 {dietary}</Text>
                 </View>
               ))}
+              {recipe.allergensIncluded && recipe.allergensIncluded.length > 0 && 
+                recipe.allergensIncluded.map((allergen, index) => (
+                  <View key={`included-${index}`} style={styles.allergenIncludedTag}>
+                    <Text style={styles.tagText}>⚠️ {allergen}</Text>
+                  </View>
+                ))
+              }
             </View>
           )}
         </View>
