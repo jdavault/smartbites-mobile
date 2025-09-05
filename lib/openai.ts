@@ -514,7 +514,8 @@ export async function generateRecipes(
       console.log(`🤖 DEBUG: Recipe ${index + 1} breakdown:`);
       console.log(`  - Title: "${recipe.title}"`);
       console.log(`  - Method: "${recipe.method}"`);
-      console.log(`  - Allergens (avoided):`, recipe.allergens);
+      console.log(`  - AllergensToAvoid:`, recipe.allergensToAvoid);
+      console.log(`  - AllergensToAvoid:`, recipe.allergensToAvoid);
       console.log(`  - AllergensIncluded:`, recipe.allergensIncluded);
       console.log(
         `  - AllergensIncluded type:`,
