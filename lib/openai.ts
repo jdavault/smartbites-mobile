@@ -344,7 +344,6 @@ export async function generateRecipes(
                     'tags',
                     'searchQuery',
                     'allergens',
-                    'allergensToAvoid',
                     'dietaryPrefs',
                     'allergensIncluded',
                     'notes',
