@@ -375,11 +375,11 @@ export class RecipeService {
         console.log('💾 DEBUG: recipe.allergensIncluded isArray:', Array.isArray(recipe.allergensIncluded));
         
         // Convert allergensIncluded array to comma-delimited string for storage
-        const allergensContained = Array.isArray(recipe.allergensIncluded) 
-          ? recipe.allergensIncluded.join(',')
-          : typeof recipe.allergensIncluded === 'string' 
-            ? recipe.allergensIncluded 
-            : '';
+        // Use allergensIncluded from the mapped recipe (should be an array)
+        const allergensIncludedArray = recipe.allergensIncluded || [];
+        const allergensContained = allergensIncludedArray.length > 0 
+          ? allergensIncludedArray.join(',')
+          : '';
         
         console.log('💾 DEBUG: allergensContained for DB:', allergensContained);
         console.log('💾 DEBUG: allergensContained length:', allergensContained.length);
