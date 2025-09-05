@@ -12,11 +12,11 @@ interface GeneratedRecipe {
   difficulty: 'easy' | 'medium' | 'hard';
   tags: string[];
   searchQuery: string;
-  allergens: string[];
+  allergensToAvoid: string[];
   dietaryPrefs: string[];
+  allergensIncluded: string[];
   notes: string;
   nutritionInfo: string;
-  allergensIncluded: string[];
 }
 
 export type ChatMessage = {
@@ -343,7 +343,7 @@ export async function generateRecipes(
                     'method',
                     'tags',
                     'searchQuery',
-                    'allergens',
+                    'allergensToAvoid',
                     'dietaryPrefs',
                     'allergensIncluded',
                     'notes',
@@ -393,7 +393,7 @@ export async function generateRecipes(
                       maxItems: 6,
                     },
                     searchQuery: { type: 'string' },
-                    allergens: {
+                    allergensToAvoid: {
                       type: 'array',
                       description:
                         'Allergens that are explicitly avoided and NOT present.',
@@ -431,7 +431,7 @@ export async function generateRecipes(
                     allergensIncluded: {
                       type: 'array',
                       description:
-                        'List ALL allergens actually present in the recipe ingredients (mutually exclusive from allergens). Always required, [] if none.',
+                        'List ALL allergens actually present in the recipe ingredients (mutually exclusive from allergensToAvoid). Always required, [] if none.',
                       items: {
                         type: 'string',
                         enum: [
