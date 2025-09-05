@@ -645,7 +645,10 @@ export default function SearchScreen() {
               {searchResults.map((recipe, index) => (
                 <RecipeCard
                   key={index}
-                  recipe={recipe}
+                  recipe={{
+                    ...recipe,
+                    allergens: recipe.allergensToAvoid || [], // Map OpenAI field to display field
+                  }}
                   onSave={() => handleSaveRecipe(recipe)}
                   onSaveAndFavorite={() => handleSaveAndFavoriteRecipe(recipe)}
                   showSaveButton={true}
