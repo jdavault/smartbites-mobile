@@ -662,7 +662,7 @@ const getStyles = (colors: ThemeColors) =>
       marginBottom: 4,
     },
     subtitle: {
-      fontSize: Platform.OS === 'android' ? 12 : 16,
+      fontSize: Platform.OS === 'android' ? 11 : 16,
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
     },
