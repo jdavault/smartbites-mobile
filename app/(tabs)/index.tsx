@@ -651,8 +651,6 @@ export default function SearchScreen() {
                   key={index}
                   recipe={{
                     ...recipe,
-                    allergens: recipe.allergensToAvoid || [],
-                    allergensToAvoid: recipe.allergensToAvoid || [],
                   }}
                   onSave={() => handleSaveRecipe(recipe)}
                   onSaveAndFavorite={() => handleSaveAndFavoriteRecipe(recipe)}
