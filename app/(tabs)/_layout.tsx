@@ -22,13 +22,13 @@ export default function TabLayout() {
   // Calculate appropriate tab bar height and padding
   const tabBarHeight = Platform.select({
     ios: 70 + Math.max(insets.bottom - 8, 8), // iOS: add some bottom padding but not too much
-    android: 60, // Android: much smaller height, no extra bottom padding
+    android: 68, // Android: reasonable height with some padding
     web: 70 + 16, // Web: add extra padding to prevent cutoff
   });
 
   const tabBarPaddingBottom = Platform.select({
     ios: Math.max(insets.bottom - 4, 8), // iOS: respect safe area but reduce it slightly
-    android: 8, // Android: minimal bottom padding
+    android: 12, // Android: reasonable bottom padding
     web: 16, // Web: extra padding to prevent cutoff
   });
   return (
