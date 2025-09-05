@@ -21,7 +21,7 @@ export default function RestaurantsScreen() {
     },
     header: {
       paddingHorizontal: 24, // reverted back
-      paddingTop: 4,
+      paddingTop: Platform.OS === 'android' ? 32 : 4,
       paddingBottom: 4,
       backgroundColor: colors.surface,
       marginBottom: 12,
