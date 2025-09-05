@@ -343,7 +343,7 @@ export async function generateRecipes(
                     'method',
                     'tags',
                     'searchQuery',
-                    'allergens',
+                    'allergensToAvoid',
                     'dietaryPrefs',
                     'allergensIncluded',
                     'notes',
@@ -524,6 +524,7 @@ export async function generateRecipes(
       console.log(
         `  - AllergensIncluded isArray:`,
         Array.isArray(recipe.allergensIncluded)
+      );
       );
       console.log(`  - Full recipe object:`, JSON.stringify(recipe, null, 2));
     });
