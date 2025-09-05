@@ -200,19 +200,19 @@ export async function callOpenAI(
 
 export async function generateRecipes(
   query: string,
-  allergens: string[] = [],
+  allergensToAvoid: string[] = [],
   dietaryPrefs: string[] = []
 ): Promise<GeneratedRecipe[]> {
   try {
     const debugMessages: string[] = [];
     debugMessages.push(`=== generateRecipes START ===`);
     debugMessages.push(`Query: "${query}"`);
-    debugMessages.push(`Allergens: ${JSON.stringify(allergens)}`);
+    debugMessages.push(`Allergens: ${JSON.stringify(allergensToAvoid)}`);
     debugMessages.push(`Dietary Prefs: ${JSON.stringify(dietaryPrefs)}`);
 
-    const allergensBlock = allergens.length
+    const allergensBlock = allergensToAvoid.length
       ? [
-          `- Avoid these allergens: ${allergens.join(', ')}.`,
+          `- Avoid these allergens: ${allergensToAvoid.join(', ')}.`,
           `- Do not include any ingredients or instructions that contain the allergens above.`,
           `- In "allergens", list any and all allergens (especially those provided) that are avoided in the final recipe based on this list:`,
           `  Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)`,
@@ -245,9 +245,9 @@ export async function generateRecipes(
             "method": string,          // cooking method from enum
             "tags": string[],          // <=6 (e.g., quick, no-bake, one-pot)
             "searchQuery": string,
-            "allergens": string[],     // Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten) AVOIDED in recipe
-            "dietaryPrefs": string[],  // from: Mediterranean, Low-Sodium, Keto, Diabetic, Vegan, Vegetarian, Whole-30, and Paleo (Exact Casing and Spelling)
-            "allergensIncluded": string[], // Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten) Found in RECIPE
+            "allergensToAvoid": string[],   // List of allergens explicitly AVOIDED and NOT in the recipe
+            "dietaryPrefs": string[],       // from: Mediterranean, Low-Sodium, Keto, Diabetic, Vegan, Vegetarian, Whole-30, Paleo
+            "allergensIncluded": string[],  // List of allergens actually PRESENT in recipe ingredients
             "notes": string,
             "nutritionInfo": string
           }
@@ -255,13 +255,14 @@ export async function generateRecipes(
       }
 
       Final Recipe Rules:
-        CRITICAL: Always populate allergensIncluded field
-          - This field is REQUIRED and must contain ALL allergens that ARE present in the recipe
-          - Analyze every ingredient and identify which allergens from this list are contained: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)
-          - Example: If recipe contains butter and flour, allergensIncluded should be ["Milk", "Wheat (Gluten)"]
-          - If no allergens are present, use empty array []
-          - This is different from "allergens" field which lists what to AVOID
-        
+        Allergens
+          - "allergensToAvoid": Array of allergens that must be excluded from the recipe (from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)).
+          - "allergensIncluded": Array of allergens that ARE present in the recipe’s actual ingredients. REQUIRED. [] if none.
+          - The two arrays must never overlap. If something is in allergensIncluded, it cannot appear in allergensToAvoid.
+          - Example: If a recipe has butter and flour:
+              "allergensToAvoid": ["Eggs", "Fish", "Peanuts"]  // avoided
+              "allergensIncluded": ["Milk", "Wheat (Gluten)"] // actually present
+
         Title Rules
           - Use a direct, descriptive title that is clear, accurate, and searchable. Avoid ambiguity or mystery (what is loaded cauliflower casserole?).
           - Capitalize all words except articles, conjunctions, and prepositions (e.g., Pigs in a Blanket, Patty Melt with Cabbage on Rye).
@@ -283,12 +284,12 @@ export async function generateRecipes(
           - Explain what to do, what to watch for, and how to fix common issues when possible.
           - Include food-safe internal temperatures for meats and seafood.
           - Serving size must be exactly 4 servings (hard limit), and specified using Imperial units (e.g., "Serves 4" or "4 servings").
-        Tags and Allergens
+        Tags 
           - Tags are not allergens or dietary preferences — they are convenience/descriptor tags (e.g., BBQ, easy, quick, no-bake, one-pot).
-          - "allergens": MUST include every allergen from the master list that is AVOIDED and NOT in the recipe.
-          - "allergensIncluded": MUST include every allergen from the master list that IS present in the recipe’s ingredients. 
-          - The two arrays must never overlap. If an allergen is in "allergensIncluded", it cannot appear in "allergens".
-          - If neither applies, return an empty array for that field.
+        Allergens
+          - "allergensToAvoid": Array of allergens that are explicitly avoided and NOT included in the recipe.
+          - "allergensIncluded": Array of allergens that ARE present in the recipe ingredients. This is REQUIRED. If no allergens are present, return [].
+          - The two arrays must never overlap.
         Formatting & Output
           - Keep JSON syntactically valid (no trailing commas, no commentary).
           - Return only a valid JSON object in the exact required structure.
@@ -390,8 +391,10 @@ export async function generateRecipes(
                       maxItems: 6,
                     },
                     searchQuery: { type: 'string' },
-                    allergens: {
+                    allergensToAvoid: {
                       type: 'array',
+                      description:
+                        'Allergens that are explicitly avoided and NOT present.',
                       items: {
                         type: 'string',
                         enum: [
@@ -425,6 +428,8 @@ export async function generateRecipes(
                     },
                     allergensIncluded: {
                       type: 'array',
+                      description:
+                        'List ALL allergens actually present in the recipe ingredients (mutually exclusive from allergens). Always required, [] if none.',
                       items: {
                         type: 'string',
                         enum: [
