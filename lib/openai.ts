@@ -216,6 +216,7 @@ export async function generateRecipes(
           `- Do not include any ingredients or instructions that contain the allergens above.`,
           `- In "allergens", list any and all allergens (especially those provided) that are avoided in the final recipe based on this list:`,
           `  Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)`,
+          `- In "allergensIncluded", list any and all allergens from the same list that ARE present in the recipe’s actual ingredients. This should be mutually exclusive from "allergens".`,
         ].join('\n')
       : '';
 
@@ -284,9 +285,10 @@ export async function generateRecipes(
           - Serving size must be exactly 4 servings (hard limit), and specified using Imperial units (e.g., "Serves 4" or "4 servings").
         Tags and Allergens
           - Tags are not allergens or dietary preferences — they are convenience/descriptor tags (e.g., BBQ, easy, quick, no-bake, one-pot).
-          - Allergens is the list of ingredients that must be AVOID and are NOT included the recipe  (e.g., Eggs, Fish, Milk, etc) in the recipe.
-          - AllergensIncluded includes ANY and ALL allergens (from Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)) that ARE present in the recipe 
-            which mean by it wont contain those that were avoid and listed in Allergens.
+          - "allergens": MUST include every allergen from the master list that is AVOIDED and NOT in the recipe.
+          - "allergensIncluded": MUST include every allergen from the master list that IS present in the recipe’s ingredients. 
+          - The two arrays must never overlap. If an allergen is in "allergensIncluded", it cannot appear in "allergens".
+          - If neither applies, return an empty array for that field.
         Formatting & Output
           - Keep JSON syntactically valid (no trailing commas, no commentary).
           - Return only a valid JSON object in the exact required structure.
@@ -365,7 +367,7 @@ export async function generateRecipes(
                       type: 'string',
                       enum: ['easy', 'medium', 'hard'],
                     },
-                    "method": {
+                    method: {
                       type: 'string',
                       enum: [
                         'Bake',
@@ -461,21 +463,30 @@ export async function generateRecipes(
     );
 
     // DEBUG: Log the complete OpenAI response
-    console.log('🤖 DEBUG: Complete OpenAI API response:', JSON.stringify(data, null, 2));
-    console.log('🤖 DEBUG: OpenAI response status:', data?.choices?.[0]?.finish_reason);
+    console.log(
+      '🤖 DEBUG: Complete OpenAI API response:',
+      JSON.stringify(data, null, 2)
+    );
+    console.log(
+      '🤖 DEBUG: OpenAI response status:',
+      data?.choices?.[0]?.finish_reason
+    );
     console.log('🤖 DEBUG: OpenAI usage tokens:', data?.usage);
-    
+
     const raw = data?.choices?.[0]?.message?.content ?? '{"recipes":[] }';
     console.log('🤖 DEBUG: Raw JSON content from OpenAI:');
     console.log(raw);
     console.log('🤖 DEBUG: Raw content length:', raw.length);
-    
+
     let parsed: any;
     try {
       parsed = JSON.parse(raw);
       console.log('🤖 DEBUG: Successfully parsed JSON structure:');
       console.log(JSON.stringify(parsed, null, 2));
-      console.log('🤖 DEBUG: Recipes array length:', parsed?.recipes?.length || 0);
+      console.log(
+        '🤖 DEBUG: Recipes array length:',
+        parsed?.recipes?.length || 0
+      );
     } catch {
       console.log('🤖 DEBUG: JSON parse FAILED - using empty fallback');
       parsed = { recipes: [] };
@@ -497,8 +508,14 @@ export async function generateRecipes(
       console.log(`  - Title: "${recipe.title}"`);
       console.log(`  - Method: "${recipe.method}"`);
       console.log(`  - AllergensIncluded:`, recipe.allergensIncluded);
-      console.log(`  - AllergensIncluded type:`, typeof recipe.allergensIncluded);
-      console.log(`  - AllergensIncluded isArray:`, Array.isArray(recipe.allergensIncluded));
+      console.log(
+        `  - AllergensIncluded type:`,
+        typeof recipe.allergensIncluded
+      );
+      console.log(
+        `  - AllergensIncluded isArray:`,
+        Array.isArray(recipe.allergensIncluded)
+      );
       console.log(`  - Allergens (avoided):`, recipe.allergens);
       console.log(`  - Full recipe object:`, JSON.stringify(recipe, null, 2));
     });
