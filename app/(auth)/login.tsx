@@ -167,131 +167,148 @@ export default function LoginScreen() {
             >
               <View style={styles.contentContainer}>
                 <View style={styles.main}>
-                <Image
-                  source={SmartBitesLogo}
-                  style={styles.brandLogo}
-                  accessible
-                  accessibilityLabel="SmartBites logo"
-                />
-                <Text style={styles.subtitle}>
-                  Sign in to continue your culinary journey
-                </Text>
+                  <Image
+                    source={SmartBitesLogo}
+                    style={styles.brandLogo}
+                    accessible
+                    accessibilityLabel="SmartBites logo"
+                  />
+                  <Text style={styles.subtitle}>
+                    Sign in to continue your culinary journey
+                  </Text>
 
-                <View style={styles.form}>
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Email</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={email}
-                      onChangeText={setEmail}
-                      placeholder="Enter your email"
-                      placeholderTextColor={colors.textSecondary}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                    />
-                  </View>
-
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Password</Text>
-                    <View style={styles.passwordInputContainer}>
+                  <View style={styles.form}>
+                    <View style={styles.inputContainer}>
+                      <Text style={styles.label}>Email</Text>
                       <TextInput
-                        style={styles.passwordInput}
-                        value={password}
-                        onChangeText={setPassword}
-                        placeholder="Enter your password"
+                        style={styles.input}
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="Enter your email"
                         placeholderTextColor={colors.textSecondary}
-                        secureTextEntry={!showPassword}
-                        returnKeyType="done"
-                        onSubmitEditing={handleLogin}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
                       />
-                      <TouchableOpacity
-                        style={styles.eyeButton}
-                        onPress={() => setShowPassword((v) => !v)}
-                      >
-                        {showPassword ? (
-                          <EyeOff size={20} color={colors.textSecondary} />
-                        ) : (
-                          <Eye size={20} color={colors.textSecondary} />
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-
-                  <View style={styles.actions}>
-                    <TouchableOpacity
-                      style={[styles.button, loading && styles.buttonDisabled]}
-                      onPress={handleLogin}
-                      disabled={loading}
-                    >
-                      <Text style={styles.buttonText}>
-                        {loading ? 'Signing In...' : 'Sign In'}
-                      </Text>
-                    </TouchableOpacity>
-
-                    <View style={styles.divider}>
-                      <View style={styles.dividerLine} />
-                      <Text style={styles.dividerText}>OR</Text>
-                      <View style={styles.dividerLine} />
                     </View>
 
-                    {/* Social signin buttons side by side */}
-                    <View style={styles.socialButtonsRow}>
-                      <TouchableOpacity
-                        style={[styles.socialButton, styles.googleButton]}
-                        onPress={() =>
-                          openModal({
-                            title: 'Google Login Not Available',
-                            subtitle: "We're working on it — coming soon!",
-                            emoji: '😔',
-                          })
-                        }
-                        disabled={loading}
-                      >
-                        <Text style={[styles.socialButtonText, styles.googleButtonText]}>
-                          Google SignIn
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[styles.socialButton, styles.appleButton]}
-                        onPress={() =>
-                          openModal({
-                            title: 'Apple Login Not Available',
-                            subtitle: "We're working on it — coming soon!",
-                            emoji: '😔',
-                          })
-                        }
-                        disabled={loading}
-                      >
-                        <Text style={[styles.socialButtonText, styles.appleButtonText]}>
-                          Apple SignIn
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-
-                    {/* Sign up */}
-                    <View style={styles.signupRow}>
-                      <Text style={styles.footerText}>
-                        Don&apos;t have an account?{' '}
-                      </Text>
-                      <Link href="/(auth)/register" asChild>
-                        <TouchableOpacity>
-                          <Text style={styles.footerLink}>Sign Up</Text>
+                    <View style={styles.inputContainer}>
+                      <Text style={styles.label}>Password</Text>
+                      <View style={styles.passwordInputContainer}>
+                        <TextInput
+                          style={styles.passwordInput}
+                          value={password}
+                          onChangeText={setPassword}
+                          placeholder="Enter your password"
+                          placeholderTextColor={colors.textSecondary}
+                          secureTextEntry={!showPassword}
+                          returnKeyType="done"
+                          onSubmitEditing={handleLogin}
+                          blurOnSubmit={true}
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                        />
+                        <TouchableOpacity
+                          style={styles.eyeButton}
+                          onPress={() => setShowPassword((v) => !v)}
+                        >
+                          {showPassword ? (
+                            <EyeOff size={20} color={colors.textSecondary} />
+                          ) : (
+                            <Eye size={20} color={colors.textSecondary} />
+                          )}
                         </TouchableOpacity>
-                      </Link>
+                      </View>
                     </View>
 
-                    <View style={styles.forgotPasswordContainer}>
-                      <Link href="/(auth)/forgot-password" asChild>
-                        <TouchableOpacity>
-                          <Text style={styles.forgotPasswordLink}>
-                            Forgot Password?
+                    <View style={styles.actions}>
+                      <TouchableOpacity
+                        style={[
+                          styles.button,
+                          loading && styles.buttonDisabled,
+                        ]}
+                        onPress={handleLogin}
+                        disabled={loading}
+                      >
+                        <Text style={styles.buttonText}>
+                          {loading ? 'Signing In...' : 'Sign In'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <View style={styles.divider}>
+                        <View style={styles.dividerLine} />
+                        <Text style={styles.dividerText}>OR</Text>
+                        <View style={styles.dividerLine} />
+                      </View>
+
+                      {/* Social signin buttons side by side */}
+                      <View style={styles.socialButtonsRow}>
+                        <TouchableOpacity
+                          style={[styles.socialButton, styles.googleButton]}
+                          onPress={() =>
+                            openModal({
+                              title: 'Google Login Not Available',
+                              subtitle: "We're working on it — coming soon!",
+                              emoji: '😔',
+                            })
+                          }
+                          disabled={loading}
+                        >
+                          <Text
+                            style={[
+                              styles.socialButtonText,
+                              styles.googleButtonText,
+                            ]}
+                          >
+                            Google SignIn
                           </Text>
                         </TouchableOpacity>
-                      </Link>
+
+                        <TouchableOpacity
+                          style={[styles.socialButton, styles.appleButton]}
+                          onPress={() =>
+                            openModal({
+                              title: 'Apple Login Not Available',
+                              subtitle: "We're working on it — coming soon!",
+                              emoji: '😔',
+                            })
+                          }
+                          disabled={loading}
+                        >
+                          <Text
+                            style={[
+                              styles.socialButtonText,
+                              styles.appleButtonText,
+                            ]}
+                          >
+                            Apple SignIn
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      {/* Sign up */}
+                      <View style={styles.signupRow}>
+                        <Text style={styles.footerText}>
+                          Don&apos;t have an account?{' '}
+                        </Text>
+                        <Link href="/(auth)/register" asChild>
+                          <TouchableOpacity>
+                            <Text style={styles.footerLink}>Sign Up</Text>
+                          </TouchableOpacity>
+                        </Link>
+                      </View>
+
+                      <View style={styles.forgotPasswordContainer}>
+                        <Link href="/(auth)/forgot-password" asChild>
+                          <TouchableOpacity>
+                            <Text style={styles.forgotPasswordLink}>
+                              Forgot Password?
+                            </Text>
+                          </TouchableOpacity>
+                        </Link>
+                      </View>
                     </View>
                   </View>
-                </View>
                 </View>
               </View>
             </ScrollView>
@@ -466,7 +483,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     signupRow: {
       flexDirection: 'row',
       alignItems: 'center',
-     justifyContent: 'center',
+      justifyContent: 'center',
     },
     footerText: {
       fontSize: 14,
