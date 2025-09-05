@@ -306,8 +306,6 @@ export class RecipeService {
         servings: recipe.servings || 4,
         difficulty: recipe.difficulty || 'easy',
         method: recipe.cooking_method || 'Bake',
-        method: recipe.method || 'Bake',
-        method: recipe.cooking_method || recipe.method || 'Bake',
         tags: recipe.tags || [],
         searchQuery: recipe.search_query || '',
         searchKey: recipe.search_key || '',
