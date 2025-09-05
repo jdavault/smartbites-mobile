@@ -382,6 +382,7 @@ export class RecipeService {
         
         console.log('💾 DEBUG: allergensContained for DB:', allergensContained);
         console.log('💾 DEBUG: allergensContained length:', allergensContained.length);
+        console.log('💾 DEBUG: recipe.method from OpenAI:', recipe.method);
         console.log('💾 DEBUG: Full recipe object being saved:', JSON.stringify({
           title: recipe.title,
           allergens_included: allergensContained,
