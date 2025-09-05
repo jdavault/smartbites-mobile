@@ -460,18 +460,24 @@ export async function generateRecipes(
       }`
     );
 
-    // DEBUG: Log the full OpenAI response
-    console.log('🤖 DEBUG: Full OpenAI response:', JSON.stringify(data, null, 2));
+    // DEBUG: Log the complete OpenAI response
+    console.log('🤖 DEBUG: Complete OpenAI API response:', JSON.stringify(data, null, 2));
+    console.log('🤖 DEBUG: OpenAI response status:', data?.choices?.[0]?.finish_reason);
+    console.log('🤖 DEBUG: OpenAI usage tokens:', data?.usage);
     
     const raw = data?.choices?.[0]?.message?.content ?? '{"recipes":[] }';
-    console.log('🤖 DEBUG: Raw content from OpenAI:', raw);
+    console.log('🤖 DEBUG: Raw JSON content from OpenAI:');
+    console.log(raw);
+    console.log('🤖 DEBUG: Raw content length:', raw.length);
     
     let parsed: any;
     try {
       parsed = JSON.parse(raw);
-      console.log('🤖 DEBUG: Parsed JSON:', JSON.stringify(parsed, null, 2));
+      console.log('🤖 DEBUG: Successfully parsed JSON structure:');
+      console.log(JSON.stringify(parsed, null, 2));
+      console.log('🤖 DEBUG: Recipes array length:', parsed?.recipes?.length || 0);
     } catch {
-      console.log('🤖 DEBUG: JSON parse failed, using fallback');
+      console.log('🤖 DEBUG: JSON parse FAILED - using empty fallback');
       parsed = { recipes: [] };
     }
 
@@ -487,19 +493,14 @@ export async function generateRecipes(
       JSON.stringify(result, null, 2)
     );
     result.forEach((recipe, index) => {
-      console.log(
-        `🤖 DEBUG Recipe ${index + 1} allergensIncluded:`,
-        recipe.allergensIncluded
-      );
-      console.log(
-        `🤖 DEBUG Recipe ${index + 1} allergensIncluded type:`,
-        typeof recipe.allergensIncluded,
-        Array.isArray(recipe.allergensIncluded) ? 'is array' : 'not array'
-      );
-      console.log(
-        `🤖 DEBUG Recipe ${index + 1} full recipe object:`,
-        JSON.stringify(recipe, null, 2)
-      );
+      console.log(`🤖 DEBUG: Recipe ${index + 1} breakdown:`);
+      console.log(`  - Title: "${recipe.title}"`);
+      console.log(`  - Method: "${recipe.method}"`);
+      console.log(`  - AllergensIncluded:`, recipe.allergensIncluded);
+      console.log(`  - AllergensIncluded type:`, typeof recipe.allergensIncluded);
+      console.log(`  - AllergensIncluded isArray:`, Array.isArray(recipe.allergensIncluded));
+      console.log(`  - Allergens (avoided):`, recipe.allergens);
+      console.log(`  - Full recipe object:`, JSON.stringify(recipe, null, 2));
     });
 
     if (result.length === 0) {
