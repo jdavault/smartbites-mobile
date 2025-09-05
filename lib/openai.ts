@@ -258,11 +258,17 @@ export async function generateRecipes(
         Allergens
           - "allergensToAvoid": Array of allergens that must be excluded from the recipe (from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)).
           - "allergensIncluded": Array of allergens that ARE present in the recipe’s actual ingredients. REQUIRED. [] if none.
-          - The two arrays must never overlap. If something is in allergensIncluded, it cannot appear in allergensToAvoid.
-          - Example: If a recipe has butter and flour:
-              "allergensToAvoid": ["Eggs", "Fish", "Peanuts"]  // avoided
-              "allergensIncluded": ["Milk", "Wheat (Gluten)"] // actually present
-
+          - You MUST scan the "ingredients" list and explicitly cross-check against this allergen list.
+          - If any ingredient contains or implies one of these allergens, include it in "allergensIncluded".
+            Examples:
+              - Ingredient "hotdog bun" → "Wheat (Gluten)"
+              - Ingredient "butter" → "Milk"
+              - Ingredient "shrimp" → "Shellfish"
+          - The two arrays must never overlap.
+          - Example:
+              Ingredients: ["4 hotdog buns", "2 tbsp butter", "1 lb shrimp"]
+              → "allergensToAvoid": ["Eggs", "Peanuts"]   // provided to avoid
+              → "allergensIncluded": ["Wheat (Gluten)", "Milk", "Shellfish"]
         Title Rules
           - Use a direct, descriptive title that is clear, accurate, and searchable. Avoid ambiguity or mystery (what is loaded cauliflower casserole?).
           - Capitalize all words except articles, conjunctions, and prepositions (e.g., Pigs in a Blanket, Patty Melt with Cabbage on Rye).
@@ -286,10 +292,6 @@ export async function generateRecipes(
           - Serving size must be exactly 4 servings (hard limit), and specified using Imperial units (e.g., "Serves 4" or "4 servings").
         Tags 
           - Tags are not allergens or dietary preferences — they are convenience/descriptor tags (e.g., BBQ, easy, quick, no-bake, one-pot).
-        Allergens
-          - "allergensToAvoid": Array of allergens that are explicitly avoided and NOT included in the recipe.
-          - "allergensIncluded": Array of allergens that ARE present in the recipe ingredients. This is REQUIRED. If no allergens are present, return [].
-          - The two arrays must never overlap.
         Formatting & Output
           - Keep JSON syntactically valid (no trailing commas, no commentary).
           - Return only a valid JSON object in the exact required structure.
