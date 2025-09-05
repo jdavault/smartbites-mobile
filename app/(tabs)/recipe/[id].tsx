@@ -207,15 +207,15 @@ export default function RecipeDetailScreen() {
           ))}
 
 
-          {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
+          {(recipe.allergensToAvoid?.length > 0 || recipe.dietaryPrefs?.length > 0) && (
             <>
               <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Dietary Information</Text>
               <View style={[styles.tagsContainer, { marginTop: 8 }]}>
-                {recipe.allergens.map((allergen, index) => (
+                {recipe.allergensToAvoid?.map((allergen, index) => (
                   <View key={`allergen-${index}`} style={styles.allergenTag}>
                     <Text style={styles.prefText}>🚫 {allergen}</Text>
                   </View>
-                ))}
+                )) || []}
                 {recipe.dietaryPrefs.map((dietary, index) => (
                   <View key={`dietary-${index}`} style={styles.dietaryTag}>
                     <Text style={styles.prefText}>🌱 {dietary}</Text>
