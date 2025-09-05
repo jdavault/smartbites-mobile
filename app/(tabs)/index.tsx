@@ -278,7 +278,7 @@ export default function SearchScreen() {
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: 24, // reverted back
-      paddingTop: Platform.OS === 'android' ? 16 : 4,
+      paddingTop: Platform.OS === 'android' ? 32 : 4,
       paddingBottom: 4,
       backgroundColor: colors.surface,
       marginBottom: 12,
@@ -336,7 +336,7 @@ export default function SearchScreen() {
       backgroundColor: colors.surface,
       borderRadius: 12,
       paddingHorizontal: 10,
-      paddingVertical: 8,
+      paddingVertical: Platform.OS === 'android' ? 4 : 8,
       borderWidth: 1,
       borderColor: colors.border,
     },
