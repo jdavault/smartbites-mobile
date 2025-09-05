@@ -5,6 +5,7 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ALLERGENS } from '@/contexts/AllergensContext';
@@ -32,6 +33,7 @@ export default function AllergenFilter({
       borderWidth: 1,
       borderColor: colors.border,
       marginBottom: Platform.OS === 'android' ? 8 : 12,
+    },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
