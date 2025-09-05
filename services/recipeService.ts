@@ -88,7 +88,9 @@ export class RecipeService {
         notes: item.recipes.notes || '',
         nutritionInfo: item.recipes.nutrition_info || '',
         image: item.recipes.image,
-        allergensIncluded: item.recipes.allergens_included || '',
+        allergensIncluded: item.recipes.allergens_included 
+          ? item.recipes.allergens_included.split(', ').filter(Boolean)
+          : [],
         isFavorite: item.actions?.includes('favorite') || false,
         actions: item.actions || [],
         createdAt: item.recipes.created_at,
@@ -318,7 +320,9 @@ export class RecipeService {
         notes: recipe.notes || '',
         nutritionInfo: recipe.nutrition_info || '',
         image: recipe.image,
-        allergensIncluded: recipe.allergens_included ? recipe.allergens_included.split(', ').filter(Boolean) : [],
+        allergensIncluded: recipe.allergens_included 
+          ? recipe.allergens_included.split(', ').filter(Boolean)
+          : [],
         isFavorite: false,
         actions: [],
         createdAt: recipe.created_at,
@@ -362,6 +366,7 @@ export class RecipeService {
         console.log('💾 Creating new recipe in DB:');
         console.log('💾 recipe.allergensIncluded from OpenAI:', recipe.allergensIncluded);
         
+        // Convert allergensIncluded array to comma-delimited string for storage
         const allergensContained = Array.isArray(recipe.allergensIncluded) 
           ? recipe.allergensIncluded.join(', ')
           : typeof recipe.allergensIncluded === 'string' 
