@@ -19,7 +19,7 @@ export interface Recipe {
   tags: string[];
   searchQuery: string;
   searchKey: string;
-  allergensToAvoid?: string[];
+  allergensToAvoid: string[];
   dietaryPrefs: string[];
   notes: string;
   nutritionInfo: string;
@@ -84,7 +84,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         tags: item.tags,
         searchQuery: item.searchQuery,
         searchKey: item.searchKey,
-        allergens: item.allergens,
+        allergensToAvoid: item.allergens,
         dietaryPrefs: item.dietaryPrefs,
         notes: item.notes,
         nutritionInfo: item.nutritionInfo,
@@ -93,6 +93,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         isFavorite: item.isFavorite,
         actions: item.actions,
         createdAt: item.createdAt,
+        method: item.method || 'Bake',
       }));
 
       setSavedRecipes(formattedRecipes);
@@ -147,7 +148,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         tags: item.tags,
         searchQuery: item.searchQuery,
         searchKey: item.searchKey,
-        allergens: item.allergens,
+        allergensToAvoid: item.allergens,
         dietaryPrefs: item.dietaryPrefs,
         notes: item.notes,
         nutritionInfo: item.nutritionInfo,
@@ -156,6 +157,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
         isFavorite: item.isFavorite,
         actions: item.actions,
         createdAt: item.createdAt,
+        method: item.method || 'Bake',
       }));
 
       setFeaturedRecipes(formattedRecipes);
