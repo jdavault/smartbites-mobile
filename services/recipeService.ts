@@ -377,16 +377,16 @@ export class RecipeService {
         // Convert allergensIncluded array to comma-delimited string for storage
         // Use allergensIncluded from the mapped recipe (should be an array)
         const allergensIncludedArray = recipe.allergensIncluded || [];
-        const allergensContained = allergensIncludedArray.length > 0 
+        const allergensIncludedString = allergensIncludedArray.length > 0 
           ? allergensIncludedArray.join(',')
           : '';
         
-        console.log('💾 DEBUG: allergensContained for DB:', allergensContained);
-        console.log('💾 DEBUG: allergensContained length:', allergensContained.length);
+        console.log('💾 DEBUG: allergensIncludedString for DB:', allergensIncludedString);
+        console.log('💾 DEBUG: allergensIncludedString length:', allergensIncludedString.length);
         console.log('💾 DEBUG: recipe.method from OpenAI:', recipe.method);
         console.log('💾 DEBUG: Full recipe object being saved:', JSON.stringify({
           title: recipe.title,
-          allergens_included: allergensContained,
+          allergens_included: allergensIncludedString,
           cooking_method: recipe.method || 'Bake'
         }, null, 2));
         
@@ -408,7 +408,7 @@ export class RecipeService {
             search_key: contentKey,
             notes: recipe.notes,
             nutrition_info: recipe.nutritionInfo,
-            allergens_included: allergensContained,
+            allergens_included: allergensIncludedString,
             image: null,
           }])
           .select()
