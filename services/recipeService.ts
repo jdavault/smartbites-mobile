@@ -93,7 +93,7 @@ export class RecipeService {
         notes: item.recipes.notes || '',
         nutritionInfo: item.recipes.nutrition_info || '',
         image: item.recipes.image,
-        allergensIncluded: item.recipes.allergens_included 
+        allergensIncluded: item.recipes.allergens_included
           ? item.recipes.allergens_included.split(',').map(s => s.trim()).filter(Boolean)
           : [],
         isFavorite: item.actions?.includes('favorite') || false,

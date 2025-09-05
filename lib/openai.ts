@@ -214,9 +214,9 @@ export async function generateRecipes(
       ? [
           `- Avoid these allergens: ${allergensToAvoid.join(', ')}.`,
           `- Do not include any ingredients or instructions that contain the allergens above.`,
-          `- In "allergens", list any and all allergens (especially those provided) that are avoided in the final recipe based on this list:`,
+          `- In "allergensToAvoid", list any and all allergens (especially those provided) that are avoided in the final recipe based on this list:`,
           `  Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)`,
-          `- In "allergensIncluded", list any and all allergens from the same list that ARE present in the recipe's actual ingredients. This should be mutually exclusive from "allergens".`,
+          `- In "allergensIncluded", list any and all allergens from the same list that ARE present in the recipe's actual ingredients. This should be mutually exclusive from "allergensToAvoid".`,
         ].join('\n')
       : '';
 
