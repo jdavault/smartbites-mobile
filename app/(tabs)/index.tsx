@@ -649,7 +649,6 @@ export default function SearchScreen() {
                   onSave={() => handleSaveRecipe(recipe)}
                   onSaveAndFavorite={() => handleSaveAndFavoriteRecipe(recipe)}
                   showSaveButton={true}
-                  selectedAllergens={selectedAllergens}
                   isSaving={savingRecipeId === recipe.title}
                   isFavoriting={favoritingRecipeId === recipe.title}
                 />
