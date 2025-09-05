@@ -320,7 +320,7 @@ export class RecipeService {
         notes: recipe.notes || '',
         nutritionInfo: recipe.nutrition_info || '',
         image: recipe.image,
-        allergensIncluded: recipe.allergens_included || '',
+        allergensIncluded: recipe.allergens_included ? recipe.allergens_included.split(', ').filter(Boolean) : [],
         isFavorite: false,
         actions: [],
         createdAt: recipe.created_at,
@@ -366,7 +366,9 @@ export class RecipeService {
         
         const allergensContained = Array.isArray(recipe.allergensIncluded) 
           ? recipe.allergensIncluded.join(', ')
-          : (recipe.allergensIncluded || '');
+          : typeof recipe.allergensIncluded === 'string' 
+            ? recipe.allergensIncluded 
+            : '';
         
         console.log('💾 allergensContained for DB:', allergensContained);
         
