@@ -94,7 +94,7 @@ export class RecipeService {
         nutritionInfo: item.recipes.nutrition_info || '',
         image: item.recipes.image,
         allergensIncluded: item.recipes.allergens_included 
-          ? item.recipes.allergens_included.split(', ').filter(Boolean)
+          ? item.recipes.allergens_included.split(',').map(s => s.trim()).filter(Boolean)
           : [],
         isFavorite: item.actions?.includes('favorite') || false,
         actions: item.actions || [],
@@ -326,7 +326,7 @@ export class RecipeService {
         nutritionInfo: recipe.nutrition_info || '',
         image: recipe.image,
         allergensIncluded: recipe.allergens_included 
-          ? recipe.allergens_included.split(', ').filter(Boolean)
+          ? recipe.allergens_included.split(',').map(s => s.trim()).filter(Boolean)
           : [],
         isFavorite: false,
         actions: [],
@@ -376,7 +376,7 @@ export class RecipeService {
         
         // Convert allergensIncluded array to comma-delimited string for storage
         const allergensContained = Array.isArray(recipe.allergensIncluded) 
-          ? recipe.allergensIncluded.join(', ')
+          ? recipe.allergensIncluded.join(',')
           : typeof recipe.allergensIncluded === 'string' 
             ? recipe.allergensIncluded 
             : '';
