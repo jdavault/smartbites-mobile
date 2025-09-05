@@ -335,12 +335,10 @@ export class RecipeService {
     try {
       // Create a content-based key for true deduplication
       const contentKey = buildSearchKey({
-        searchQuery: recipe.searchQuery,
-        userAllergens: [], // Don't include user-specific data in content key
-        userDietaryPrefs: [], // Don't include user-specific data in content key
+        allergens: recipe.allergens,
+        dietaryPrefs: recipe.dietaryPrefs,
         title: recipe.title,
         headNote: recipe.headNote,
-        description: recipe.description,
       });
 
       // Check if recipe with same content already exists
