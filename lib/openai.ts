@@ -515,6 +515,7 @@ export async function generateRecipes(
       console.log(`  - Title: "${recipe.title}"`);
       console.log(`  - Method: "${recipe.method}"`);
       console.log(`  - AllergensToAvoid:`, recipe.allergensToAvoid);
+      console.log(`  - AllergensToAvoid:`, recipe.allergensToAvoid);
       console.log(`  - AllergensIncluded:`, recipe.allergensIncluded);
       console.log(
         `  - AllergensIncluded type:`,
@@ -523,7 +524,6 @@ export async function generateRecipes(
       console.log(
         `  - AllergensIncluded isArray:`,
         Array.isArray(recipe.allergensIncluded)
-      );
       console.log(`  - Full recipe object:`, JSON.stringify(recipe, null, 2));
     });
 
