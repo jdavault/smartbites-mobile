@@ -68,10 +68,10 @@ export class RecipeService {
         }
         throw error;
       }
-      console.log('💾 Raw database items for debugging:');
+      console.log('💾 DEBUG: Raw database items for debugging:');
       data?.forEach((item, index) => {
-        console.log(`💾 Item ${index + 1} allergens_included from DB:`, item.recipes?.allergens_included);
-        console.log(`💾 Item ${index + 1} cooking_method from DB:`, item.recipes?.cooking_method);
+        console.log(`💾 DEBUG: Item ${index + 1} allergens_included from DB:`, item.recipes?.allergens_included);
+        console.log(`💾 DEBUG: Item ${index + 1} cooking_method from DB:`, item.recipes?.cooking_method);
       });
 
       return data?.map(item => ({
@@ -368,10 +368,10 @@ export class RecipeService {
         console.log('💾 Reusing existing recipe with same content:', recipeId);
       } else {
         // Create new recipe with content-based key
-        console.log('💾 Creating new recipe in DB:');
-        console.log('💾 recipe.allergensIncluded from OpenAI:', recipe.allergensIncluded);
-        console.log('💾 recipe.allergensIncluded type:', typeof recipe.allergensIncluded);
-        console.log('💾 recipe.allergensIncluded isArray:', Array.isArray(recipe.allergensIncluded));
+        console.log('💾 DEBUG: Creating new recipe in DB:');
+        console.log('💾 DEBUG: recipe.allergensIncluded from OpenAI:', recipe.allergensIncluded);
+        console.log('💾 DEBUG: recipe.allergensIncluded type:', typeof recipe.allergensIncluded);
+        console.log('💾 DEBUG: recipe.allergensIncluded isArray:', Array.isArray(recipe.allergensIncluded));
         
         // Convert allergensIncluded array to comma-delimited string for storage
         const allergensContained = Array.isArray(recipe.allergensIncluded) 
@@ -380,9 +380,9 @@ export class RecipeService {
             ? recipe.allergensIncluded 
             : '';
         
-        console.log('💾 allergensContained for DB:', allergensContained);
-        console.log('💾 allergensContained length:', allergensContained.length);
-        console.log('💾 Full recipe object being saved:', JSON.stringify({
+        console.log('💾 DEBUG: allergensContained for DB:', allergensContained);
+        console.log('💾 DEBUG: allergensContained length:', allergensContained.length);
+        console.log('💾 DEBUG: Full recipe object being saved:', JSON.stringify({
           title: recipe.title,
           allergens_included: allergensContained,
           cooking_method: recipe.method || 'Bake'
@@ -412,9 +412,9 @@ export class RecipeService {
           .select()
           .single();
 
-        console.log('💾 Inserted recipe data:', recipeData);
-        console.log('💾 Inserted recipe allergens_included:', recipeData?.allergens_included);
-        console.log('💾 Inserted recipe cooking_method:', recipeData?.cooking_method);
+        console.log('💾 DEBUG: Inserted recipe data:', recipeData);
+        console.log('💾 DEBUG: Inserted recipe allergens_included:', recipeData?.allergens_included);
+        console.log('💾 DEBUG: Inserted recipe cooking_method:', recipeData?.cooking_method);
         
         if (recipeError) throw recipeError;
         recipeId = recipeData.id;

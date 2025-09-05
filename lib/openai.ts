@@ -254,6 +254,13 @@ export async function generateRecipes(
       }
 
       Final Recipe Rules:
+        CRITICAL: Always populate allergensIncluded field
+          - This field is REQUIRED and must contain ALL allergens that ARE present in the recipe
+          - Analyze every ingredient and identify which allergens from this list are contained: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)
+          - Example: If recipe contains butter and flour, allergensIncluded should be ["Milk", "Wheat (Gluten)"]
+          - If no allergens are present, use empty array []
+          - This is different from "allergens" field which lists what to AVOID
+        
         Title Rules
           - Use a direct, descriptive title that is clear, accurate, and searchable. Avoid ambiguity or mystery (what is loaded cauliflower casserole?).
           - Capitalize all words except articles, conjunctions, and prepositions (e.g., Pigs in a Blanket, Patty Melt with Cabbage on Rye).
@@ -452,11 +459,19 @@ export async function generateRecipes(
         data.choices?.[0]?.message?.content?.substring(0, 200) || 'EMPTY'
       }`
     );
+
+    // DEBUG: Log the full OpenAI response
+    console.log('🤖 DEBUG: Full OpenAI response:', JSON.stringify(data, null, 2));
+    
     const raw = data?.choices?.[0]?.message?.content ?? '{"recipes":[] }';
+    console.log('🤖 DEBUG: Raw content from OpenAI:', raw);
+    
     let parsed: any;
     try {
       parsed = JSON.parse(raw);
+      console.log('🤖 DEBUG: Parsed JSON:', JSON.stringify(parsed, null, 2));
     } catch {
+      console.log('🤖 DEBUG: JSON parse failed, using fallback');
       parsed = { recipes: [] };
     }
 
@@ -473,16 +488,16 @@ export async function generateRecipes(
     );
     result.forEach((recipe, index) => {
       console.log(
-        `🤖 Recipe ${index + 1} allergensIncluded:`,
+        `🤖 DEBUG Recipe ${index + 1} allergensIncluded:`,
         recipe.allergensIncluded
       );
       console.log(
-        `🤖 Recipe ${index + 1} allergensIncluded type:`,
+        `🤖 DEBUG Recipe ${index + 1} allergensIncluded type:`,
         typeof recipe.allergensIncluded,
         Array.isArray(recipe.allergensIncluded) ? 'is array' : 'not array'
       );
       console.log(
-        `🤖 Recipe ${index + 1} full recipe object:`,
+        `🤖 DEBUG Recipe ${index + 1} full recipe object:`,
         JSON.stringify(recipe, null, 2)
       );
     });
