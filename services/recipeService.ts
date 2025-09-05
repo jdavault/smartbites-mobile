@@ -68,6 +68,11 @@ export class RecipeService {
         }
         throw error;
       }
+      console.log('💾 Raw database items for debugging:');
+      data?.forEach((item, index) => {
+        console.log(`💾 Item ${index + 1} allergens_included from DB:`, item.recipes?.allergens_included);
+        console.log(`💾 Item ${index + 1} cooking_method from DB:`, item.recipes?.cooking_method);
+      });
 
       return data?.map(item => ({
         id: item.recipes.id,
@@ -365,6 +370,8 @@ export class RecipeService {
         // Create new recipe with content-based key
         console.log('💾 Creating new recipe in DB:');
         console.log('💾 recipe.allergensIncluded from OpenAI:', recipe.allergensIncluded);
+        console.log('💾 recipe.allergensIncluded type:', typeof recipe.allergensIncluded);
+        console.log('💾 recipe.allergensIncluded isArray:', Array.isArray(recipe.allergensIncluded));
         
         // Convert allergensIncluded array to comma-delimited string for storage
         const allergensContained = Array.isArray(recipe.allergensIncluded) 
@@ -374,6 +381,12 @@ export class RecipeService {
             : '';
         
         console.log('💾 allergensContained for DB:', allergensContained);
+        console.log('💾 allergensContained length:', allergensContained.length);
+        console.log('💾 Full recipe object being saved:', JSON.stringify({
+          title: recipe.title,
+          allergens_included: allergensContained,
+          cooking_method: recipe.method || 'Bake'
+        }, null, 2));
         
         const { data: recipeData, error: recipeError } = await supabase
           .from('recipes')
@@ -400,6 +413,8 @@ export class RecipeService {
           .single();
 
         console.log('💾 Inserted recipe data:', recipeData);
+        console.log('💾 Inserted recipe allergens_included:', recipeData?.allergens_included);
+        console.log('💾 Inserted recipe cooking_method:', recipeData?.cooking_method);
         
         if (recipeError) throw recipeError;
         recipeId = recipeData.id;

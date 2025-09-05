@@ -476,6 +476,15 @@ export async function generateRecipes(
         `🤖 Recipe ${index + 1} allergensIncluded:`,
         recipe.allergensIncluded
       );
+      console.log(
+        `🤖 Recipe ${index + 1} allergensIncluded type:`,
+        typeof recipe.allergensIncluded,
+        Array.isArray(recipe.allergensIncluded) ? 'is array' : 'not array'
+      );
+      console.log(
+        `🤖 Recipe ${index + 1} full recipe object:`,
+        JSON.stringify(recipe, null, 2)
+      );
     });
 
     if (result.length === 0) {
