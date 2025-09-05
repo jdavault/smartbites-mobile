@@ -171,7 +171,7 @@ export async function callOpenAI(
   const body = {
     model: DEFAULT_MODEL,
     temperature: 0.3,
-    seed: 7,
+    max_tokens: 2000,
     response_format: { type: 'json_object' },
     max_tokens: 2000,
     messages,
@@ -362,12 +362,12 @@ export async function generateRecipes(
                     ingredients: {
                       type: 'array',
                       items: { type: 'string' },
-                      maxItems: 10,
+                      maxItems: 8,
                     },
                     instructions: {
                       type: 'array',
                       items: { type: 'string' },
-                      maxItems: 6,
+                      maxItems: 5,
                     },
                     prepTime: { type: 'string' },
                     cookTime: { type: 'string' },
