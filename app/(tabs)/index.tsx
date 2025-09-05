@@ -30,6 +30,7 @@ import RecipeCard from '@/components/RecipeCard';
 import RecipeSection from '@/components/RecipeSection';
 import AllergenFilter from '@/components/AllergenFilter';
 import DietaryFilter from '@/components/DietaryFilter';
+import { mapOpenAIRecipeToRecipe } from '@/utils/recipeMapping';
 
 type ModalInfo = {
   visible: boolean;
@@ -126,7 +127,10 @@ export default function SearchScreen() {
         allergenNames,
         dietaryNames
       );
-      setSearchResults(recipes);
+      
+      // Map OpenAI recipes to our Recipe interface
+      const mappedRecipes = recipes.map(mapOpenAIRecipeToRecipe);
+      setSearchResults(mappedRecipes);
       debugMessages.push(`=== SEARCH DEBUG END (no error )===`);
     } catch (error) {
       console.error('Search error:', error);
