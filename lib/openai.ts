@@ -12,7 +12,7 @@ interface GeneratedRecipe {
   difficulty: 'easy' | 'medium' | 'hard';
   tags: string[];
   searchQuery: string;
-  allergensToAvoid: string[];
+  allergens: string[];
   dietaryPrefs: string[];
   notes: string;
   nutritionInfo: string;
@@ -343,7 +343,7 @@ export async function generateRecipes(
                     'method',
                     'tags',
                     'searchQuery',
-                    'allergensToAvoid',
+                    'allergens',
                     'dietaryPrefs',
                     'allergensIncluded',
                     'notes',
@@ -393,7 +393,7 @@ export async function generateRecipes(
                       maxItems: 6,
                     },
                     searchQuery: { type: 'string' },
-                    allergensToAvoid: {
+                    allergens: {
                       type: 'array',
                       description:
                         'Allergens that are explicitly avoided and NOT present.',
@@ -514,8 +514,7 @@ export async function generateRecipes(
       console.log(`🤖 DEBUG: Recipe ${index + 1} breakdown:`);
       console.log(`  - Title: "${recipe.title}"`);
       console.log(`  - Method: "${recipe.method}"`);
-      console.log(`  - AllergensToAvoid:`, recipe.allergensToAvoid);
-      console.log(`  - AllergensToAvoid:`, recipe.allergensToAvoid);
+      console.log(`  - Allergens (avoided):`, recipe.allergens);
       console.log(`  - AllergensIncluded:`, recipe.allergensIncluded);
       console.log(
         `  - AllergensIncluded type:`,
