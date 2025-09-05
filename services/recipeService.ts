@@ -454,11 +454,11 @@ export class RecipeService {
         }
 
         // Insert allergen relationships for new recipes only
-        if (recipe.allergensToAvoid && recipe.allergensToAvoid.length > 0) {
+        if (recipe.allergens && recipe.allergens.length > 0) {
           const { data: allergenData, error: allergenError } = await supabase
             .from('allergens')
             .select('id, name')
-            .in('name', recipe.allergensToAvoid);
+            .in('name', recipe.allergens);
 
           if (allergenError) throw allergenError;
 
@@ -474,7 +474,7 @@ export class RecipeService {
 
             if (allergenRelError) throw allergenRelError;
             
-            console.log('💾 DEBUG: Inserted allergen relationships for allergensToAvoid:', recipe.allergensToAvoid);
+            console.log('💾 DEBUG: Inserted allergen relationships for allergens:', recipe.allergens);
           }
         }
 
