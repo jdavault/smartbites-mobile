@@ -1,7 +1,7 @@
 {
   "name": "bolt-expo-starter",
   "main": "expo-router/entry",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "private": true,
   "scripts": {
     "start": "npx expo start --clear",
@@ -14,6 +14,7 @@
     "start-clear": "npx expo start --clear",
     "android": "npx expo run:android --device",
     "android:apk": "eas build --platform android --profile preview --local --output=./SmartBites-preview.apk && adb install -r ./SmartBites-preview.apk",
+    "ios:ipa": "eas build --platform ios --profile preview --local --output=./SmartBites-preview.ipa && xcrun simctl install booted ./SmartBites-preview.ipa && xcrun simctl launch booted com.smartbites.app",
     "ios:native": "rimraf -rf node_modules/.cache/babel-loader/* && rimraf -rf .expo && npx expo run:ios --device 'iPhone 13 Pro Max'",
     "ios:sim": "npx expo run:ios --device 'iPhone 13 Pro Max'",
     "ios": "npx expo run:ios --device",
