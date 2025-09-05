@@ -336,7 +336,7 @@ export default function SearchScreen() {
       backgroundColor: colors.surface,
       borderRadius: 12,
       paddingHorizontal: 10,
-      paddingVertical: Platform.OS === 'android' ? 2 : 8,
+      paddingVertical: Platform.OS === 'android' ? 1 : 8,
       borderWidth: 1,
       borderColor: colors.border,
     },
@@ -345,7 +345,7 @@ export default function SearchScreen() {
     },
     searchInput: {
       flex: 1,
-      fontSize: Platform.OS === 'android' ? 12 : 16,
+      fontSize: Platform.OS === 'android' ? 13 : 16,
       fontFamily: 'Inter-Regular',
       color: colors.textPrimary,
       outlineWidth: 0,
