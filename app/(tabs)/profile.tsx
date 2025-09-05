@@ -622,9 +622,9 @@ const getStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 24, // reverted back
-      paddingTop: Platform.OS === 'android' ? 32 : 4,
-      paddingBottom: 4,
+      paddingHorizontal: Platform.OS === 'android' ? 16 : 24,
+      paddingTop: Platform.OS === 'android' ? 24 : 4,
+      paddingBottom: Platform.OS === 'android' ? 2 : 4,
       backgroundColor: colors.surface,
       marginBottom: 12,
     },
@@ -656,7 +656,7 @@ const getStyles = (colors: ThemeColors) =>
       letterSpacing: 0.5,
     },
     title: {
-      fontSize: 28,
+      fontSize: Platform.OS === 'android' ? 24 : 28,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
       marginBottom: 4,
@@ -702,9 +702,9 @@ const getStyles = (colors: ThemeColors) =>
     // Card wrapper
     formCard: {
       backgroundColor: colors.surface,
-      marginHorizontal: 12, // keep reduced for body content
+      marginHorizontal: Platform.OS === 'android' ? 8 : 12,
       borderRadius: 12,
-      padding: 16,
+      padding: Platform.OS === 'android' ? 12 : 16,
       marginBottom: 16,
       borderWidth: 1,
       borderColor: colors.border,
@@ -725,33 +725,33 @@ const getStyles = (colors: ThemeColors) =>
 
     // Sections
     sectionTitle: {
-      fontSize: 18,
+      fontSize: Platform.OS === 'android' ? 16 : 18,
       fontFamily: 'Inter-SemiBold',
       color: colors.primary,
       marginTop: 0,
-      marginBottom: 6,
-      paddingHorizontal: 12, // keep reduced for body content
+      marginBottom: Platform.OS === 'android' ? 4 : 6,
+      paddingHorizontal: Platform.OS === 'android' ? 8 : 12,
     },
     sectionTitleDiet: {
-      fontSize: 18,
+      fontSize: Platform.OS === 'android' ? 16 : 18,
       fontFamily: 'Inter-SemiBold',
       color: colors.dietary,
       marginTop: 0,
-      marginBottom: 6,
-      paddingHorizontal: 12, // keep reduced for body content
+      marginBottom: Platform.OS === 'android' ? 4 : 6,
+      paddingHorizontal: Platform.OS === 'android' ? 8 : 12,
     },
 
     // Chips
     chipGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 6,
-      paddingHorizontal: 12, // keep reduced for body content
+      gap: Platform.OS === 'android' ? 4 : 6,
+      paddingHorizontal: Platform.OS === 'android' ? 8 : 12,
       marginBottom: 16,
     },
     chip: {
-      paddingVertical: 8,
-      paddingHorizontal: 12,
+      paddingVertical: Platform.OS === 'android' ? 6 : 8,
+      paddingHorizontal: Platform.OS === 'android' ? 10 : 12,
       borderRadius: 999,
       borderWidth: 1,
       borderColor: colors.border,
@@ -766,6 +766,11 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.dietary,
     },
     chipText: { fontSize: 12, fontFamily: 'Inter-Medium', color: colors.text },
+    chipText: { 
+      fontSize: Platform.OS === 'android' ? 11 : 12, 
+      fontFamily: 'Inter-Medium', 
+      color: colors.text 
+    },
     chipTextSelected: { color: '#fff' },
 
     readOnlyInput: {
@@ -776,15 +781,15 @@ const getStyles = (colors: ThemeColors) =>
     // Theme toggle
     settingsRow: {
       flexDirection: 'row',
-      paddingHorizontal: 12,
-      gap: 12,
+      paddingHorizontal: Platform.OS === 'android' ? 8 : 12,
+      gap: Platform.OS === 'android' ? 8 : 12,
       marginBottom: 8,
       marginTop: 4,
     },
     themeContainer: {
       flex: 1,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingHorizontal: Platform.OS === 'android' ? 10 : 12,
+      paddingVertical: Platform.OS === 'android' ? 6 : 8,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -795,8 +800,8 @@ const getStyles = (colors: ThemeColors) =>
     },
     deleteAccountButton: {
       flex: 1,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingHorizontal: Platform.OS === 'android' ? 10 : 12,
+      paddingVertical: Platform.OS === 'android' ? 6 : 8,
       backgroundColor: colors.error,
       borderRadius: 12,
       alignItems: 'center',
@@ -805,12 +810,12 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.error,
     },
     deleteAccountText: {
-      fontSize: 16,
+      fontSize: Platform.OS === 'android' ? 14 : 16,
       fontFamily: 'Inter-Medium',
       color: '#FFFFFF',
     },
     themeText: {
-      fontSize: 16,
+      fontSize: Platform.OS === 'android' ? 14 : 16,
       fontFamily: 'Inter-Medium',
       color: colors.text,
     },
@@ -825,8 +830,8 @@ const getStyles = (colors: ThemeColors) =>
     },
     buttonRow: {
       flexDirection: 'row',
-      paddingHorizontal: 12, // keep reduced for body content
-      gap: 12,
+      paddingHorizontal: Platform.OS === 'android' ? 8 : 12,
+      gap: Platform.OS === 'android' ? 8 : 12,
       marginTop: 8,
       marginBottom: 12,
     },
