@@ -168,7 +168,7 @@ export default function RecipeCard({
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <BookmarkPlus size={18} color={colors.text} />
-                )}
+            {recipe.allergensToAvoid?.map((allergen, index) => (
               </TouchableOpacity>
             )}
 

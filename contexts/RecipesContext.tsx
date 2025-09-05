@@ -19,7 +19,7 @@ export interface Recipe {
   tags: string[];
   searchQuery: string;
   searchKey: string;
-  allergens: string[];
+  allergensToAvoid: string[];
   dietaryPrefs: string[];
   notes: string;
   nutritionInfo: string;
