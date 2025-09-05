@@ -345,7 +345,7 @@ export default function SearchScreen() {
     },
     searchInput: {
       flex: 1,
-      fontSize: Platform.OS === 'android' ? 13 : 16,
+      fontSize: Platform.OS === 'android' ? 12 : 16,
       fontFamily: 'Inter-Regular',
       color: colors.textPrimary,
       outlineWidth: 0,
