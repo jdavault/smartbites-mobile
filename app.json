@@ -2,8 +2,8 @@
   "expo": {
     "name": "SmartBites",
     "slug": "allergy-aware-recipe-finder",
-    "runtimeVersion": "1.0.9",
-    "version": "1.0.9",
+    "runtimeVersion": "1.0.10",
+    "version": "1.0.10",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "smartbites",
@@ -14,19 +14,13 @@
       "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "cover",
       "backgroundColor": "#f9f8f2"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "androidStatusBar": {
       "backgroundColor": "#f9f8f2",
       "barStyle": "dark-content",
@@ -40,12 +34,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.allergy-aware-recipe-finder",
       "buildNumber": "56",
-      "associatedDomains": [
-        "applinks:smartbites.food"
-      ],
-      "urlSchemes": [
-        "smartbites"
-      ],
+      "associatedDomains": ["applinks:smartbites.food"],
+      "urlSchemes": ["smartbites"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "This app uses the camera to scan items for allergy-friendly recipes.",
@@ -69,10 +59,7 @@
               "pathPrefix": "/reset-password"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ],
       "adaptiveIcon": {
