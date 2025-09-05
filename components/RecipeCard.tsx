@@ -283,7 +283,7 @@ export default function RecipeCard({
 
           {(recipe.allergens?.length > 0 || recipe.dietaryPrefs?.length > 0 || recipe.allergensIncluded?.length > 0) && (
             <View style={styles.tags}>
-              {recipe.allergens?.map((allergen, index) => (
+              {(recipe.allergens || recipe.allergensToAvoid || []).map((allergen, index) => (
                 <View key={`allergen-${index}`} style={styles.allergenTag}>
                   <Text style={styles.tagText}>🚫 {allergen}</Text>
                 </View>
