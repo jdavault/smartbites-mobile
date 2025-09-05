@@ -370,6 +370,7 @@ export class RecipeService {
         // Create new recipe with content-based key
         console.log('💾 DEBUG: Creating new recipe in DB:');
         console.log('💾 DEBUG: recipe.allergensIncluded from OpenAI:', recipe.allergensIncluded);
+        console.log('💾 DEBUG: recipe.allergensToAvoid from OpenAI:', recipe.allergensToAvoid);
         console.log('💾 DEBUG: recipe.allergensIncluded type:', typeof recipe.allergensIncluded);
         console.log('💾 DEBUG: recipe.allergensIncluded isArray:', Array.isArray(recipe.allergensIncluded));
         
@@ -453,11 +454,11 @@ export class RecipeService {
         }
 
         // Insert allergen relationships for new recipes only
-        if (recipe.allergens.length > 0) {
+        if (recipe.allergensToAvoid && recipe.allergensToAvoid.length > 0) {
           const { data: allergenData, error: allergenError } = await supabase
             .from('allergens')
             .select('id, name')
-            .in('name', recipe.allergens);
+            .in('name', recipe.allergensToAvoid);
 
           if (allergenError) throw allergenError;
 
