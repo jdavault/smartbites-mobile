@@ -525,7 +525,6 @@ export async function generateRecipes(
         `  - AllergensIncluded isArray:`,
         Array.isArray(recipe.allergensIncluded)
       );
-      );
       console.log(`  - Full recipe object:`, JSON.stringify(recipe, null, 2));
     });
 
