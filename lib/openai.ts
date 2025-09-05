@@ -257,13 +257,19 @@ export async function generateRecipes(
       Final Recipe Rules:
         Allergens
           - "allergensToAvoid": Array of allergens that must be excluded from the recipe (from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)).
-          - "allergensIncluded": Array of allergens that ARE present in the recipe's actual ingredients. REQUIRED. [] if none.
+          - "allergensIncluded": Array of allergens that ARE present in the recipe’s actual ingredients. REQUIRED. [] if none.
           - You MUST scan the "ingredients" list and explicitly cross-check against this allergen list.
+          - Cross-check each ingredient against this allergen mapping:
+              • Any cheese, milk, cream, yogurt → Milk
+              • Any bread, bun, flour, pasta, cracker → Wheat (Gluten)
+              • Any shrimp, crab, lobster, scallop, oyster → Shellfish
+              • Any almond, walnut, cashew, pistachio, pecan, hazelnut, macadamia → Tree Nuts
+              • Any soy sauce, tofu, edamame → Soybeans
+              • Any egg → Eggs
+              • Any fish by name (salmon, cod, tuna, etc.) → Fish
+              • Any sesame seed, tahini → Sesame
+              • Any peanut, peanut butter → Peanuts
           - If any ingredient contains or implies one of these allergens, include it in "allergensIncluded".
-            Examples:
-              - Ingredient "hotdog bun" → "Wheat (Gluten)"
-              - Ingredient "butter" → "Milk"
-              - Ingredient "shrimp" → "Shellfish"
           - The two arrays must never overlap.
           - Example:
               Ingredients: ["4 hotdog buns", "2 tbsp butter", "1 lb shrimp"]
