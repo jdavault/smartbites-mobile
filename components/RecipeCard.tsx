@@ -324,11 +324,11 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       overflow: 'hidden',
       width: '100%',
-      height: SafePlatform.OS === 'android' ? 520 : 520,
+      height: SafePlatform.OS === 'android' ? 560 : 540,
     },
     cardWithMaxWidth: {
       maxWidth: 380, // Only apply max width for horizontal layouts
-      height: SafePlatform.OS === 'android' ? 580 : 520, // Taller on Android to compensate for max width
+      height: SafePlatform.OS === 'android' ? 620 : 560, // Taller on Android to compensate for max width
       alignSelf: 'center', // Center the card when it hits max width
     },
     previewCard: {
