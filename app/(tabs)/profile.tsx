@@ -302,7 +302,7 @@ export default function ProfileScreen() {
       {/* White header matching other tabs */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.title}>Profile</Text>
+          <Text style={styles.title}>Your Profile</Text>
           <Text style={styles.subtitle}>Manage your preferences</Text>
         </View>
         <View style={styles.headerLogoContainer}>
@@ -666,11 +666,13 @@ const getStyles = (colors: ThemeColors) =>
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
       marginBottom: 4,
+      lineHeight: 24,
     },
     subtitle: {
       fontSize: Platform.OS === 'android' ? 12 : 16,
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
+      lineHeight: Platform.OS === 'android' ? 16 : 20,
     },
 
     // Form styling
