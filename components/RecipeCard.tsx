@@ -318,7 +318,9 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       overflow: 'hidden',
       width: '100%',
-      height: 520,
+      maxWidth: 380, // Prevent cards from getting too wide on large Android phones
+      height: Platform.OS === 'android' ? 580 : 520, // Taller on Android to compensate for max width
+      alignSelf: 'center', // Center the card when it hits max width
     },
     previewCard: {
       backgroundColor: colors.surface,
@@ -328,6 +330,8 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       overflow: 'hidden',
       width: '100%',
+      maxWidth: 380, // Same max width for consistency
+      alignSelf: 'center', // Center the card when it hits max width
       // No fixed height - let content determine height
     },
     image: {
