@@ -405,112 +405,118 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <Text style={styles.sectionTitle}>Allergens</Text>
-          {allergensLoading ? (
-            <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
-              <ActivityIndicator size="small" color={colors.primary} />
-            </View>
-          ) : (
-            <View style={styles.chipGrid}>
-              {ALLERGENS.map((allergen) => {
-                const selected = userAllergens.some(
-                  (a) => a.$id === allergen.$id
-                );
-                return (
-                  <TouchableOpacity
-                    key={allergen.$id}
-                    style={[styles.chip, selected && styles.chipSelected]}
-                    onPress={() => toggleAllergen(allergen)}
-                    disabled={allergensLoading}
-                  >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        selected && styles.chipTextSelected,
-                      ]}
-                    >
-                      {allergen.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
-
-          <Text style={styles.sectionTitleDiet}>Dietary Preferences</Text>
-          {dietaryLoading ? (
-            <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
-              <ActivityIndicator size="small" color={colors.dietary} />
-            </View>
-          ) : (
-            <View style={styles.chipGrid}>
-              {DIETARY_PREFERENCES.map((pref) => {
-                const selected = userDietaryPrefs.some(
-                  (p) => p.$id === pref.$id
-                );
-                return (
-                  <TouchableOpacity
-                    key={pref.$id}
-                    style={[
-                      styles.chip,
-                      selected && styles.chipSelectedDietary,
-                    ]}
-                    onPress={() => toggleDietaryPref(pref)}
-                    disabled={dietaryLoading}
-                  >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        selected && styles.chipTextSelected,
-                      ]}
-                    >
-                      {pref.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
-
-          <View style={styles.settingsRow}>
-            <View style={styles.themeContainer}>
-              <View
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
-              >
-                {isDark ? (
-                  <Moon size={20} color={colors.text} />
-                ) : (
-                  <Sun size={20} color={colors.text} />
-                )}
-                <Text style={styles.themeText}>
-                  {isDark ? 'Dark' : 'Light'}
-                </Text>
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Allergens</Text>
+            {allergensLoading ? (
+              <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
+                <ActivityIndicator size="small" color={colors.primary} />
               </View>
-              <Switch
-                value={isDark}
-                onValueChange={toggleTheme}
-                trackColor={{ false: '#e6e2d6', true: colors.primary }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
+            ) : (
+              <View style={styles.chipGrid}>
+                {ALLERGENS.map((allergen) => {
+                  const selected = userAllergens.some(
+                    (a) => a.$id === allergen.$id
+                  );
+                  return (
+                    <TouchableOpacity
+                      key={allergen.$id}
+                      style={[styles.chip, selected && styles.chipSelected]}
+                      onPress={() => toggleAllergen(allergen)}
+                      disabled={allergensLoading}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          selected && styles.chipTextSelected,
+                        ]}
+                      >
+                        {allergen.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+          </View>
 
-            <TouchableOpacity
-              style={styles.deleteAccountButton}
-              onPress={() => openModal({
-                title: 'Delete Account',
-                subtitle: 'Are you sure you want to permanently delete your account? This action cannot be undone.',
-                emoji: '⚠️',
-                primary: { 
-                  label: 'Yes, Delete', 
-                  onPress: handleDeleteAccount 
-                },
-                secondary: { 
-                  label: 'Cancel' 
-                }
-              })}
-            >
-              <Text style={styles.deleteAccountText}>Delete Account</Text>
-            </TouchableOpacity>
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitleDiet}>Dietary Preferences</Text>
+            {dietaryLoading ? (
+              <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
+                <ActivityIndicator size="small" color={colors.dietary} />
+              </View>
+            ) : (
+              <View style={styles.chipGrid}>
+                {DIETARY_PREFERENCES.map((pref) => {
+                  const selected = userDietaryPrefs.some(
+                    (p) => p.$id === pref.$id
+                  );
+                  return (
+                    <TouchableOpacity
+                      key={pref.$id}
+                      style={[
+                        styles.chip,
+                        selected && styles.chipSelectedDietary,
+                      ]}
+                      onPress={() => toggleDietaryPref(pref)}
+                      disabled={dietaryLoading}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          selected && styles.chipTextSelected,
+                        ]}
+                      >
+                        {pref.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+
+          <View style={styles.sectionCard}>
+            <View style={styles.settingsRow}>
+              <View style={styles.themeContainer}>
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+                >
+                  {isDark ? (
+                    <Moon size={20} color={colors.text} />
+                  ) : (
+                    <Sun size={20} color={colors.text} />
+                  )}
+                  <Text style={styles.themeText}>
+                    {isDark ? 'Dark' : 'Light'}
+                  </Text>
+                </View>
+                <Switch
+                  value={isDark}
+                  onValueChange={toggleTheme}
+                  trackColor={{ false: '#e6e2d6', true: colors.primary }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.deleteAccountButton}
+                onPress={() => openModal({
+                  title: 'Delete Account',
+                  subtitle: 'Are you sure you want to permanently delete your account? This action cannot be undone.',
+                  emoji: '⚠️',
+                  primary: { 
+                    label: 'Yes, Delete', 
+                    onPress: handleDeleteAccount 
+                  },
+                  secondary: { 
+                    label: 'Cancel' 
+                  }
+                })}
+              >
+                <Text style={styles.deleteAccountText}>Delete Account</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.buttonRow}>
@@ -702,7 +708,16 @@ const getStyles = (colors: ThemeColors) =>
     // Card wrapper
     formCard: {
       backgroundColor: colors.surface,
-      marginHorizontal: Platform.OS === 'android' ? 8 : 12,
+      marginHorizontal: Platform.OS === 'android' ? 16 : 12,
+      borderRadius: 12,
+      padding: Platform.OS === 'android' ? 12 : 16,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    sectionCard: {
+      backgroundColor: colors.surface,
+      marginHorizontal: Platform.OS === 'android' ? 16 : 12,
       borderRadius: 12,
       padding: Platform.OS === 'android' ? 12 : 16,
       marginBottom: 16,
@@ -729,16 +744,16 @@ const getStyles = (colors: ThemeColors) =>
       fontFamily: 'Inter-SemiBold',
       color: colors.primary,
       marginTop: 0,
-      marginBottom: Platform.OS === 'android' ? 4 : 6,
-      paddingHorizontal: Platform.OS === 'android' ? 8 : 12,
+      marginBottom: Platform.OS === 'android' ? 8 : 6,
+      paddingHorizontal: 0,
     },
     sectionTitleDiet: {
       fontSize: Platform.OS === 'android' ? 16 : 18,
       fontFamily: 'Inter-SemiBold',
       color: colors.dietary,
       marginTop: 0,
-      marginBottom: Platform.OS === 'android' ? 4 : 6,
-      paddingHorizontal: Platform.OS === 'android' ? 8 : 12,
+      marginBottom: Platform.OS === 'android' ? 8 : 6,
+      paddingHorizontal: 0,
     },
 
     // Chips
@@ -746,8 +761,8 @@ const getStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: Platform.OS === 'android' ? 4 : 6,
-      paddingHorizontal: Platform.OS === 'android' ? 8 : 12,
-      marginBottom: 16,
+      paddingHorizontal: 0,
+      marginBottom: 0,
     },
     chip: {
       paddingVertical: Platform.OS === 'android' ? 6 : 8,
@@ -765,7 +780,6 @@ const getStyles = (colors: ThemeColors) =>
       backgroundColor: colors.dietary,
       borderColor: colors.dietary,
     },
-    chipText: { fontSize: 12, fontFamily: 'Inter-Medium', color: colors.text },
     chipText: { 
       fontSize: Platform.OS === 'android' ? 11 : 12, 
       fontFamily: 'Inter-Medium', 
@@ -781,10 +795,9 @@ const getStyles = (colors: ThemeColors) =>
     // Theme toggle
     settingsRow: {
       flexDirection: 'row',
-      paddingHorizontal: Platform.OS === 'android' ? 8 : 12,
       gap: Platform.OS === 'android' ? 8 : 12,
-      marginBottom: 8,
-      marginTop: 4,
+      marginBottom: 0,
+      marginTop: 0,
     },
     themeContainer: {
       flex: 1,
@@ -815,14 +828,14 @@ const getStyles = (colors: ThemeColors) =>
       color: '#FFFFFF',
     },
     themeText: {
-      fontSize: Platform.OS === 'android' ? 14 : 16,
+      fontSize: Platform.OS === 'android' ? 13 : 16,
       fontFamily: 'Inter-Medium',
       color: colors.text,
     },
 
     // Buttons
     button: {
-      paddingVertical: 8,
+      paddingVertical: Platform.OS === 'android' ? 6 : 8,
       borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
@@ -830,7 +843,7 @@ const getStyles = (colors: ThemeColors) =>
     },
     buttonRow: {
       flexDirection: 'row',
-      paddingHorizontal: Platform.OS === 'android' ? 8 : 12,
+      paddingHorizontal: Platform.OS === 'android' ? 16 : 12,
       gap: Platform.OS === 'android' ? 8 : 12,
       marginTop: 8,
       marginBottom: 12,
@@ -840,7 +853,10 @@ const getStyles = (colors: ThemeColors) =>
       backgroundColor: colors.primary,
       borderColor: colors.primary,
     },
-    buttonText: { fontSize: 14, fontFamily: 'Inter-SemiBold' },
+    buttonText: { 
+      fontSize: Platform.OS === 'android' ? 13 : 14, 
+      fontFamily: 'Inter-SemiBold' 
+    },
     saveButtonText: { color: '#FFFFFF' },
     signOutButton: { 
       flex: 1,
