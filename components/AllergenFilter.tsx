@@ -47,7 +47,7 @@ export default function AllergenFilter({
     },
     title: {
       fontFamily: 'Inter-SemiBold',
-      fontSize: Platform.OS === 'android' ? 13 : 15,
+      fontSize: Platform.OS === 'android' ? 11 : 15,
       color: colors.primary,
       marginLeft: 8,
     },
@@ -56,7 +56,7 @@ export default function AllergenFilter({
     },
     clearButtonText: {
       fontFamily: 'Inter-Regular',
-      fontSize: Platform.OS === 'android' ? 12 : 14,
+      fontSize: Platform.OS === 'android' ? 10 : 14,
       color: colors.primary,
     },
     filters: {
@@ -79,7 +79,7 @@ export default function AllergenFilter({
       borderColor: colors.primary,
     },
     filterText: {
-      fontSize: Platform.OS === 'android' ? 11 : 13,
+      fontSize: Platform.OS === 'android' ? 9 : 13,
       color: colors.text,
     },
     activeFilterText: {
@@ -96,7 +96,7 @@ export default function AllergenFilter({
     },
     activeFiltersText: {
       fontFamily: 'Inter-Regular',
-      fontSize: Platform.OS === 'android' ? 11 : 13,
+      fontSize: Platform.OS === 'android' ? 9 : 13,
       color: colors.text,
     },
     activeFiltersHighlight: {
