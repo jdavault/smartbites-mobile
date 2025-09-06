@@ -690,7 +690,7 @@ const getStyles = (colors: ThemeColors) =>
       fontSize: 15,
       fontFamily: 'Inter-Regular',
       color: colors.text,
-      backgroundColor: colors.background,
+      backgroundColor: colors.backgroundLight,
     },
 
     // NEW: state select button (looks like input)
@@ -719,7 +719,7 @@ const getStyles = (colors: ThemeColors) =>
       backgroundColor: colors.surface,
       marginHorizontal: Platform.OS === 'android' ? 16 : 12,
       borderRadius: 12,
-      padding: Platform.OS === 'android' ? 12 : 16,
+      padding: Platform.OS === 'android' ? 8 : 16,
       marginBottom: 16,
       borderWidth: 1,
       borderColor: colors.border,
@@ -743,16 +743,16 @@ const getStyles = (colors: ThemeColors) =>
       fontSize: Platform.OS === 'android' ? 16 : 18,
       fontFamily: 'Inter-SemiBold',
       color: colors.primary,
-      marginTop: 0,
-      marginBottom: Platform.OS === 'android' ? 8 : 6,
+      marginTop: Platform.OS === 'android' ? 2 : 0,
+      marginBottom: Platform.OS === 'android' ? 4 : 6,
       paddingHorizontal: 0,
     },
     sectionTitleDiet: {
       fontSize: Platform.OS === 'android' ? 16 : 18,
       fontFamily: 'Inter-SemiBold',
       color: colors.dietary,
-      marginTop: 0,
-      marginBottom: Platform.OS === 'android' ? 8 : 6,
+      marginTop: Platform.OS === 'android' ? 2 : 0,
+      marginBottom: Platform.OS === 'android' ? 4 : 6,
       paddingHorizontal: 0,
     },
 
@@ -770,7 +770,7 @@ const getStyles = (colors: ThemeColors) =>
       borderRadius: 999,
       borderWidth: 1,
       borderColor: colors.border,
-      backgroundColor: colors.surface,
+      backgroundColor: colors.backgroundLight,
     },
     chipSelected: {
       backgroundColor: colors.primary,
