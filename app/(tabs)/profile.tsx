@@ -690,8 +690,8 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       borderRadius: 9,
       paddingHorizontal: 12,
-      paddingVertical: Platform.OS === 'android' ? 6 : 9,
-      fontSize: 15,
+      paddingVertical: Platform.OS === 'android' ? 4 : 9,
+      fontSize: Platform.OS === 'android' ? 13 : 15,
       fontFamily: 'Inter-Regular',
       color: colors.text,
       backgroundColor: colors.backgroundLight,
@@ -817,8 +817,8 @@ const getStyles = (colors: ThemeColors) =>
     },
     deleteAccountButton: {
       flex: 1,
-      paddingHorizontal: Platform.OS === 'android' ? 10 : 12,
-      paddingVertical: Platform.OS === 'android' ? 6 : 8,
+      paddingHorizontal: Platform.OS === 'android' ? 8 : 12,
+      paddingVertical: Platform.OS === 'android' ? 8 : 8,
       backgroundColor: colors.error,
       borderRadius: 12,
       alignItems: 'center',
@@ -827,12 +827,13 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.error,
     },
     deleteAccountText: {
-      fontSize: Platform.OS === 'android' ? 14 : 16,
+      fontSize: Platform.OS === 'android' ? 12 : 16,
       fontFamily: 'Inter-Medium',
       color: '#FFFFFF',
+      textAlign: 'center',
     },
     themeText: {
-      fontSize: Platform.OS === 'android' ? 13 : 16,
+      fontSize: Platform.OS === 'android' ? 12 : 16,
       fontFamily: 'Inter-Medium',
       color: colors.text,
     },
@@ -858,7 +859,7 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.primary,
     },
     buttonText: { 
-      fontSize: Platform.OS === 'android' ? 13 : 14, 
+      fontSize: Platform.OS === 'android' ? 12 : 14, 
       fontFamily: 'Inter-SemiBold' 
     },
     saveButtonText: { color: '#FFFFFF' },
