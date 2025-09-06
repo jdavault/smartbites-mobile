@@ -666,13 +666,11 @@ const getStyles = (colors: ThemeColors) =>
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
       marginBottom: 8,
-      lineHeight: 24,
     },
     subtitle: {
       fontSize: Platform.OS === 'android' ? 12 : 16,
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
-      lineHeight: Platform.OS === 'android' ? 16 : 20,
     },
 
     // Form styling
