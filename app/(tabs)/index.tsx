@@ -343,7 +343,7 @@ export default function SearchScreen() {
       paddingVertical: Platform.OS === 'android' ? 4 : 8,
       borderWidth: 1,
       borderColor: colors.border,
-      minHeight: Platform.OS === 'android' ? 52 : 'auto',
+      minHeight: Platform.OS === 'android' ? 40 : 'auto',
     },
     searchIcon: {
       marginRight: 12,
