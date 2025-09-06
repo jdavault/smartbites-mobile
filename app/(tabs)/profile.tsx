@@ -670,7 +670,7 @@ const getStyles = (colors: ThemeColors) =>
     subtitle: {
       fontSize: Platform.select({
         ios: 16,
-        android: 12,
+        android: 11,
         web: 13,
       }),
       fontFamily: 'Lato-Regular',
