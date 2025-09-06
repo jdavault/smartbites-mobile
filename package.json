@@ -6,6 +6,11 @@
   "scripts": {
     "start": "npx expo start --clear",
     "dev": "npx expo start --dev-client --clear",
+    "env:dev": "node scripts/set-env.js development",
+    "env:staging": "node scripts/set-env.js staging", 
+    "env:prod": "node scripts/set-env.js production",
+    "dev:local": "npm run env:dev && npm run dev",
+    "dev:prod": "npm run env:prod && npm run dev",
     "build:web": "npx expo export --platform web --output-dir dist && cp public/_redirects dist/_redirects && mkdir -p dist/.well-known && cp public/.well-known/assetlinks.json dist/.well-known/ && cp public/.well-known/apple-app-site-association dist/.well-known/ && cp public/.well-known/apple-app-site-association dist/",
     "lint": "npx expo lint",
     "build:ios:native": "rm -rf node_modules/.cache/babel-loader/* .expo ios && npx expo prebuild --platform ios --clean",
