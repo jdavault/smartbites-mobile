@@ -680,7 +680,7 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       borderRadius: 9,
       paddingHorizontal: 12,
-      paddingVertical: 9,
+      paddingVertical: Platform.OS === 'android' ? 6 : 9,
       fontSize: 15,
       fontFamily: 'Inter-Regular',
       color: colors.text,
