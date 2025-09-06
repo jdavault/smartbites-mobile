@@ -303,7 +303,7 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>Profile</Text>
-          <Text style={styles.subtitle}>User preferences</Text>
+          <Text style={styles.subtitle}>Manage your preferences</Text>
         </View>
         <View style={styles.headerLogoContainer}>
           <Image
