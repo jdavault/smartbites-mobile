@@ -339,6 +339,7 @@ export default function SearchScreen() {
       paddingVertical: Platform.OS === 'android' ? 1 : 8,
       borderWidth: 1,
       borderColor: colors.border,
+      minHeight: Platform.OS === 'android' ? 48 : 'auto',
     },
     searchIcon: {
       marginRight: 12,
@@ -349,6 +350,8 @@ export default function SearchScreen() {
       fontFamily: 'Inter-Regular',
       color: colors.textPrimary,
       outlineWidth: 0,
+      paddingVertical: Platform.OS === 'android' ? 12 : 0,
+      textAlignVertical: Platform.OS === 'android' ? 'center' : 'auto',
     },
     searchButton: {
       backgroundColor: colors.primary,

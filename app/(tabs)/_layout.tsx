@@ -48,10 +48,10 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 12,
           fontFamily: 'Inter-Medium',
-          marginTop: 4,
+          marginTop: 2,
         },
         tabBarIconStyle: {
-          marginBottom: 2,
+          marginBottom: 0,
         },
       }}
     >
