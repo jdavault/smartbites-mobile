@@ -323,7 +323,11 @@ export default function SearchScreen() {
       marginBottom: 8,
     },
     subtitle: {
-      fontSize: Platform.OS === 'android' ? 14 : 16,
+      fontSize: Platform.select({
+        ios: 16,
+        android: 13,
+        web: 13,
+      }),
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
     },
@@ -346,7 +350,11 @@ export default function SearchScreen() {
     },
     searchInput: {
       flex: 1,
-      fontSize: Platform.OS === 'android' ? 14 : 16,
+      fontSize: Platform.select({
+        ios: 16,
+        android: 13,
+        web: 13,
+      }),
       fontFamily: 'Inter-Regular',
       color: colors.textPrimary,
       outlineWidth: 0,
