@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,6 +26,9 @@ import {
   SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE,
   SUPABASE_URL,
 } from '@/config/constants';
+
+// Safe Platform fallback for web compatibility
+const SafePlatform = Platform || { OS: 'web' };
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -319,7 +323,7 @@ const getStyles = (colors: ThemeColors) =>
       overflow: 'hidden',
       width: '100%',
       maxWidth: 380, // Prevent cards from getting too wide on large Android phones
-      height: Platform.OS === 'android' ? 580 : 520, // Taller on Android to compensate for max width
+      height: SafePlatform.OS === 'android' ? 580 : 520, // Taller on Android to compensate for max width
       alignSelf: 'center', // Center the card when it hits max width
     },
     previewCard: {
