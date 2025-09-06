@@ -171,9 +171,8 @@ export async function callOpenAI(
   const body = {
     model: DEFAULT_MODEL,
     temperature: 0.3,
-    max_tokens: 2000,
+    max_tokens: 1400,
     response_format: { type: 'json_object' },
-    max_tokens: 2000,
     messages,
     ...options,
   };
@@ -257,7 +256,7 @@ export async function generateRecipes(
       Final Recipe Rules:
         Allergens
           - "allergensToAvoid": Array of allergens that must be excluded from the recipe (from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)).
-          - "allergensIncluded": Array of allergens that ARE present in the recipe’s actual ingredients. REQUIRED. [] if none.
+          - "allergensIncluded": Array of allergens that ARE present in the recipe's actual ingredients. REQUIRED. [] if none.
           - You MUST scan the "ingredients" list and explicitly cross-check against this allergen list.
           - Cross-check each ingredient against this allergen mapping:
               • Any cheese, milk, cream, yogurt → Milk
@@ -320,7 +319,7 @@ export async function generateRecipes(
     const data = await callOpenAI(messages, {
       model: DEFAULT_MODEL,
       temperature: 0.3,
-      max_tokens: 2000,
+      max_tokens: 1400,
       seed: 7,
       response_format: {
         type: 'json_schema',
