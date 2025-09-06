@@ -46,7 +46,7 @@ export default function TabLayout() {
           height: tabBarHeight,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: Platform.OS === 'android' ? 10 : 12,
           fontFamily: 'Inter-Medium',
           marginTop: 2,
         },
