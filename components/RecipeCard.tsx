@@ -41,6 +41,7 @@ interface RecipeCardProps {
   selectedAllergens?: { $id: string; name: string }[];
   isSaving?: boolean;
   isFavoriting?: boolean;
+  isHorizontalLayout?: boolean;
 }
 
 export default function RecipeCard({
@@ -54,6 +55,7 @@ export default function RecipeCard({
   selectedAllergens = [],
   isSaving = false,
   isFavoriting = false,
+  isHorizontalLayout = false,
 }: RecipeCardProps) {
   const { colors } = useTheme();
   const { user } = useAuth();
@@ -198,7 +200,7 @@ export default function RecipeCard({
 
   // Show full version with image for saved recipes
   return (
-    <TouchableOpacity style={styles.card} onPress={handleCardPress}>
+    <TouchableOpacity style={[styles.card, isHorizontalLayout && styles.cardWithMaxWidth]} onPress={handleCardPress}>
       {getImageUrl() && (
         <Image source={{ uri: getImageUrl()! }} style={styles.image} />
       )}
@@ -322,7 +324,10 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       overflow: 'hidden',
       width: '100%',
-      maxWidth: 380, // Prevent cards from getting too wide on large Android phones
+      height: SafePlatform.OS === 'android' ? 520 : 520,
+    },
+    cardWithMaxWidth: {
+      maxWidth: 380, // Only apply max width for horizontal layouts
       height: SafePlatform.OS === 'android' ? 580 : 520, // Taller on Android to compensate for max width
       alignSelf: 'center', // Center the card when it hits max width
     },
