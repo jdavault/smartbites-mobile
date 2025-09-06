@@ -425,6 +425,7 @@ export class RecipeService {
         try {
           await this.persistRecipeImage({
             recipeTitle: recipe.title,
+            recipeIngredients: recipe.ingredients,
             searchQuery: recipe.searchQuery,
             allergenNames: userAllergens,
             recipeId,
@@ -610,12 +611,14 @@ export class RecipeService {
 
   static async persistRecipeImage({
     recipeTitle,
+    recipeIngredients,
     searchQuery,
     allergenNames,
     recipeId,
     userId,
   }: {
     recipeTitle: string;
+    recipeIngredients: string[];
     searchQuery: string;
     recipeId: string;
     allergenNames: string[];
@@ -625,7 +628,31 @@ export class RecipeService {
       console.log('🖼️ Start image generation:', recipeTitle);
 
       const fileName = formatImageName(searchQuery, allergenNames, 'png').replace('.png', '');
-      const prompt = `High quality food photo of ${recipeTitle}, professional lighting, styled on a plate`;
+      
+      // Create a more detailed prompt using key ingredients
+      const keyIngredients = recipeIngredients
+        .slice(0, 5) // Use first 5 ingredients to avoid overly long prompts
+        .map(ingredient => {
+          // Extract the main ingredient name (remove quantities and prep instructions)
+          return ingredient
+            .replace(/^\d+[\s\w]*\s+/, '') // Remove quantities like "2 cups", "1 lb"
+            .replace(/,.*$/, '') // Remove everything after comma
+            .replace(/\(.*?\)/g, '') // Remove parenthetical notes
+            .trim()
+            .split(' ')
+            .slice(0, 2) // Take first 2 words max
+            .join(' ');
+        })
+        .filter(ingredient => ingredient.length > 2) // Filter out very short words
+        .slice(0, 3); // Limit to 3 key ingredients for prompt clarity
+      
+      const ingredientsText = keyIngredients.length > 0 
+        ? ` featuring ${keyIngredients.join(', ')}`
+        : '';
+      
+      const prompt = `High quality food photo of ${recipeTitle}${ingredientsText}, professional lighting, styled on a plate`;
+      
+      console.log('🖼️ Generated image prompt:', prompt);
       
       const result = await generateAndUploadImage({
         prompt,
