@@ -629,7 +629,7 @@ const getStyles = (colors: ThemeColors) =>
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: Platform.OS === 'android' ? 16 : 24,
-      paddingTop: Platform.OS === 'android' ? 24 : 4,
+      paddingTop: Platform.OS === 'android' ? 32 : 4,
       paddingBottom: Platform.OS === 'android' ? 2 : 4,
       backgroundColor: colors.surface,
       marginBottom: 12,
