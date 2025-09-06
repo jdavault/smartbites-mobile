@@ -290,28 +290,28 @@ CREATE POLICY "Users can delete own recipes"
   USING (auth.uid() = user_id);
 
 -- Insert standard allergens (FDA top 9)
-INSERT INTO allergens (id, name, description) VALUES
-  ('6836b268000f852ce32b', 'Wheat (Gluten)', 'Wheat and gluten-containing grains'),
-  ('6836b2890017ba0e92c1', 'Milk', 'Milk and dairy products'),
-  ('6836b2e700115cf70cf4', 'Eggs', 'Eggs and egg products'),
-  ('6836b38300375094419d', 'Sesame', 'Sesame seeds and sesame products'),
-  ('6836b36600054111f911', 'Soybeans', 'Soy and soy products'),
-  ('6836b34d000d469c9b61', 'Fish', 'Fish and fish products'),
-  ('6836b33600072b4ac17a', 'Shellfish', 'Shellfish and crustaceans'),
-  ('6836b31b00340746396b', 'Peanuts', 'Peanuts and peanut products'),
-  ('6836b30500330c1cdc5e', 'Tree Nuts', 'Tree nuts and tree nut products')
+INSERT INTO allergens (name, description) VALUES
+  ('Wheat (Gluten)', 'Wheat and gluten-containing grains'),
+  ('Milk', 'Milk and dairy products'),
+  ('Eggs', 'Eggs and egg products'),
+  ('Sesame', 'Sesame seeds and sesame products'),
+  ('Soybeans', 'Soy and soy products'),
+  ('Fish', 'Fish and fish products'),
+  ('Shellfish', 'Shellfish and crustaceans'),
+  ('Peanuts', 'Peanuts and peanut products'),
+  ('Tree Nuts', 'Tree nuts and tree nut products')
 ON CONFLICT (name) DO NOTHING;
 
 -- Insert common dietary preferences
-INSERT INTO dietary_prefs (id, name, description) VALUES
-  ('mediterranean', 'Mediterranean', 'Mediterranean diet focusing on whole foods'),
-  ('low-sodium', 'Low Sodium', 'Reduced sodium content'),
-  ('keto', 'Keto', 'Ketogenic low-carb diet'),
-  ('diabetic', 'Diabetic', 'Diabetic-friendly recipes'),
-  ('vegan', 'Vegan', 'Plant-based, no animal products'),
-  ('vegetarian', 'Vegetarian', 'Vegetarian diet'),
-  ('whole-30', 'Whole 30', 'Whole30 compliant recipes'),
-  ('paleo', 'Paleo', 'Paleolithic diet')
+INSERT INTO dietary_prefs (name, description) VALUES
+  ('Mediterranean', 'Mediterranean diet focusing on whole foods'),
+  ('Low Sodium', 'Reduced sodium content'),
+  ('Keto', 'Ketogenic low-carb diet'),
+  ('Diabetic', 'Diabetic-friendly recipes'),
+  ('Vegan', 'Plant-based, no animal products'),
+  ('Vegetarian', 'Vegetarian diet'),
+  ('Whole 30', 'Whole30 compliant recipes'),
+  ('Paleo', 'Paleolithic diet')
 ON CONFLICT (name) DO NOTHING;
 
 -- Create indexes for better performance
