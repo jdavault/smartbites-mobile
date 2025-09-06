@@ -69,7 +69,7 @@ export default function RestaurantsScreen() {
       marginBottom: 8,
     },
     subtitle: {
-      fontSize: Platform.OS === 'android' ? 12 : 16,
+      fontSize: Platform.OS === 'android' ? 14 : 16,
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
     },
