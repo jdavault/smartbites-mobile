@@ -100,6 +100,7 @@ export default function RecipeSection({
                 recipe={recipe}
                 onToggleFavorite={() => onToggleFavorite(recipe.id!)}
                 onDelete={onDelete ? () => onDelete(recipe.id!) : undefined}
+                isHorizontalLayout={horizontal}
               />
             </View>
           ))}
