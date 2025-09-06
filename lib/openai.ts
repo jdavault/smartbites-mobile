@@ -320,7 +320,7 @@ export async function generateRecipes(
     const data = await callOpenAI(messages, {
       model: DEFAULT_MODEL,
       temperature: 0.3,
-      max_tokens: 1400,
+      max_tokens: 2000,
       seed: 7,
       response_format: {
         type: 'json_schema',
