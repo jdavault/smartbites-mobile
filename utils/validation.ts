@@ -4,7 +4,7 @@ export function validateFoodQuery(query: string): { isValid: boolean; suggestion
   
   // Common non-food keywords that should be rejected
   const nonFoodKeywords = [
-    'car', 'engine', 'java', 'javascript', 'python', 'code', 'program', 'app', 'website',
+    'car', 'engine', 'java', 'javascript', 'python', 'code', 'program', 'website',
     'computer', 'software', 'hardware', 'build', 'create', 'develop', 'install',
     'download', 'upload', 'server', 'database', 'api', 'framework', 'library',
     'algorithm', 'function', 'class', 'variable', 'array', 'object', 'method',
@@ -31,9 +31,10 @@ export function validateFoodQuery(query: string): { isValid: boolean; suggestion
     'plumbing', 'electrical', 'construction', 'renovation', 'diy project'
   ];
   
-  // Check if query contains non-food keywords
+  // Check if query contains non-food keywords (must be exact word matches, not partial)
+  const words = normalizedQuery.split(/\s+/);
   const containsNonFood = nonFoodKeywords.some(keyword => 
-    normalizedQuery.includes(keyword)
+    words.includes(keyword) || normalizedQuery === keyword
   );
   
   if (containsNonFood) {
