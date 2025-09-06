@@ -225,7 +225,7 @@ export default function RestaurantsScreen() {
       borderTopColor: colors.border,
     },
     mobileBetaText: {
-      fontSize: 12,
+      fontSize: Platform.OS === 'android' ? 10 : 12,
       fontFamily: 'Inter-Regular',
       color: colors.textSecondary,
       textAlign: 'center',
