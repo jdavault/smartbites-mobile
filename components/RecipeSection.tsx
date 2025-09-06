@@ -61,7 +61,10 @@ export default function RecipeSection({
       marginBottom: 8,
     },
     sectionTitle: {
-      fontSize: 20,
+      fontSize: Platform.select({
+        android: 16, // 20% smaller for Android
+        default: 20, // Keep iOS/web at 20
+      }),
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
       marginBottom: 12,
