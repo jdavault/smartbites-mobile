@@ -340,7 +340,7 @@ export default function SearchScreen() {
       backgroundColor: colors.surface,
       borderRadius: 12,
       paddingHorizontal: 10,
-      paddingVertical: Platform.OS === 'android' ? 8 : 8,
+      paddingVertical: Platform.OS === 'android' ? 4 : 8,
       borderWidth: 1,
       borderColor: colors.border,
       minHeight: Platform.OS === 'android' ? 52 : 'auto',
