@@ -260,7 +260,7 @@ export default function LoginScreen() {
                               styles.googleButtonText,
                             ]}
                           >
-                            Google SignIn
+                            Google Sign In
                           </Text>
                         </TouchableOpacity>
 
@@ -281,7 +281,7 @@ export default function LoginScreen() {
                               styles.appleButtonText,
                             ]}
                           >
-                            Apple SignIn
+                            Apple Sign In
                           </Text>
                         </TouchableOpacity>
                       </View>
