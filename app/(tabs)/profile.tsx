@@ -665,7 +665,7 @@ const getStyles = (colors: ThemeColors) =>
       fontSize: 20,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
-      marginBottom: 4,
+      marginBottom: 8,
       lineHeight: 24,
     },
     subtitle: {
