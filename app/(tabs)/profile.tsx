@@ -628,7 +628,7 @@ const getStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: Platform.OS === 'android' ? 16 : 24,
+      paddingHorizontal: 24,
       paddingTop: Platform.OS === 'android' ? 32 : 4,
       paddingBottom: 2,
       backgroundColor: colors.surface,
@@ -668,7 +668,7 @@ const getStyles = (colors: ThemeColors) =>
       marginBottom: 4,
     },
     subtitle: {
-      fontSize: Platform.OS === 'android' ? 11 : 16,
+      fontSize: Platform.OS === 'android' ? 12 : 16,
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
     },
