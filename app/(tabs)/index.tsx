@@ -325,7 +325,7 @@ export default function SearchScreen() {
     subtitle: {
       fontSize: Platform.select({
         ios: 16,
-        android: 13,
+        android: 12,
         web: 13,
       }),
       fontFamily: 'Lato-Regular',
@@ -352,7 +352,7 @@ export default function SearchScreen() {
       flex: 1,
       fontSize: Platform.select({
         ios: 16,
-        android: 13,
+        android: 12,
         web: 13,
       }),
       fontFamily: 'Inter-Regular',
