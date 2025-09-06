@@ -279,7 +279,7 @@ export default function SearchScreen() {
       alignItems: 'center',
       paddingHorizontal: 24, // reverted back
       paddingTop: Platform.OS === 'android' ? 32 : 4,
-      paddingBottom: 4,
+      paddingBottom: 2,
       backgroundColor: colors.surface,
       marginBottom: 12,
     },
