@@ -662,7 +662,7 @@ const getStyles = (colors: ThemeColors) =>
       letterSpacing: 0.5,
     },
     title: {
-      fontSize: Platform.OS === 'android' ? 24 : 28,
+      fontSize: 20,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
       marginBottom: 4,
