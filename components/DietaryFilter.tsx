@@ -46,7 +46,7 @@ export default function DietaryFilter({
     },
     title: {
       fontFamily: 'Inter-SemiBold',
-      fontSize: Platform.OS === 'android' ? 13 : 15,
+      fontSize: Platform.OS === 'android' ? 11 : 15,
       color: colors.dietary,
       marginLeft: 8,
     },
@@ -55,7 +55,7 @@ export default function DietaryFilter({
     },
     clearButtonText: {
       fontFamily: 'Inter-Regular',
-      fontSize: Platform.OS === 'android' ? 12 : 14,
+      fontSize: Platform.OS === 'android' ? 10 : 14,
       color: colors.dietary,
     },
     filters: {
@@ -78,7 +78,7 @@ export default function DietaryFilter({
       borderColor: colors.dietary,
     },
     filterText: {
-      fontSize: Platform.OS === 'android' ? 11 : 13,
+      fontSize: Platform.OS === 'android' ? 9 : 13,
       fontFamily: 'Inter-Regular',
       color: colors.text,
     },
@@ -96,7 +96,7 @@ export default function DietaryFilter({
     },
     activeFiltersText: {
       fontFamily: 'Inter-Regular',
-      fontSize: Platform.OS === 'android' ? 11 : 13,
+      fontSize: Platform.OS === 'android' ? 9 : 13,
       color: colors.text,
     },
     activeFiltersHighlight: {
