@@ -66,7 +66,7 @@ export default function RestaurantsScreen() {
       fontSize: 20,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
-      marginBottom: 4,
+      marginBottom: 8,
     },
     subtitle: {
       fontSize: Platform.OS === 'android' ? 12 : 16,
