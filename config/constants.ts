@@ -8,30 +8,30 @@ const getEnvironment = () => {
     (__DEV__ ? 'development' : 'production');
 
   if (appEnv === 'production') return 'production';
-  if (appEnv === 'test') return 'test';
+  if (appEnv === 'local') return 'local';
   return 'development';
 };
 
 // Environment-specific configuration
 const configs = {
   development: {
+    SUPABASE_URL: 'https://ahikcpeeuyaxyssscgqk.supabase.co',
+    SUPABASE_ANON_KEY: 'sb_publishable_tEXAe_K7Oqkx7OETDgRTCw_YSFvjPpH',
+    APP_BASE_URL: 'https://smartbites.food',
+    RECIPE_IMAGES_PUBLIC_ROUTE: '/storage/v1/object/public/recipe-images',
+    CONTACT_EMAIL: 'support@smartbites.food',
+    SUPPORT_EMAIL: 'support@smartbites.food',
+    SUPPORT_PHONE: '623-220-9724',
+    RESET_PASSWORD_ROUTE: '/reset-password',
+    DEBUG_APP: false,
+  },
+  local: {
     SUPABASE_URL: 'http://127.0.0.1:54321',
     SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
     APP_BASE_URL: 'http://localhost:8081',
     RECIPE_IMAGES_PUBLIC_ROUTE: '/storage/v1/object/public/recipe-images',
     CONTACT_EMAIL: 'support@smartbites.food',
     SUPPORT_EMAIL: 'support@smartbites.food',
-    SUPPORT_PHONE: '623-220-9724',
-    RESET_PASSWORD_ROUTE: '/reset-password',
-    DEBUG_APP: true,
-  },
-  test: {
-    SUPABASE_URL: 'http://127.0.0.1:54321',
-    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
-    APP_BASE_URL: 'http://localhost:8081',
-    RECIPE_IMAGES_PUBLIC_ROUTE: '/storage/v1/object/public/recipe-images',
-    CONTACT_EMAIL: 'test@smartbites.food',
-    SUPPORT_EMAIL: 'test@smartbites.food',
     SUPPORT_PHONE: '623-220-9724',
     RESET_PASSWORD_ROUTE: '/reset-password',
     DEBUG_APP: true,
@@ -71,8 +71,8 @@ export const REDIRECT_URLS = {
 
 export const DEBUG_APP = currentConfig.DEBUG_APP;
 export const isDevelopment = CURRENT_ENV === 'development';
+export const isLocal = CURRENT_ENV === 'local';
 export const isProduction = CURRENT_ENV === 'production';
-export const isTest = CURRENT_ENV === 'test';
 
 // Log current environment for debugging
 console.log(`🌍 Environment: ${CURRENT_ENV}`);
