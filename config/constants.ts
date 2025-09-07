@@ -1,15 +1,4 @@
 // config/constants.ts
-import {
-  EXPO_PUBLIC_SUPABASE_URL,
-  EXPO_PUBLIC_SUPABASE_KEY,
-  EXPO_PUBLIC_SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE,
-  EXPO_PUBLIC_APP_BASE_URL,
-  EXPO_PUBLIC_CONTACT_EMAIL,
-  EXPO_PUBLIC_SUPPORT_EMAIL,
-  EXPO_PUBLIC_SUPPORT_PHONE,
-  EXPO_PUBLIC_RESET_PASSWORD_ROUTE,
-  EXPO_PUBLIC_DEBUG_APP,
-} from '@env';
 
 const getEnvironment = () => {
   const appEnv =
@@ -23,16 +12,56 @@ const getEnvironment = () => {
   return 'development';
 };
 
-// All values come directly from the environment file selected by getEnvironment()
+// Environment-specific configuration
+const configs = {
+  development: {
+    SUPABASE_URL: 'http://127.0.0.1:54321',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
+    APP_BASE_URL: 'http://localhost:8081',
+    RECIPE_IMAGES_PUBLIC_ROUTE: '/storage/v1/object/public/recipe-images',
+    CONTACT_EMAIL: 'support@smartbites.food',
+    SUPPORT_EMAIL: 'support@smartbites.food',
+    SUPPORT_PHONE: '623-220-9724',
+    RESET_PASSWORD_ROUTE: '/reset-password',
+    DEBUG_APP: true,
+  },
+  test: {
+    SUPABASE_URL: 'http://127.0.0.1:54321',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
+    APP_BASE_URL: 'http://localhost:8081',
+    RECIPE_IMAGES_PUBLIC_ROUTE: '/storage/v1/object/public/recipe-images',
+    CONTACT_EMAIL: 'test@smartbites.food',
+    SUPPORT_EMAIL: 'test@smartbites.food',
+    SUPPORT_PHONE: '623-220-9724',
+    RESET_PASSWORD_ROUTE: '/reset-password',
+    DEBUG_APP: true,
+  },
+  production: {
+    SUPABASE_URL: 'https://ahikcpeeuyaxyssscgqk.supabase.co',
+    SUPABASE_ANON_KEY: 'sb_publishable_tEXAe_K7Oqkx7OETDgRTCw_YSFvjPpH',
+    APP_BASE_URL: 'https://smartbites.food',
+    RECIPE_IMAGES_PUBLIC_ROUTE: '/storage/v1/object/public/recipe-images',
+    CONTACT_EMAIL: 'support@smartbites.food',
+    SUPPORT_EMAIL: 'support@smartbites.food',
+    SUPPORT_PHONE: '623-220-9724',
+    RESET_PASSWORD_ROUTE: '/reset-password',
+    DEBUG_APP: false,
+  },
+};
+
+// Get current environment and config
 export const CURRENT_ENV = getEnvironment();
-export const APP_URL = EXPO_PUBLIC_APP_BASE_URL;
-export const SUPABASE_URL = EXPO_PUBLIC_SUPABASE_URL;
-export const SUPABASE_ANON_KEY = EXPO_PUBLIC_SUPABASE_KEY;
-export const SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE = EXPO_PUBLIC_SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE;
-export const CONTACT_EMAIL = EXPO_PUBLIC_CONTACT_EMAIL;
-export const SUPPORT_EMAIL = EXPO_PUBLIC_SUPPORT_EMAIL;
-export const SUPPORT_PHONE = EXPO_PUBLIC_SUPPORT_PHONE;
-export const RESET_PASSWORD_ROUTE = EXPO_PUBLIC_RESET_PASSWORD_ROUTE;
+const currentConfig = configs[CURRENT_ENV as keyof typeof configs];
+
+// Export all constants
+export const APP_URL = currentConfig.APP_BASE_URL;
+export const SUPABASE_URL = currentConfig.SUPABASE_URL;
+export const SUPABASE_ANON_KEY = currentConfig.SUPABASE_ANON_KEY;
+export const SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE = currentConfig.RECIPE_IMAGES_PUBLIC_ROUTE;
+export const CONTACT_EMAIL = currentConfig.CONTACT_EMAIL;
+export const SUPPORT_EMAIL = currentConfig.SUPPORT_EMAIL;
+export const SUPPORT_PHONE = currentConfig.SUPPORT_PHONE;
+export const RESET_PASSWORD_ROUTE = currentConfig.RESET_PASSWORD_ROUTE;
 export const LOGIN_ROUTE = '/sign-in';
 
 export const REDIRECT_URLS = {
@@ -40,7 +69,7 @@ export const REDIRECT_URLS = {
   signIn: `${APP_URL}${LOGIN_ROUTE}`,
 };
 
-export const DEBUG_APP = EXPO_PUBLIC_DEBUG_APP === 'true';
+export const DEBUG_APP = currentConfig.DEBUG_APP;
 export const isDevelopment = CURRENT_ENV === 'development';
 export const isProduction = CURRENT_ENV === 'production';
 export const isTest = CURRENT_ENV === 'test';
