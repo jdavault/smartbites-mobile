@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
   Image,
+  Platform,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ChefHat, MapPin, Calendar, Globe, Star, Clock } from 'lucide-react-native';
@@ -19,37 +20,66 @@ export default function RestaurantsScreen() {
       backgroundColor: colors.background,
     },
     header: {
-      paddingHorizontal: 24,
-      paddingTop: 8,
-      paddingBottom: 8,
-      backgroundColor: colors.surface,
-      marginBottom: 12,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
+      paddingHorizontal: 24,
+      paddingTop: Platform.OS === 'android' ? 32 : 4,
+      paddingBottom: 2,
+      backgroundColor: colors.surface,
+      marginBottom: 12,
     },
     headerContent: {
       flex: 1,
+    },
+    headerLogoContainer: {
+      alignItems: 'center',
+      position: 'relative',
     },
     headerLogo: {
       width: 72,
       height: 72,
       marginLeft: 16,
     },
+    betaBadge: {
+      position: 'absolute',
+      top: -4,
+      right: -8,
+      backgroundColor: '#FF8866',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    betaBadgeText: {
+      fontSize: 10,
+      fontFamily: 'Inter-SemiBold',
+      color: '#FFFFFF',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
     title: {
-      fontSize: 28,
+      fontSize: 20,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
-      marginBottom: 4,
+      marginBottom: 8,
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: Platform.select({
+        ios: 16,
+        android: 11,
+        web: 13,
+      }),
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
     },
     content: {
       flex: 1,
-      paddingHorizontal: 24,
+      paddingHorizontal: 12, // keep reduced for body content
     },
     contentContainer: {
       width: '100%',
@@ -80,14 +110,14 @@ export default function RestaurantsScreen() {
       letterSpacing: 0.5,
     },
     comingSoonTitle: {
-      fontSize: 18,
+      fontSize: Platform.OS === 'android' ? 16 : 18,
       fontFamily: 'Inter-SemiBold',
       color: colors.text,
       marginBottom: 8,
       textAlign: 'center',
     },
     comingSoonText: {
-      fontSize: 14,
+      fontSize: Platform.OS === 'android' ? 12 : 14,
       fontFamily: 'Inter-Regular',
       color: colors.textSecondary,
       textAlign: 'center',
@@ -101,14 +131,14 @@ export default function RestaurantsScreen() {
       marginBottom: 12,
     },
     heroTitle: {
-      fontSize: 24,
+      fontSize: Platform.OS === 'android' ? 20 : 24,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
       textAlign: 'center',
       marginBottom: 8,
     },
     heroSubtitle: {
-      fontSize: 16,
+      fontSize: Platform.OS === 'android' ? 14 : 16,
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       textAlign: 'center',
@@ -121,7 +151,7 @@ export default function RestaurantsScreen() {
     },
     featureCard: {
       backgroundColor: colors.surface,
-      padding: 20,
+      padding: Platform.OS === 'android' ? 16 : 20,
       borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.border,
@@ -136,20 +166,20 @@ export default function RestaurantsScreen() {
       flex: 1,
     },
     featureTitle: {
-      fontSize: 16,
+      fontSize: Platform.OS === 'android' ? 14 : 16,
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
       marginBottom: 8,
     },
     featureDescription: {
-      fontSize: 14,
+      fontSize: Platform.OS === 'android' ? 12 : 14,
       fontFamily: 'Inter-Regular',
       color: colors.textSecondary,
       lineHeight: 20,
     },
     websiteSection: {
       backgroundColor: colors.surface,
-      padding: 20,
+      padding: Platform.OS === 'android' ? 16 : 20,
       borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.border,
@@ -164,18 +194,18 @@ export default function RestaurantsScreen() {
       flex: 1,
     },
     websiteTitle: {
-      fontSize: 16,
+      fontSize: Platform.OS === 'android' ? 14 : 16,
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
       marginBottom: 4,
     },
     websiteText: {
-      fontSize: 14,
+      fontSize: Platform.OS === 'android' ? 12 : 14,
       fontFamily: 'Inter-Regular',
       color: colors.textSecondary,
     },
     websiteUrl: {
-      fontSize: 14,
+      fontSize: Platform.OS === 'android' ? 12 : 14,
       fontFamily: 'Inter-Medium',
       color: colors.primary,
       marginTop: 4,
@@ -186,6 +216,19 @@ export default function RestaurantsScreen() {
     },
     trademark: {
       fontFamily: 'Inter-Regular',
+    },
+    mobileBetaFooter: {
+      paddingHorizontal: 24,
+      paddingVertical: 8,
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    mobileBetaText: {
+      fontSize: Platform.OS === 'android' ? 10 : 12,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
     },
     futureFeatures: {
       gap: 16,
@@ -218,11 +261,18 @@ export default function RestaurantsScreen() {
           <Text style={styles.title}>Restaurants</Text>
           <Text style={styles.subtitle}>Find allergy-friendly dining options</Text>
         </View>
-        <Image
-          source={require('@/assets/images/smart-bites-logo.png')}
-          style={styles.headerLogo}
-          resizeMode="contain"
-        />
+        <View style={styles.headerLogoContainer}>
+          <Image
+            source={require('@/assets/images/smart-bites-logo.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
+          {Platform.OS !== 'web' && (
+            <View style={styles.betaBadge}>
+              <Text style={styles.betaBadgeText}>Beta</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -305,6 +355,15 @@ export default function RestaurantsScreen() {
         </Text>
         </View>
       </ScrollView>
+
+      {/* Mobile Beta Footer */}
+      {Platform.OS !== 'web' && (
+        <View style={styles.mobileBetaFooter}>
+          <Text style={styles.mobileBetaText}>
+            Currently in beta — thanks for testing!
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

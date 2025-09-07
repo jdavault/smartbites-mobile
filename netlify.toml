@@ -1,0 +1,19 @@
+[build]
+  publish = "dist"
+  command = "npm run build:web"
+
+[[redirects]]
+  from = "/.well-known/apple-app-site-association"
+  to = "/apple-app-site-association"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/apple-app-site-association"
+  [headers.values]
+    Content-Type = "application/json"
+
+[[headers]]
+  for = "/.well-known/apple-app-site-association"
+  [headers.values]
+    Content-Type = "application/json"

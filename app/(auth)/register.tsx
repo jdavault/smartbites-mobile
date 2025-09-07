@@ -1,4 +1,4 @@
-// app/(auth)/register.tsx  
+// app/(auth)/register.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
@@ -17,17 +17,22 @@ import {
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
-import { supabase } from '@/lib/supabase';
+import { AllergenService } from '@/services/allergenService';
+import { DietaryService } from '@/services/dietaryService';
 import ThemedText from '@/components/ThemedText';
 import { ALLERGENS } from '@/contexts/AllergensContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
 import SmartBitesLogo from '@/assets/images/smart-bites-logo.png'; // 72x72
 
-const DismissWrapper = Platform.OS === 'web' ? React.Fragment : TouchableWithoutFeedback;
+const DismissWrapper =
+  Platform.OS === 'web' ? React.Fragment : TouchableWithoutFeedback;
 
 // Phone number formatting helper
 const formatPhoneNumber = (value: string): string => {
@@ -36,7 +41,10 @@ const formatPhoneNumber = (value: string): string => {
   if (digits.length <= 6) {
     return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
   } else {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(
+      6,
+      10
+    )}`;
   }
 };
 
@@ -159,39 +167,11 @@ export default function RegisterScreen() {
       try {
         setLoadingTaxonomies(true);
 
-        const { data: allergensData, error: allergensError } = await supabase
-          .from('allergens')
-          .select('id, name')
-          .order('name');
-
-        if (allergensError) {
-          console.error('Error fetching allergens:', allergensError);
-          setAllergens(ALLERGENS.map((a) => ({ id: a.$id, name: a.name })));
-        } else {
-          // Sort by the preferred order from ALLERGENS constant
-          const orderedAllergens = ALLERGENS.map(allergen => 
-            allergensData?.find(dbAllergen => dbAllergen.name === allergen.name)
-          ).filter(Boolean).map(allergen => ({ id: allergen!.id, name: allergen!.name }));
-          setAllergens(orderedAllergens);
-        }
-
-        const { data: dietPrefsData, error: dietPrefsError } = await supabase
-          .from('dietary_prefs')
-          .select('id, name')
-          .order('name');
-
-        if (dietPrefsError) {
-          console.error('Error fetching dietary preferences:', dietPrefsError);
-          setDietPrefs(
-            DIETARY_PREFERENCES.map((d) => ({ id: d.$id, name: d.name }))
-          );
-        } else {
-          // Sort by the preferred order from DIETARY_PREFERENCES constant
-          const orderedDietPrefs = DIETARY_PREFERENCES.map(pref => 
-            dietPrefsData?.find(dbPref => dbPref.name === pref.name)
-          ).filter(Boolean).map(pref => ({ id: pref!.id, name: pref!.name }));
-          setDietPrefs(orderedDietPrefs);
-        }
+        // Use fallback data from constants
+        setAllergens(ALLERGENS.map((a) => ({ id: a.$id, name: a.name })));
+        setDietPrefs(
+          DIETARY_PREFERENCES.map((d) => ({ id: d.$id, name: d.name }))
+        );
       } catch (error) {
         console.error('Error in fetchTaxonomies:', error);
         setAllergens(ALLERGENS.map((a) => ({ id: a.$id, name: a.name })));
@@ -220,15 +200,18 @@ export default function RegisterScreen() {
   const [showConsent, setShowConsent] = useState(false);
 
   // avoid re-opening loops
-  const openStates = React.useCallback((initial?: string) => {
-    if (!showStates) {
-      setShowStates(true);
-      if (initial) {
-        // delay lets the modal mount before we seed the search
-        setTimeout(() => setStateSearchText(initial.toUpperCase()), 0);
+  const openStates = React.useCallback(
+    (initial?: string) => {
+      if (!showStates) {
+        setShowStates(true);
+        if (initial) {
+          // delay lets the modal mount before we seed the search
+          setTimeout(() => setStateSearchText(initial.toUpperCase()), 0);
+        }
       }
-    }
-  }, [showStates]);
+    },
+    [showStates]
+  );
 
   const handleStateKeyPress = (key: string) => {
     // open if not open
@@ -236,11 +219,11 @@ export default function RegisterScreen() {
 
     // if user types A–Z, seed search text
     if (/^[a-z]$/i.test(key)) {
-      setStateSearchText(prev => (prev + key).toUpperCase());
+      setStateSearchText((prev) => (prev + key).toUpperCase());
     }
     // Optional: handle Backspace to edit search
     if (key === 'Backspace') {
-      setStateSearchText(prev => prev.slice(0, -1));
+      setStateSearchText((prev) => prev.slice(0, -1));
     }
   };
   const toggle = (
@@ -309,9 +292,15 @@ export default function RegisterScreen() {
 
     setLoading(true);
 
-    const { error: signErr } = await signUp(email, password, {
+    const { error: signErr, data } = await signUp(email, password, {
       first_name: firstName,
       last_name: lastName,
+      address1,
+      address2,
+      city,
+      state,
+      zip,
+      phone,
     });
 
     if (signErr) {
@@ -338,56 +327,37 @@ export default function RegisterScreen() {
       return;
     }
 
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
+    // Save allergens and dietary preferences after successful registration
+    if (data.user) {
+      try {
+        // Save selected allergens
+        if (selectedAllergenIds.size > 0) {
+          const selectedAllergenObjects = allergens.filter((a) =>
+            selectedAllergenIds.has(a.id)
+          );
+          await AllergenService.setUserAllergens(
+            data.user.id,
+            selectedAllergenObjects.map((a) => ({ $id: a.id, name: a.name }))
+          );
+        }
 
-    try {
-      await supabase
-        .from('user_profiles')
-        .upsert(
-          {
-            user_id: userId,
-            first_name: firstName,
-            last_name: lastName,
-            address1: address1.trim() || null,
-            address2: address2.trim() || null,
-            city: city.trim() || null,
-            state: state.trim() || null,
-            zip: zip.trim() || null,
-            phone: phone.replace(/\D/g, '') || null,
-          },
-          { onConflict: 'user_id' }
+        // Save selected dietary preferences
+        if (selectedPrefIds.size > 0) {
+          const selectedDietaryObjects = dietPrefs.filter((d) =>
+            selectedPrefIds.has(d.id)
+          );
+          await DietaryService.setUserDietaryPrefs(
+            data.user.id,
+            selectedDietaryObjects.map((d) => ({ $id: d.id, name: d.name }))
+          );
+        }
+      } catch (preferencesError) {
+        console.error(
+          'Error saving user preferences during registration:',
+          preferencesError
         );
-
-      if (selectedAllergenIds.size) {
-        const ua = Array.from(selectedAllergenIds).map((allergenId) => {
-          const allergen = allergens.find((a) => a.id === allergenId);
-          return {
-            user_id: userId,
-            allergen_id: allergenId,
-            allergen: allergen?.name || '',
-          };
-        });
-        await supabase.from('user_allergens').insert(ua);
+        // Don't fail the registration if preferences fail to save
       }
-
-      if (selectedPrefIds.size) {
-        const udp = Array.from(selectedPrefIds).map((prefId) => {
-          const dietPref = dietPrefs.find((d) => d.id === prefId);
-          return {
-            user_id: userId,
-            dietary_pref_id: prefId,
-            dietary_pref: dietPref?.name || '',
-          };
-        });
-        await supabase.from('user_dietary_prefs').insert(udp);
-      }
-    } catch (error) {
-      console.error('Error saving user data:', error);
     }
 
     setLoading(false);
@@ -439,15 +409,23 @@ export default function RegisterScreen() {
           height: 72,
         },
 
-
         form: { gap: 8 },
         row: { flexDirection: 'row', gap: 8 },
+        nameRow: {
+          flexDirection: 'row',
+          gap: 8,
+          flexWrap: 'wrap', // Allow wrapping on small screens
+        },
+        nameInput: {
+          minWidth: 140, // Minimum width before wrapping
+          flex: 1, // Grow to fill available space
+        },
         flex1: { flex: 1 },
         flex2: { flex: 2 },
         flex3: { flex: 1.5 },
 
-       zipContainer: { width: 80 },
-       phoneContainer: { width: 140 },
+        zipContainer: { width: 80 },
+        phoneContainer: { width: 140 },
 
         // Platform-specific vertical padding (web-safe)
         input: {
@@ -455,7 +433,11 @@ export default function RegisterScreen() {
           borderColor: colors.border,
           borderRadius: 9,
           paddingHorizontal: 12,
-          paddingVertical: Platform.select({ android: 10, ios: 8, default: 10 }),
+          paddingVertical: Platform.select({
+            android: 10,
+            ios: 8,
+            default: 10,
+          }),
           fontSize: 15,
           fontFamily: 'Inter-Regular',
           color: colors.text,
@@ -474,7 +456,11 @@ export default function RegisterScreen() {
         pwInput: {
           flex: 1,
           paddingHorizontal: 12,
-          paddingVertical: Platform.select({ android: 10, ios: 8, default: 10 }),
+          paddingVertical: Platform.select({
+            android: 10,
+            ios: 8,
+            default: 10,
+          }),
           fontSize: 15,
           fontFamily: 'Inter-Regular',
           color: colors.text,
@@ -493,7 +479,11 @@ export default function RegisterScreen() {
           justifyContent: 'space-between',
           alignItems: 'center',
           paddingHorizontal: 12,
-          paddingVertical: Platform.select({ android: 10, ios: 8, default: 10 }),
+          paddingVertical: Platform.select({
+            android: 10,
+            ios: 8,
+            default: 10,
+          }),
         },
         stateButtonText: {
           fontSize: 15,
@@ -501,7 +491,11 @@ export default function RegisterScreen() {
           color: state ? colors.text : colors.textSecondary,
         },
 
-        sectionToggle: { alignItems: 'center', paddingVertical: 2, marginTop: 4 },
+        sectionToggle: {
+          alignItems: 'center',
+          paddingVertical: 2,
+          marginTop: 4,
+        },
         sectionToggleText: {
           fontSize: 16,
           fontFamily: 'Inter-SemiBold',
@@ -534,16 +528,26 @@ export default function RegisterScreen() {
           paddingHorizontal: 16,
         },
         chip: {
-          paddingVertical: 6,
-          paddingHorizontal: 10,
+          paddingVertical: 8,
+          paddingHorizontal: 12,
           borderRadius: 999,
           borderWidth: 1,
           borderColor: colors.border,
           backgroundColor: colors.surface,
         },
-        chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-        chipSelectedDietary: { backgroundColor: colors.dietary, borderColor: colors.dietary },
-        chipText: { fontSize: 12, fontFamily: 'Inter-Medium', color: colors.text },
+        chipSelected: {
+          backgroundColor: colors.primary,
+          borderColor: colors.primary,
+        },
+        chipSelectedDietary: {
+          backgroundColor: colors.dietary,
+          borderColor: colors.dietary,
+        },
+        chipText: {
+          fontSize: 12,
+          fontFamily: 'Inter-Medium',
+          color: colors.text,
+        },
         chipTextSelected: { color: '#fff' },
 
         loadingContainer: {
@@ -656,8 +660,15 @@ export default function RegisterScreen() {
           minWidth: 112,
           alignItems: 'center',
         },
-        modalBtnPrimary: { backgroundColor: colors.primary, borderColor: colors.primary },
-        modalBtnText: { fontSize: 13, fontFamily: 'Inter-SemiBold', color: colors.text },
+        modalBtnPrimary: {
+          backgroundColor: colors.primary,
+          borderColor: colors.primary,
+        },
+        modalBtnText: {
+          fontSize: 13,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.text,
+        },
         modalBtnTextPrimary: { color: '#fff' },
 
         // State picker modal styles
@@ -696,9 +707,22 @@ export default function RegisterScreen() {
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
         },
-        dropdownItemText: { fontSize: 15, fontFamily: 'Inter-Regular', color: colors.text },
-        dropdownCancel: { marginTop: 8, alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 14 },
-        dropdownCancelText: { fontSize: 14, fontFamily: 'Inter-SemiBold', color: colors.primary },
+        dropdownItemText: {
+          fontSize: 15,
+          fontFamily: 'Inter-Regular',
+          color: colors.text,
+        },
+        dropdownCancel: {
+          marginTop: 8,
+          alignSelf: 'center',
+          paddingVertical: 10,
+          paddingHorizontal: 14,
+        },
+        dropdownCancelText: {
+          fontSize: 14,
+          fontFamily: 'Inter-SemiBold',
+          color: colors.primary,
+        },
 
         bottom: {
           paddingHorizontal: 24,
@@ -738,18 +762,27 @@ export default function RegisterScreen() {
             <View style={styles.dropdownSheet}>
               <Text style={styles.dropdownTitle}>Select a state</Text>
               {stateSearchText && (
-                <Text style={{ textAlign: 'center', marginBottom: 8, fontSize: 14, color: colors.primary }}>
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    marginBottom: 8,
+                    fontSize: 14,
+                    color: colors.primary,
+                  }}
+                >
                   Searching: {stateSearchText}
                 </Text>
               )}
-              <ScrollView style={styles.dropdownList} keyboardShouldPersistTaps="handled">
-                {US_STATES
-                  .filter(stateItem => 
-                    !stateSearchText || 
-                    stateItem.code.startsWith(stateSearchText) || 
+              <ScrollView
+                style={styles.dropdownList}
+                keyboardShouldPersistTaps="handled"
+              >
+                {US_STATES.filter(
+                  (stateItem) =>
+                    !stateSearchText ||
+                    stateItem.code.startsWith(stateSearchText) ||
                     stateItem.name.toUpperCase().includes(stateSearchText)
-                  )
-                  .map((stateItem) => (
+                ).map((stateItem) => (
                   <TouchableOpacity
                     key={stateItem.code}
                     style={styles.dropdownItem}
@@ -763,11 +796,11 @@ export default function RegisterScreen() {
                       {stateItem.code} — {stateItem.name}
                     </Text>
                   </TouchableOpacity>
-                  ))}
+                ))}
               </ScrollView>
 
-              <TouchableOpacity 
-                style={styles.dropdownCancel} 
+              <TouchableOpacity
+                style={styles.dropdownCancel}
                 onPress={() => {
                   setShowStates(false);
                   setStateSearchText('');
@@ -874,9 +907,9 @@ export default function RegisterScreen() {
                   </View>
 
                   {/* Names */}
-                  <View style={styles.row}>
+                  <View style={[styles.row, styles.nameRow]}>
                     <TextInput
-                      style={[styles.input, styles.flex2]}
+                      style={[styles.input, styles.nameInput]}
                       value={firstName}
                       onChangeText={setFirstName}
                       placeholder="First name"
@@ -887,7 +920,7 @@ export default function RegisterScreen() {
                       autoComplete="given-name"
                     />
                     <TextInput
-                      style={[styles.input, styles.flex3]}
+                      style={[styles.input, styles.nameInput]}
                       value={lastName}
                       onChangeText={setLastName}
                       placeholder="Last name"
@@ -898,88 +931,6 @@ export default function RegisterScreen() {
                       autoComplete="family-name"
                     />
                   </View>
-                  {/* Address */}
-                  <TextInput
-                    style={styles.input}
-                    value={address1}
-                    onChangeText={setAddress1}
-                    placeholder="Address line 1"
-                    placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    textContentType="fullStreetAddress"
-                    autoComplete="street-address"
-                  />
-                  <TextInput
-                    style={styles.input}
-                    value={address2}
-                    onChangeText={setAddress2}
-                    placeholder="Address line 2 (optional)"
-                    placeholderTextColor={colors.textSecondary}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                  />
-                  <View style={styles.row}>
-                    <TextInput
-                      style={[styles.input, styles.flex2]}
-                      value={city}
-                      onChangeText={setCity}
-                      placeholder="City"
-                      placeholderTextColor={colors.textSecondary}
-                      autoCapitalize="words"
-                      autoCorrect={false}
-                      textContentType="addressCity"
-                      returnKeyType="next"
-                      onSubmitEditing={() => setShowStates(true)}
-                    />
-                    <TouchableOpacity
-                      style={[styles.input, styles.flex1, styles.stateButton]}
-                      onPress={() => openStates()}
-                    >
-                      <Text style={styles.stateButtonText}>
-                        {state || 'State'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.row}>
-                    <View style={styles.zipContainer}>
-                      <TextInput
-                        style={styles.input}
-                        value={zip}
-                        onChangeText={setZip}
-                        placeholder="ZIP"
-                        placeholderTextColor={colors.textSecondary}
-                        keyboardType="number-pad"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        maxLength={10}
-                        textContentType="postalCode"
-                        returnKeyType="next"
-                        onSubmitEditing={() => openStates()}
-                      />
-                    </View>
-                    <View style={styles.phoneContainer}>
-                      <TextInput
-                        style={styles.input}
-                        value={phone}
-                        onChangeText={(text) => {
-                          const formatted = formatPhoneNumber(text);
-                          setPhone(formatted);
-                        }}
-                        placeholder="Phone"
-                        placeholderTextColor={colors.textSecondary}
-                        keyboardType="phone-pad"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        maxLength={14}
-                        textContentType="telephoneNumber"
-                        autoComplete="tel"
-                        returnKeyType="done"
-                      />
-                    </View>
-                  </View>
-
                   {/* Allergens */}
                   <Text style={styles.sectionTitle}>Allergens</Text>
                   {loadingTaxonomies ? (
@@ -993,7 +944,10 @@ export default function RegisterScreen() {
                         return (
                           <TouchableOpacity
                             key={a.id}
-                            style={[styles.chip, selected && styles.chipSelected]}
+                            style={[
+                              styles.chip,
+                              selected && styles.chipSelected,
+                            ]}
                             onPress={() =>
                               toggle(
                                 selectedAllergenIds,
@@ -1065,8 +1019,8 @@ export default function RegisterScreen() {
 
                   {showConsent && (
                     <Text style={styles.tosText}>
-                      By tapping "Create Account", I acknowledge that I have read
-                      and agree to the{' '}
+                      By tapping "Create Account", I acknowledge that I have
+                      read and agree to the{' '}
                       <Text
                         style={styles.tosLink}
                         onPress={() =>
@@ -1082,7 +1036,7 @@ export default function RegisterScreen() {
                         style={styles.tosLink}
                         onPress={() =>
                           Linking.openURL(
-                            'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                            'https://www.privacypolicies.com/live/1a6f589d-84cc-4f85-82b9-802b08c501b2'
                           )
                         }
                       >
@@ -1161,9 +1115,7 @@ export default function RegisterScreen() {
                   else closeModal();
                 }}
               >
-                <Text
-                  style={[styles.modalBtnText, styles.modalBtnTextPrimary]}
-                >
+                <Text style={[styles.modalBtnText, styles.modalBtnTextPrimary]}>
                   {modal.primary?.label ?? 'OK'}
                 </Text>
               </TouchableOpacity>

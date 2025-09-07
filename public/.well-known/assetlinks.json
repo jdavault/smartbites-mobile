@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "cooking.safeplate.allergyawarerecipefinder",
+      "sha256_cert_fingerprints": [
+        "BE:2D:D2:33:6F:F5:7B:4C:37:4E:F9:AD:AA:73:E4:F4:E8:CC:B3:47:80:66:B9:E8:E1:55:54:12:62:91:10:0C"
+      ]
+    }
+  }
+]

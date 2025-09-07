@@ -30,7 +30,6 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_OPENAI_API_KEY": "$EXPO_PUBLIC_OPENAI_API_KEY",
         "EXPO_PUBLIC_SUPABASE_URL": "$EXPO_PUBLIC_SUPABASE_URL",
         "EXPO_PUBLIC_SUPABASE_KEY": "$EXPO_PUBLIC_SUPABASE_KEY"
       },

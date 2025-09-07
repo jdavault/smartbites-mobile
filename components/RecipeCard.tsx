@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,9 +18,17 @@ import {
   BookmarkPlus,
   Clock,
   Users,
-  ChefHat,
+  Zap,
+  Flame,
   Trash2,
 } from 'lucide-react-native';
+import {
+  SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE,
+  SUPABASE_URL,
+} from '@/config/constants';
+
+// Safe Platform fallback for web compatibility
+const SafePlatform = Platform || { OS: 'web' };
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -32,6 +41,7 @@ interface RecipeCardProps {
   selectedAllergens?: { $id: string; name: string }[];
   isSaving?: boolean;
   isFavoriting?: boolean;
+  isHorizontalLayout?: boolean;
 }
 
 export default function RecipeCard({
@@ -45,6 +55,7 @@ export default function RecipeCard({
   selectedAllergens = [],
   isSaving = false,
   isFavoriting = false,
+  isHorizontalLayout = false,
 }: RecipeCardProps) {
   const { colors } = useTheme();
   const { user } = useAuth();
@@ -53,16 +64,29 @@ export default function RecipeCard({
   // Get the image URL - either from Supabase storage or fallback
   const getImageUrl = () => {
     if (recipe.image && recipe.id) {
-      const baseUrl = process.env.EXPO_PUBLIC_RECIPE_IMAGES!; // define it in your .env
+      const baseUrl = `${SUPABASE_URL}${SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE}`;
       return `${baseUrl}/${recipe.id}/${recipe.image}`;
     }
-
-    return 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
+    // Return null if no image available
+    return null;
   };
 
   const handleCardPress = () => {
-    if (recipe.id) {
-      router.push(`/recipe/${recipe.id}`);
+    // Always allow navigation to details, whether saved or search result
+    if (recipe.id || showSaveButton) {
+      // For search results, we'll pass the recipe data as params
+      if (showSaveButton) {
+        router.push({
+          pathname: '/recipe/search-result',
+          params: {
+            recipeData: JSON.stringify(recipe),
+            fromSearch: 'true'
+          }
+        });
+      } else {
+        // For saved/featured recipes, use the normal ID route
+        router.push(`/recipe/${recipe.id}`);
+      }
     }
   };
 
@@ -94,28 +118,50 @@ export default function RecipeCard({
 
           <View style={styles.previewMetadata}>
             <View style={styles.previewMetadataItem}>
+             <Clock size={16} color={colors.text} />
+             <Text style={styles.previewMetadataText}>
+               {recipe.cookTime.replace('minutes', 'min')}
+             </Text>
+           </View>
+ 
+           <View style={styles.previewMetadataItem}>
               <Users size={16} color={colors.text} />
               <Text style={styles.previewMetadataText}>
                 {recipe.servings} serving{recipe.servings !== 1 ? 's' : ''}
               </Text>
             </View>
+
+           <View style={styles.difficulty}>
+             <Zap
+               size={16}
+               color={getDifficultyColor(recipe.difficulty)}
+             />
+             <Text
+               style={[
+                 styles.previewMetadataText,
+                 { color: getDifficultyColor(recipe.difficulty) },
+               ]}
+             >
+               {recipe.difficulty}
+             </Text>
+           </View>
+
+            <View style={styles.method}>
+              <Flame
+                size={16}
+                color="#99523d"
+              />
+              <Text
+                style={[
+                  styles.previewMetadataText,
+                  { color: "#99523d" },
+                ]}
+              >
+                {recipe.method || 'Bake'}
+              </Text>
+            </View>
           </View>
 
-          <View style={styles.previewTags}>
-            {recipe.allergens.map((allergen, index) => (
-              <View key={`allergen-${index}`} style={styles.allergenTag}>
-                <Text style={styles.previewTagText}>🚫 {allergen}</Text>
-              </View>
-            ))}
-            {recipe.dietaryPrefs.map((dietary, index) => (
-              <View key={`dietary-${index}`} style={styles.dietaryTag}>
-                <Text style={styles.previewTagText}>🌱 {dietary}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Corner action buttons for search results */}
         {showSaveButton && (
           <View style={styles.cornerActions}>
             {onSave && (
@@ -127,7 +173,7 @@ export default function RecipeCard({
                 {isSaving ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <BookmarkPlus size={18} color="#FFFFFF" />
+                  <BookmarkPlus size={18} color={colors.text} />
                 )}
               </TouchableOpacity>
             )}
@@ -141,20 +187,23 @@ export default function RecipeCard({
                 {isFavoriting ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Heart size={18} color="#FFFFFF" />
+                  <Heart size={18} color={colors.error} />
                 )}
               </TouchableOpacity>
             )}
           </View>
         )}
+        </View>
       </TouchableOpacity>
     );
   }
 
   // Show full version with image for saved recipes
   return (
-    <TouchableOpacity style={styles.card} onPress={handleCardPress}>
-      <Image source={{ uri: getImageUrl() }} style={styles.image} />
+    <TouchableOpacity style={[styles.card, isHorizontalLayout && styles.cardWithMaxWidth]} onPress={handleCardPress}>
+      {getImageUrl() && (
+        <Image source={{ uri: getImageUrl()! }} style={styles.image} />
+      )}
 
       <View style={styles.content}>
         <View style={styles.header}>
@@ -194,11 +243,11 @@ export default function RecipeCard({
 
           <View style={styles.metadataItem}>
             <Users size={14} color={colors.textSecondary} />
-            <Text style={styles.metadataText}>{recipe.servings} servings</Text>
+            <Text style={styles.metadataText}>{recipe.servings} serv</Text>
           </View>
 
           <View style={styles.difficulty}>
-            <ChefHat size={14} color={getDifficultyColor(recipe.difficulty)} />
+            <Zap size={14} color={getDifficultyColor(recipe.difficulty)} />
             <Text
               style={[
                 styles.difficultyText,
@@ -208,6 +257,19 @@ export default function RecipeCard({
               {recipe.difficulty}
             </Text>
           </View>
+
+          <View style={styles.method}>
+            <Flame size={14} color="#99523d" />
+            <Text
+              style={[
+                styles.methodText,
+                { color: "#99523d" },
+              ]}
+            >
+              {recipe.method || 'Bake'}
+            </Text>
+          </View>
+
         </View>
 
         {/* Bottom content: fixed at bottom */}
@@ -225,18 +287,25 @@ export default function RecipeCard({
             </View>
           )}
 
-          {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
+          {(recipe.allergens?.length > 0 || recipe.dietaryPrefs?.length > 0 || recipe.allergensIncluded?.length > 0) && (
             <View style={styles.tags}>
-              {recipe.allergens.map((allergen, index) => (
+              {(recipe.allergens || recipe.allergensToAvoid || []).map((allergen, index) => (
                 <View key={`allergen-${index}`} style={styles.allergenTag}>
                   <Text style={styles.tagText}>🚫 {allergen}</Text>
                 </View>
-              ))}
-              {recipe.dietaryPrefs.map((dietary, index) => (
+              )) || []}
+              {recipe.dietaryPrefs?.map((dietary, index) => (
                 <View key={`dietary-${index}`} style={styles.dietaryTag}>
                   <Text style={styles.tagText}>🌱 {dietary}</Text>
                 </View>
-              ))}
+              )) || []}
+              {recipe.allergensIncluded && recipe.allergensIncluded.length > 0 && 
+                recipe.allergensIncluded.map((allergen, index) => (
+                  <View key={`included-${index}`} style={styles.allergenIncludedTag}>
+                    <Text style={styles.tagText}>⚠️ {allergen}</Text>
+                  </View>
+                ))
+              }
             </View>
           )}
         </View>
@@ -255,7 +324,12 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       overflow: 'hidden',
       width: '100%',
-      height: 580,
+      height: SafePlatform.OS === 'android' ? 600 : 540,
+    },
+    cardWithMaxWidth: {
+      maxWidth: 380, // Only apply max width for horizontal layouts
+      height: SafePlatform.OS === 'android' ? 660 : 560, // Taller on Android to compensate for max width
+      alignSelf: 'center', // Center the card when it hits max width
     },
     previewCard: {
       backgroundColor: colors.surface,
@@ -265,6 +339,8 @@ const getStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       overflow: 'hidden',
       width: '100%',
+      maxWidth: 380, // Same max width for consistency
+      alignSelf: 'center', // Center the card when it hits max width
       // No fixed height - let content determine height
     },
     image: {
@@ -343,18 +419,10 @@ const getStyles = (colors: ThemeColors) =>
       borderRadius: 18,
       justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
-      elevation: 4,
+      backgroundColor: colors.background,
     },
-    saveCornerButton: {
-      backgroundColor: colors.primary,
-    },
-    favoriteCornerButton: {
-      backgroundColor: colors.error,
-    },
+    saveCornerButton: {},
+    favoriteCornerButton: {},
     description: {
       fontSize: 15,
       fontFamily: 'Lato-Regular',
@@ -372,10 +440,9 @@ const getStyles = (colors: ThemeColors) =>
     },
     metadata: {
       flexDirection: 'row',
-      gap: 16,
-      // keep this tight; tags follow below
+      justifyContent: 'space-between',
+      alignItems: 'center',
       marginTop: 12,
-      marginBottom: 8,
     },
     previewMetadata: {
       flexDirection: 'row',
@@ -413,19 +480,27 @@ const getStyles = (colors: ThemeColors) =>
       fontFamily: 'Inter-Medium',
       textTransform: 'capitalize',
     },
-
+    method: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    methodText: {
+      fontSize: 12,
+      fontFamily: 'Inter-Medium',
+      textTransform: 'capitalize',
+    },
     tags: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 8,
-      marginBottom: 8,
-      // no bottom margin needed; it's already at the bottom
+      marginBottom: 5,
     },
     previewTags: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 8,
-      marginBottom: 20,
+      marginBottom: 5,
     },
     tag: {
       backgroundColor: '#8ec7df', // Colors.cerulean[200]
@@ -444,6 +519,12 @@ const getStyles = (colors: ThemeColors) =>
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: 12,
+    },
+    allergenIncludedTag: {
+      backgroundColor: colors.warning,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+      borderRadius: 8,
     },
     dietaryTag: {
       backgroundColor: colors.dietary,

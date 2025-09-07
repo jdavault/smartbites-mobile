@@ -5,6 +5,7 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
@@ -27,17 +28,17 @@ export default function DietaryFilter({
     container: {
       backgroundColor: colors.surface,
       borderRadius: 12,
-      paddingTop: 4,
+      paddingTop: Platform.OS === 'android' ? 1 : 2,
       borderWidth: 1,
       borderColor: colors.border,
-      marginBottom: 24,
+      marginBottom: Platform.OS === 'android' ? 8 : 12,
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 14,
-      marginBottom: 6,
+      paddingHorizontal: Platform.OS === 'android' ? 6 : 8,
+      marginBottom: Platform.OS === 'android' ? 2 : 4,
     },
     titleContainer: {
       flexDirection: 'row',
@@ -45,7 +46,7 @@ export default function DietaryFilter({
     },
     title: {
       fontFamily: 'Inter-SemiBold',
-      fontSize: 16,
+      fontSize: Platform.OS === 'android' ? 11 : 15,
       color: colors.dietary,
       marginLeft: 8,
     },
@@ -54,12 +55,12 @@ export default function DietaryFilter({
     },
     clearButtonText: {
       fontFamily: 'Inter-Regular',
-      fontSize: 14,
+      fontSize: Platform.OS === 'android' ? 10 : 14,
       color: colors.dietary,
     },
     filters: {
-      paddingHorizontal: 14,
-      paddingBottom: 6,
+      paddingHorizontal: Platform.OS === 'android' ? 6 : 8,
+      paddingBottom: Platform.OS === 'android' ? 2 : 4,
     },
     filterItem: {
       flexDirection: 'row',
@@ -67,9 +68,9 @@ export default function DietaryFilter({
       borderWidth: 1,
       borderColor: '#000000',
       borderRadius: 20,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      marginRight: 6,
+      paddingHorizontal: Platform.OS === 'android' ? 6 : 8,
+      paddingVertical: Platform.OS === 'android' ? 2 : 4,
+      marginRight: Platform.OS === 'android' ? 3 : 4,
       backgroundColor: colors.surface,
     },
     activeFilterItem: {
@@ -77,7 +78,7 @@ export default function DietaryFilter({
       borderColor: colors.dietary,
     },
     filterText: {
-      fontSize: 14,
+      fontSize: Platform.OS === 'android' ? 9 : 13,
       fontFamily: 'Inter-Regular',
       color: colors.text,
     },
@@ -89,13 +90,13 @@ export default function DietaryFilter({
     },
     activeFiltersContainer: {
       backgroundColor: colors.surface,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      marginBottom: 6,
+      paddingHorizontal: Platform.OS === 'android' ? 6 : 8,
+      paddingVertical: Platform.OS === 'android' ? 4 : 6,
+      marginBottom: Platform.OS === 'android' ? 2 : 4,
     },
     activeFiltersText: {
       fontFamily: 'Inter-Regular',
-      fontSize: 14,
+      fontSize: Platform.OS === 'android' ? 9 : 13,
       color: colors.text,
     },
     activeFiltersHighlight: {

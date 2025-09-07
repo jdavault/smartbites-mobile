@@ -5,6 +5,7 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ALLERGENS } from '@/contexts/AllergensContext';
@@ -27,17 +28,18 @@ export default function AllergenFilter({
     container: {
       backgroundColor: colors.surface,
       borderRadius: 12, // 👈 rounded corners
-      paddingTop: 4,
-      marginBottom: 16, // 👈 spacing below
+      paddingTop: Platform.OS === 'android' ? 1 : 2,
+      marginBottom: 6, // 👈 spacing below
       borderWidth: 1,
       borderColor: colors.border,
+      marginBottom: Platform.OS === 'android' ? 8 : 12,
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 14,
-      marginBottom: 6,
+      paddingHorizontal: Platform.OS === 'android' ? 6 : 8,
+      marginBottom: Platform.OS === 'android' ? 2 : 4,
     },
     titleContainer: {
       flexDirection: 'row',
@@ -45,7 +47,7 @@ export default function AllergenFilter({
     },
     title: {
       fontFamily: 'Inter-SemiBold',
-      fontSize: 16,
+      fontSize: Platform.OS === 'android' ? 11 : 15,
       color: colors.primary,
       marginLeft: 8,
     },
@@ -54,12 +56,12 @@ export default function AllergenFilter({
     },
     clearButtonText: {
       fontFamily: 'Inter-Regular',
-      fontSize: 14,
+      fontSize: Platform.OS === 'android' ? 10 : 14,
       color: colors.primary,
     },
     filters: {
-      paddingHorizontal: 14,
-      paddingBottom: 6,
+      paddingHorizontal: Platform.OS === 'android' ? 6 : 8,
+      paddingBottom: Platform.OS === 'android' ? 2 : 4,
     },
     filterItem: {
       flexDirection: 'row',
@@ -67,9 +69,9 @@ export default function AllergenFilter({
       borderWidth: 1,
       borderColor: '#000000',
       borderRadius: 20,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      marginRight: 6,
+      paddingHorizontal: Platform.OS === 'android' ? 6 : 8,
+      paddingVertical: Platform.OS === 'android' ? 2 : 4,
+      marginRight: Platform.OS === 'android' ? 3 : 4,
       backgroundColor: colors.surface,
     },
     activeFilterItem: {
@@ -77,7 +79,7 @@ export default function AllergenFilter({
       borderColor: colors.primary,
     },
     filterText: {
-      fontSize: 14,
+      fontSize: Platform.OS === 'android' ? 9 : 13,
       color: colors.text,
     },
     activeFilterText: {
@@ -88,13 +90,13 @@ export default function AllergenFilter({
     },
     activeFiltersContainer: {
       backgroundColor: colors.surface,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      marginBottom: 6,
+      paddingHorizontal: Platform.OS === 'android' ? 6 : 8,
+      paddingVertical: Platform.OS === 'android' ? 4 : 6,
+      marginBottom: Platform.OS === 'android' ? 2 : 4,
     },
     activeFiltersText: {
       fontFamily: 'Inter-Regular',
-      fontSize: 14,
+      fontSize: Platform.OS === 'android' ? 9 : 13,
       color: colors.text,
     },
     activeFiltersHighlight: {

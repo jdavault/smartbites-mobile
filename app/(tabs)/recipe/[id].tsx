@@ -14,7 +14,11 @@ import { useRecipes } from '@/contexts/RecipesContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, Clock, Users, ChefHat } from 'lucide-react-native';
+import { ArrowLeft, Clock, Users, Zap, Flame } from 'lucide-react-native';
+import {
+  SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE,
+  SUPABASE_URL,
+} from '@/config/constants';
 
 const DEFAULT_IMAGE_URL =
   'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
@@ -61,12 +65,12 @@ export default function RecipeDetailScreen() {
     if (recipe?.image) {
       // Get from Supabase storage using user_id/recipe_id/filename structure
       if (recipe.id && user?.id) {
-        const baseUrl = process.env.EXPO_PUBLIC_RECIPE_IMAGES!;
+        const baseUrl = `${SUPABASE_URL}${SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE}`;
         return `${baseUrl}/${recipe.id}/${recipe.image}`;
       }
     }
-    // Fallback to default image
-    return DEFAULT_IMAGE_URL;
+    // Return null if no image - we'll handle this in the UI
+    return null;
   };
 
   const handleBack = () => {
@@ -86,7 +90,7 @@ export default function RecipeDetailScreen() {
     }
   };
 
- const styles = getStyles(colors);
+  const styles = getStyles(colors);
 
   if (!recipe) {
     return (
@@ -123,11 +127,13 @@ export default function RecipeDetailScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Image
-          source={{ uri: getImageUrl() }}
-          style={styles.image}
-          resizeMode="cover"
-        />
+        {getImageUrl() && (
+          <Image
+            source={{ uri: getImageUrl()! }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        )}
 
         <View style={styles.content}>
           <Text style={styles.title}>{recipe.title}</Text>
@@ -141,7 +147,9 @@ export default function RecipeDetailScreen() {
           <View style={styles.metadata}>
             <View style={styles.metadataItem}>
               <Clock size={16} color={colors.text} />
-              <Text style={styles.metadataText}>{recipe.prepTime.replace('minutes', 'min')} + {recipe.cookTime.replace('minutes', 'min')}</Text>
+              <Text style={styles.metadataText}>
+                {recipe.prepTime?.replace('minutes', 'min')} + {recipe.cookTime?.replace('minutes', 'min')}
+              </Text>
             </View>
 
             <View style={styles.metadataItem}>
@@ -152,7 +160,7 @@ export default function RecipeDetailScreen() {
             </View>
 
             <View style={styles.difficulty}>
-              <ChefHat
+              <Zap
                 size={16}
                 color={getDifficultyColor(recipe.difficulty)}
               />
@@ -165,6 +173,21 @@ export default function RecipeDetailScreen() {
                 {recipe.difficulty}
               </Text>
             </View>
+
+            <View style={styles.method}>
+              <Flame
+                size={16}
+                color="#99523d"
+              />
+              <Text
+                style={[
+                  styles.methodText,
+                  { color: "#99523d" },
+                ]}
+              >
+                {recipe.method || 'Bake'}
+              </Text>
+            </View>
           </View>
 
           <Text style={styles.sectionTitle}>Ingredients</Text>
@@ -174,7 +197,8 @@ export default function RecipeDetailScreen() {
             </Text>
           ))}
 
-          <Text style={styles.sectionTitle}>Instructions</Text>
+
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Instructions</Text>
           {recipe.instructions.map((instruction, index) => (
             <Text key={index} style={styles.instructionItem}>
               <Text style={styles.instructionNumber}>{index + 1}.</Text>{' '}
@@ -182,15 +206,16 @@ export default function RecipeDetailScreen() {
             </Text>
           ))}
 
-          {(recipe.allergens.length > 0 || recipe.dietaryPrefs.length > 0) && (
+
+          {(recipe.allergensToAvoid?.length > 0 || recipe.dietaryPrefs?.length > 0) && (
             <>
-              <Text style={styles.sectionTitle}>Dietary Information</Text>
-              <View style={styles.tagsContainer}>
-                {recipe.allergens.map((allergen, index) => (
+              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Dietary Information</Text>
+              <View style={[styles.tagsContainer, { marginTop: 8 }]}>
+                {recipe.allergensToAvoid?.map((allergen, index) => (
                   <View key={`allergen-${index}`} style={styles.allergenTag}>
                     <Text style={styles.prefText}>🚫 {allergen}</Text>
                   </View>
-                ))}
+                )) || []}
                 {recipe.dietaryPrefs.map((dietary, index) => (
                   <View key={`dietary-${index}`} style={styles.dietaryTag}>
                     <Text style={styles.prefText}>🌱 {dietary}</Text>
@@ -202,8 +227,8 @@ export default function RecipeDetailScreen() {
 
           {recipe.tags.length > 0 && (
             <>
-              <Text style={styles.sectionTitle}>Tags</Text>
-              <View style={styles.tagsContainer}>
+              <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 8 }]}>Tags</Text>
+              <View style={[styles.tagsContainer, { marginTop: 6 }]}>
                 {recipe.tags.map((tag, index) => (
                   <View key={index} style={styles.tag}>
                     <Text style={styles.tagText}>#{tag}</Text>
@@ -305,6 +330,7 @@ const getStyles = (colors: ThemeColors) =>
     metadata: {
       flexDirection: 'row',
       justifyContent: 'space-between',
+      alignItems: 'center',
       marginBottom: 24,
       paddingVertical: 12,
       borderTopWidth: 1,
@@ -331,12 +357,22 @@ const getStyles = (colors: ThemeColors) =>
       fontFamily: 'Inter-Medium',
       textTransform: 'capitalize',
     },
+    method: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    methodText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+      textTransform: 'capitalize',
+    },
     sectionTitle: {
       fontSize: 20,
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
-      marginBottom: 2,
-      marginTop: 8,
+      marginBottom: 12,
+      marginTop: 0,
     },
     ingredientItem: {
       fontSize: 15,
@@ -360,7 +396,8 @@ const getStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 8,
-      marginTop: 8,
+      marginTop: 4,
+      marginBottom: 8,
     },
     tag: {
       backgroundColor: '#8ec7df', // Colors.cerulean[200]
@@ -370,6 +407,12 @@ const getStyles = (colors: ThemeColors) =>
     },
     allergenTag: {
       backgroundColor: colors.primary,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 12,
+    },
+    allergenIncludedTag: {
+      backgroundColor: colors.warning,
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 12,

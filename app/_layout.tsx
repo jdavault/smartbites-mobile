@@ -16,6 +16,7 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { View, Text, StyleSheet, Image, Platform } from 'react-native';
 import { RecipesProvider } from '@/contexts/RecipesContext';
 import { AllergensProvider } from '@/contexts/AllergensContext';
 import { DietaryProvider } from '@/contexts/DietaryContext';

@@ -27,13 +27,16 @@ yarn-error.*
 .DS_Store
 *.pem
 ios/
+android/
 .idea/
 .bolt/
+certs/
 
 # local env files
-.env*.local
-.env
+.env*
+
 
 # typescript
 *.tsbuildinfo
 #supabase/
+notes.txt
