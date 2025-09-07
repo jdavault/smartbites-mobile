@@ -23,7 +23,12 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
-# macos
+
+# Build artifacts
+*.apk
+*.ipa
+
+# Misc
 .DS_Store
 *.pem
 ios/
@@ -32,11 +37,15 @@ android/
 .bolt/
 certs/
 
-# local env files
-.env*
-
+#Root env files (don’t commit secrets!)
+.env
+.env.development
+.env.local
+.env.production
 
 # typescript
 *.tsbuildinfo
-#supabase/
+# Supabase local env
+supabase/.env
+
 notes.txt

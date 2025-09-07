@@ -4,9 +4,8 @@
   "version": "1.0.10",
   "private": true,
   "scripts": {
-    "start": "npx expo start --clear",
-    "start:client": "npx expo start --dev-client --clear",
-    "start:clear": "npx expo start --clear",
+    "start": "npx expo start --dev-client --clear",
+    "start:clear": "npx expo start --dev-client --clear",
     "build:web": "npx expo export --platform web --output-dir dist && cp public/_redirects dist/_redirects && mkdir -p dist/.well-known && cp public/.well-known/assetlinks.json dist/.well-known/ && cp public/.well-known/apple-app-site-association dist/.well-known/ && cp public/.well-known/apple-app-site-association dist/",
     "lint": "npx expo lint",
     "build:ios:native": "rm -rf node_modules/.cache/babel-loader/* .expo ios && npx expo prebuild --platform ios --clean",
