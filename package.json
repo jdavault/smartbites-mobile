@@ -29,6 +29,7 @@
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
+    "@sentry/react-native": "~6.14.0",
     "@supabase/supabase-js": "^2.54.0",
     "axios": "^1.6.0",
     "expo": "53.0.22",
@@ -66,12 +67,12 @@
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "^0.20.0",
     "react-native-webview": "13.13.5",
-    "rimraf": "^6.0.1",
-    "@sentry/react-native": "~6.14.0"
+    "rimraf": "^6.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.0.10",
+    "react-native-dotenv": "^3.4.11",
     "typescript": "~5.8.3"
   },
   "expo": {
