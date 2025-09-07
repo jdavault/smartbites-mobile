@@ -13,6 +13,7 @@ import {
   Modal,
   TouchableWithoutFeedback,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -29,6 +30,7 @@ import RecipeCard from '@/components/RecipeCard';
 import RecipeSection from '@/components/RecipeSection';
 import AllergenFilter from '@/components/AllergenFilter';
 import DietaryFilter from '@/components/DietaryFilter';
+import { mapOpenAIRecipeToRecipe } from '@/utils/recipeMapping';
 
 type ModalInfo = {
   visible: boolean;
@@ -78,7 +80,7 @@ export default function SearchScreen() {
 
   const { width } = useWindowDimensions();
   const containerMax = 1024;
-  const padX = width <= 360 ? 16 : width <= 690 ? 20 : 24; // matches your section spacing scale
+  const padX = 8; // Just a tiny bit of padding for search and filters
 
   const openModal = (info: Omit<ModalInfo, 'visible'>) =>
     setModalInfo({ ...info, visible: true });
@@ -114,18 +116,29 @@ export default function SearchScreen() {
     }
 
     setLoading(true);
+    const debugMessages: string[] = [];
     try {
       const allergenNames = selectedAllergens.map((a) => a.name);
       const dietaryNames = selectedDietary.map((d) => d.name);
+      debugMessages.push(`=== SEARCH DEBUG START ===`);
 
       const recipes = await generateRecipes(
         searchQuery,
         allergenNames,
         dietaryNames
       );
-      setSearchResults(recipes);
+      
+      // Map OpenAI recipes to our Recipe interface
+      const mappedRecipes = recipes.map(mapOpenAIRecipeToRecipe);
+      setSearchResults(mappedRecipes);
+      debugMessages.push(`=== SEARCH DEBUG END (no error )===`);
     } catch (error) {
       console.error('Search error:', error);
+      debugMessages.push(
+        `Parsed recipeData: ${JSON.stringify(error).substring(0, 300)}...`
+      );
+
+      debugMessages.push(`=== SEARCH DEBUG END ( ERROR )===`);
 
       // Handle different types of errors with appropriate messages and emojis
       if (error instanceof Error) {
@@ -153,6 +166,7 @@ export default function SearchScreen() {
         });
       }
     } finally {
+      console.log('[SEARCH DEBUG]', debugMessages.join('\n'));
       setLoading(false);
     }
   };
@@ -255,62 +269,98 @@ export default function SearchScreen() {
     },
     responsiveShell: {
       width: '100%',
-      maxWidth: 1034, // same cap as your sections
+      maxWidth: '100%', // Allow full width
       alignSelf: 'center',
-      paddingHorizontal: 24, // 👈 force match card layout
+      paddingHorizontal: 0, // No padding at all
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 24,
-      paddingTop: 8,
-      paddingBottom: 8,
+      paddingHorizontal: 24, // reverted back
+      paddingTop: Platform.OS === 'android' ? 32 : 4,
+      paddingBottom: 2,
       backgroundColor: colors.surface,
       marginBottom: 12,
     },
     headerContent: {
       flex: 1,
     },
+    headerLogoContainer: {
+      alignItems: 'center',
+      position: 'relative',
+    },
     headerLogo: {
       width: 72,
       height: 72,
       marginLeft: 16,
     },
+    betaBadge: {
+      position: 'absolute',
+      top: -4,
+      right: -8,
+      backgroundColor: '#FF8866',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    betaBadgeText: {
+      fontSize: 10,
+      fontFamily: 'Inter-SemiBold',
+      color: '#FFFFFF',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
     title: {
-      fontSize: 22,
+      fontSize: 20,
       fontFamily: 'Inter-Bold',
       color: '#FF8866',
-      marginBottom: 4,
+      marginBottom: 8,
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: Platform.select({
+        ios: 16,
+        android: 11,
+        web: 13,
+      }),
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
     },
     searchContainer: {
-      //paddingHorizontal: 24,
-      marginBottom: 16,
+      marginBottom: 6,
     },
     searchInputContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: colors.surface,
       borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: 10,
+      paddingVertical: Platform.OS === 'android' ? 4 : 8,
       borderWidth: 1,
       borderColor: colors.border,
+      minHeight: Platform.OS === 'android' ? 40 : 'auto',
     },
     searchIcon: {
       marginRight: 12,
     },
     searchInput: {
       flex: 1,
-      fontSize: 16,
+      fontSize: Platform.select({
+        ios: 16,
+        android: 11,
+        web: 13,
+      }),
       fontFamily: 'Inter-Regular',
       color: colors.textPrimary,
       outlineWidth: 0,
+      paddingVertical: Platform.OS === 'android' ? 0 : 0,
+      textAlignVertical: Platform.OS === 'android' ? 'center' : 'auto',
+      includeFontPadding: false,
     },
     searchButton: {
       backgroundColor: colors.primary,
@@ -448,6 +498,19 @@ export default function SearchScreen() {
       textAlign: 'center',
       marginTop: 4, // small spacing between lines
     },
+    mobileBetaFooter: {
+      paddingHorizontal: 24,
+      paddingVertical: 8,
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    mobileBetaText: {
+      fontSize: Platform.OS === 'android' ? 10 : 12,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
   });
 
   return (
@@ -503,11 +566,18 @@ export default function SearchScreen() {
             What would you like to cook today?
           </Text>
         </View>
-        <Image
-          source={require('@/assets/images/smart-bites-logo.png')}
-          style={styles.headerLogo}
-          resizeMode="contain"
-        />
+        <View style={styles.headerLogoContainer}>
+          <Image
+            source={require('@/assets/images/smart-bites-logo.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
+          {Platform.OS !== 'web' && (
+            <View style={styles.betaBadge}>
+              <Text style={styles.betaBadgeText}>Beta</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Responsive shell for search + filters */}
@@ -591,11 +661,12 @@ export default function SearchScreen() {
               {searchResults.map((recipe, index) => (
                 <RecipeCard
                   key={index}
-                  recipe={recipe}
+                  recipe={{
+                    ...recipe,
+                  }}
                   onSave={() => handleSaveRecipe(recipe)}
                   onSaveAndFavorite={() => handleSaveAndFavoriteRecipe(recipe)}
                   showSaveButton={true}
-                  selectedAllergens={selectedAllergens}
                   isSaving={savingRecipeId === recipe.title}
                   isFavoriting={favoritingRecipeId === recipe.title}
                 />
@@ -627,7 +698,7 @@ export default function SearchScreen() {
 
               {recentRecipes.length > 0 && (
                 <RecipeSection
-                  title="🕑 Recently Added"
+                  title="📚 My Collection"
                   recipes={recentRecipes}
                   onToggleFavorite={toggleFavorite}
                   onDelete={deleteRecipe}
@@ -655,6 +726,15 @@ export default function SearchScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Mobile Beta Footer */}
+      {Platform.OS !== 'web' && (
+        <View style={styles.mobileBetaFooter}>
+          <Text style={styles.mobileBetaText}>
+            Currently in beta — thanks for testing!
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

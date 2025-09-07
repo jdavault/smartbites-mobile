@@ -2,7 +2,8 @@
   "expo": {
     "name": "SmartBites",
     "slug": "allergy-aware-recipe-finder",
-    "version": "1.0.7",
+    "runtimeVersion": "1.0.10",
+    "version": "1.0.10",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "smartbites",
@@ -16,7 +17,7 @@
     "platforms": ["ios", "android", "web"],
     "splash": {
       "image": "./assets/images/splash.png",
-      "resizeMode": "cover",
+      "resizeMode": "contain",
       "backgroundColor": "#f9f8f2"
     },
     "assetBundlePatterns": ["**/*"],
@@ -32,18 +33,35 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.allergy-aware-recipe-finder",
-      "buildNumber": "35",
+      "buildNumber": "56",
+      "associatedDomains": ["applinks:smartbites.food"],
+      "urlSchemes": ["smartbites"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "This app uses the camera to scan items for allergy-friendly recipes.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         }
-      }
+      },
+      "appleTeamId": "GEVW9YV737"
     },
     "android": {
+      "versionCode": 30,
       "package": "cooking.safeplate.allergyawarerecipefinder",
-      "versionCode": 16,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "smartbites.food",
+              "pathPrefix": "/reset-password"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon-android.png",
         "backgroundColor": "#f9f8f2"
@@ -70,9 +88,6 @@
       "eas": {
         "projectId": "a54493c7-fc4d-4aea-a8e9-7773401420b1"
       }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
     },
     "updates": {
       "url": "https://u.expo.dev/a54493c7-fc4d-4aea-a8e9-7773401420b1"

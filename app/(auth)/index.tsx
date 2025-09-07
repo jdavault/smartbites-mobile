@@ -18,18 +18,26 @@ import {
 
 import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import ThemedLogo from '@/components/ThemedLogo';
-import { Spacing } from '@/constants/Spacing';
-import { Fonts, FontSizes } from '@/constants/Typography';
 
-export default function SplashScreen() {
+export default function WelcomeScreen() {
   const { colors } = useTheme();
-  const { height, width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const styles = getStyles(colors, height, width, insets);
 
-  // Responsive sizing for small mobile viewports
-  const isSmallMobile = width <= 768;
-  const logoSize = isSmallMobile ? 200 : 300;
+  // Responsive sizing for different viewports
+  const isMobileWeb = Platform.OS === 'web' && width <= 480;
+  const isTabletWeb = Platform.OS === 'web' && width > 480 && width <= 768;
+  const isDesktopWeb = Platform.OS === 'web' && width > 768;
+  const isNativeMobile = Platform.OS !== 'web';
+
+  // Logo sizing: much smaller for mobile web, normal for everything else
+  const logoSize = isMobileWeb
+    ? 120
+    : isTabletWeb
+    ? 180
+    : isNativeMobile
+    ? 200
+    : 300;
 
   const logoAnim = useRef(new Animated.Value(0)).current;
   const buttonsAnim = useRef(new Animated.Value(0)).current;
@@ -48,6 +56,8 @@ export default function SplashScreen() {
       }),
     ]).start();
   }, []);
+
+  const styles = getStyles(colors, height, width, insets);
 
   return (
     <View style={{ flex: 1 }}>
@@ -119,7 +129,7 @@ export default function SplashScreen() {
                           { color: colors.textPrimary },
                         ]}
                       >
-                        📱 Download for iPhone
+                        📱 iPhone
                       </Text>
                     </TouchableOpacity>
 
@@ -140,10 +150,21 @@ export default function SplashScreen() {
                           { color: colors.textPrimary },
                         ]}
                       >
-                        🤖 Android (coming Sep 2025)
+                        🤖 Android (Alpha-Testers)
                       </Text>
                     </TouchableOpacity>
                   </View>
+
+                  {Platform.OS === 'web' && (
+                    <View style={styles.webBetaContainer}>
+                      <View style={styles.webBetaBadge}>
+                        <Text style={styles.webBetaBadgeText}>Beta</Text>
+                      </View>
+                      <Text style={styles.webBetaText}>
+                        Currently in beta — thanks for testing!
+                      </Text>
+                    </View>
+                  )}
                 </Animated.View>
               )}
 
@@ -189,13 +210,18 @@ export default function SplashScreen() {
   );
 }
 
-const getStyles = (colors: ThemeColors, height: number, width: number, insets: any) =>
+const getStyles = (
+  colors: ThemeColors,
+  height: number,
+  width: number,
+  insets: any
+) =>
   StyleSheet.create({
     // Restores the padding that used to live on the gradient
     content: {
       flex: 1,
       paddingHorizontal: 32,
-      paddingTop: Spacing.md,
+      paddingTop: 16,
     },
 
     // Master vertical layout: top / middle / bottom
@@ -238,49 +264,49 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
     // Web-only app store section
     appStoreContainer: {
       width: '100%',
-      paddingHorizontal: Spacing.lg,
+      paddingHorizontal: 24,
       alignItems: 'center',
       marginTop: -8,
       marginBottom: 8,
     },
     appStoreTitle: {
-      fontFamily: Fonts.heading,
-      fontSize: FontSizes.lg,
+      fontFamily: 'Inter-SemiBold',
+      fontSize: width <= 480 ? 16 : 18,
       textAlign: 'center',
       marginBottom: 4,
     },
     appStoreSubtitle: {
-      fontFamily: Fonts.body,
-      fontSize: FontSizes.sm,
+      fontFamily: 'Inter-Regular',
+      fontSize: width <= 480 ? 12 : 14,
       textAlign: 'center',
       marginBottom: 12,
     },
     storeButtonsContainer: {
       flexDirection: 'row',
-      gap: Spacing.md,
-      marginBottom: Platform.OS === 'web' ? Spacing.sm : Spacing.lg,
+      gap: 16,
+      marginBottom: Platform.OS === 'web' ? 12 : 24,
       flexWrap: 'wrap',
       justifyContent: 'center',
     },
     storeButton: {
-      paddingVertical: width <= 768 ? 10 : Spacing.md,
-      paddingHorizontal: width <= 768 ? 14 : Spacing.lg,
+      paddingVertical: width <= 480 ? 8 : width <= 768 ? 10 : 16,
+      paddingHorizontal: width <= 480 ? 10 : width <= 768 ? 14 : 24,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: colors.border,
-      minWidth: width <= 768 ? 130 : 160,
+      minWidth: width <= 480 ? 110 : width <= 768 ? 130 : 160,
       alignItems: 'center',
     },
     storeButtonText: {
-      fontFamily: Fonts.body,
-      fontSize: width <= 768 ? 12 : FontSizes.sm,
+      fontFamily: 'Inter-Regular',
+      fontSize: width <= 480 ? 10 : width <= 768 ? 12 : 14,
       textAlign: 'center',
     },
 
     // Native CTA buttons (Sign In / Create Account)
-    buttonContainer: { 
-      width: '100%', 
-      gap: width <= 768 ? 12 : 16 
+    buttonContainer: {
+      width: '100%',
+      gap: width <= 768 ? 12 : 16,
     },
     responsiveContainer: {
       width: '100%',
@@ -319,7 +345,7 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
       flexDirection: 'row',
       justifyContent: 'space-around',
       width: '100%',
-      paddingHorizontal: Spacing.xl,
+      paddingHorizontal: 32,
       paddingBottom: insets.bottom + 8,
     },
     footerLink: {
@@ -327,5 +353,30 @@ const getStyles = (colors: ThemeColors, height: number, width: number, insets: a
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       textDecorationLine: 'underline',
+    },
+    webBetaContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 12,
+      gap: 8,
+    },
+    webBetaBadge: {
+      backgroundColor: '#FF8866',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    webBetaBadgeText: {
+      fontSize: 11,
+      fontFamily: 'Inter-SemiBold',
+      color: '#FFFFFF',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    webBetaText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
     },
   });

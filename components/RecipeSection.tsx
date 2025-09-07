@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Recipe } from '@/contexts/RecipesContext';
@@ -43,7 +44,7 @@ export default function RecipeSection({
 
   let verticalCardWidth;
   if (width <= 360) {
-    // 0–360px: same width as the horizontal “tile” card
+    // 0–360px: same width as the horizontal "tile" card
     verticalCardWidth = Math.min(cardWidth, availableWidth);
   } else if (width <= 690) {
     // 361–690px: grow to ~two cards wide (~680)
@@ -58,20 +59,23 @@ export default function RecipeSection({
 
   const styles = StyleSheet.create({
     section: {
-      marginBottom: 32,
+      marginBottom: 8,
     },
     sectionTitle: {
-      fontSize: 20,
+      fontSize: Platform.select({
+        android: 16, // 20% smaller for Android
+        default: 20, // Keep iOS/web at 20
+      }),
       fontFamily: 'Inter-SemiBold',
       color: '#FF8866',
-      marginBottom: 16,
-      paddingHorizontal: 24,
+      marginBottom: 12,
+      paddingHorizontal: 12,
     },
     horizontalScrollContainer: {
-      paddingLeft: 24,
+      paddingLeft: 12,
     },
     verticalContainer: {
-      paddingHorizontal: 24,
+      paddingHorizontal: 12,
       alignItems: 'center',
       width: '100%',
     },
@@ -100,6 +104,7 @@ export default function RecipeSection({
                 recipe={recipe}
                 onToggleFavorite={() => onToggleFavorite(recipe.id!)}
                 onDelete={onDelete ? () => onDelete(recipe.id!) : undefined}
+                isHorizontalLayout={horizontal}
               />
             </View>
           ))}
