@@ -39,3 +39,4 @@ certs/
 # typescript
 *.tsbuildinfo
 #supabase/
+notes.txt
