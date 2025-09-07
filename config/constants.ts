@@ -11,7 +11,20 @@ import {
   EXPO_PUBLIC_DEBUG_APP,
 } from '@env';
 
-// All values come directly from the environment file selected by NODE_ENV
+const getEnvironment = () => {
+  const appEnv =
+    process.env.EXPO_PUBLIC_APP_ENV ||
+    process.env.APP_ENV ||
+    process.env.NODE_ENV ||
+    (__DEV__ ? 'development' : 'production');
+
+  if (appEnv === 'production') return 'production';
+  if (appEnv === 'test') return 'test';
+  return 'development';
+};
+
+// All values come directly from the environment file selected by getEnvironment()
+export const CURRENT_ENV = getEnvironment();
 export const APP_URL = EXPO_PUBLIC_APP_BASE_URL;
 export const SUPABASE_URL = EXPO_PUBLIC_SUPABASE_URL;
 export const SUPABASE_ANON_KEY = EXPO_PUBLIC_SUPABASE_KEY;
@@ -28,11 +41,12 @@ export const REDIRECT_URLS = {
 };
 
 export const DEBUG_APP = EXPO_PUBLIC_DEBUG_APP === 'true';
-export const isDevelopment = (typeof __DEV__ !== 'undefined' && __DEV__) || false;
-export const isProduction = !isDevelopment;
+export const isDevelopment = CURRENT_ENV === 'development';
+export const isProduction = CURRENT_ENV === 'production';
+export const isTest = CURRENT_ENV === 'test';
 
 // Log current environment for debugging
-const currentEnv = process.env.NODE_ENV || 'development';
-console.log(`🌍 Environment: ${currentEnv}`);
+console.log(`🌍 Environment: ${CURRENT_ENV}`);
 console.log(`🔗 Supabase URL: ${SUPABASE_URL}`);
 console.log(`🏠 App URL: ${APP_URL}`);
+console.log(`🐛 Debug: ${DEBUG_APP}`);
