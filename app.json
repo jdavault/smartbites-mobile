@@ -46,7 +46,7 @@
       "appleTeamId": "GEVW9YV737"
     },
     "android": {
-      "versionCode": 20,
+      "versionCode": 30,
       "package": "cooking.safeplate.allergyawarerecipefinder",
       "intentFilters": [
         {
