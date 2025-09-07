@@ -17,7 +17,7 @@
     "platforms": ["ios", "android", "web"],
     "splash": {
       "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
+      "resizeMode": "native",
       "backgroundColor": "#f9f8f2"
     },
     "assetBundlePatterns": ["**/*"],
