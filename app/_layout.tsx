@@ -32,7 +32,10 @@ function CustomSplashScreen() {
           style={splashStyles.logo}
           resizeMode="contain"
         />
-        <Text style={splashStyles.tagline}>Eat Smarter, Live Better</Text>
+        <Text style={splashStyles.tagline}>
+          AI-powered recipes + allergy aware restaurant menu search so you can
+          dine in or dine out with confidence.
+        </Text>
       </View>
     </View>
   );
@@ -72,10 +75,11 @@ const splashStyles = StyleSheet.create({
       android: 18,
       default: 18,
     }),
-    fontFamily: 'Inter-Medium',
+    fontFamily: 'Lato-Regular',
     color: '#FF8866',
     textAlign: 'center',
-    letterSpacing: 0.5,
+    lineHeight: 24,
+    paddingHorizontal: 32,
   },
 });
 
