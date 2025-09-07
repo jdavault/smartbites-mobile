@@ -32,7 +32,7 @@ export const isDevelopment = (typeof __DEV__ !== 'undefined' && __DEV__) || fals
 export const isProduction = !isDevelopment;
 
 // Log current environment for debugging
-console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+const currentEnv = process.env.NODE_ENV || 'development';
+console.log(`🌍 Environment: ${currentEnv}`);
 console.log(`🔗 Supabase URL: ${SUPABASE_URL}`);
 console.log(`🏠 App URL: ${APP_URL}`);
-console.log(`🐛 Debug: ${DEBUG_APP}`);
