@@ -4,13 +4,26 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "local": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "local",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "local",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://supabase-api.ngrok.io",
+        "EXPO_PUBLIC_SUPABASE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
+      },
+      "ios": { "simulator": true },
+      "android": { "buildType": "apk" }
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "$EXPO_PUBLIC_SUPABASE_URL",
-        "EXPO_PUBLIC_SUPABASE_KEY": "$EXPO_PUBLIC_SUPABASE_KEY"
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ahikcpeeuyaxyssscgqk.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_KEY": "sb_publishable_tEXAe_K7Oqkx7OETDgRTCw_YSFvjPpH"
       },
       "ios": { "simulator": true },
       "android": { "buildType": "apk" }
@@ -19,8 +32,9 @@
       "distribution": "internal",
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "$EXPO_PUBLIC_SUPABASE_URL",
-        "EXPO_PUBLIC_SUPABASE_KEY": "$EXPO_PUBLIC_SUPABASE_KEY"
+        "EXPO_PUBLIC_APP_ENV": "test",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://supabase-api.ngrok.io",
+        "EXPO_PUBLIC_SUPABASE_KEY": "test-anon-key"
       },
       "ios": { "simulator": true },
       "android": { "buildType": "apk" }
@@ -30,8 +44,9 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "$EXPO_PUBLIC_SUPABASE_URL",
-        "EXPO_PUBLIC_SUPABASE_KEY": "$EXPO_PUBLIC_SUPABASE_KEY"
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ahikcpeeuyaxyssscgqk.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_KEY": "sb_publishable_tEXAe_K7Oqkx7OETDgRTCw_YSFvjPpH"
       },
       "android": { "buildType": "app-bundle" }
     }
