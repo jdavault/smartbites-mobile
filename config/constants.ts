@@ -1,5 +1,3 @@
-// config/constants.ts
-
 // Define allowed environments
 export type Environment = 'development' | 'local' | 'test' | 'production';
 
@@ -44,7 +42,7 @@ const configs: Record<
     DEBUG_APP: false,
   },
   local: {
-    SUPABASE_URL: 'https://supabase-studio.ngrok.io',
+    SUPABASE_URL: 'https://supabase-api.ngrok.io',
     SUPABASE_ANON_KEY:
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
     APP_BASE_URL: 'https://dev.smartbites.food',
@@ -56,7 +54,7 @@ const configs: Record<
     DEBUG_APP: true,
   },
   test: {
-    SUPABASE_URL: 'https://supabase-studio.ngrok.io',
+    SUPABASE_URL: 'https://supabase-api.ngrok.io',
     SUPABASE_ANON_KEY: 'test-anon-key', // dummy or mock key
     APP_BASE_URL: 'http://localhost:9999', // can be a mock server
     RECIPE_IMAGES_PUBLIC_ROUTE: '/storage/v1/object/public/recipe-images',
@@ -105,6 +103,15 @@ export const isDevelopment = CURRENT_ENV === 'development';
 export const isLocal = CURRENT_ENV === 'local';
 export const isTest = CURRENT_ENV === 'test';
 export const isProduction = CURRENT_ENV === 'production';
+
+// 🚨 Safety checks
+if (isProduction && SUPABASE_URL.includes('ngrok')) {
+  throw new Error('❌ Production build is pointing at ngrok! Check eas.json envs.');
+}
+
+if (isLocal && !SUPABASE_URL.includes('ngrok')) {
+  console.warn('⚠️ Local build is not pointing at ngrok. Did you forget to update eas.json?');
+}
 
 // Log current environment for debugging
 console.log(`🌍 Environment: ${CURRENT_ENV}`);
