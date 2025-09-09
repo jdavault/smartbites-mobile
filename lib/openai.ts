@@ -84,7 +84,7 @@ function sleep(ms: number) {
 }
 
 /**
- * Retries on 429 and 5xx. Respects Retry-After if present.
+ * Retries on 429 and 5xx and 408. Respects Retry-After if present.
  */
 async function fetchWithRetry(
   url: string,
@@ -105,7 +105,7 @@ async function fetchWithRetry(
 
     // Decide whether to retry
     const status = res?.status ?? 0;
-    const shouldRetry = status === 429 || (status >= 500 && status < 600);
+    const shouldRetry = status === 429 || (status >= 500 && status < 600) || status === 408;
     if (!shouldRetry || attempt === tries) {
       if (res) {
         const text = await res.text().catch(() => '');
@@ -126,23 +126,6 @@ async function fetchWithRetry(
 
   throw new Error('Retries exhausted');
 }
-
-// const retryWithBackoff = async <T>(
-//   fn: () => Promise<T>,
-//   maxRetries = 3
-// ): Promise<T> => {
-//   for (let i = 0; i < maxRetries; i++) {
-//     try {
-//       return await fn();
-//     } catch (error: any) {
-//       if (i === maxRetries - 1) throw error;
-//       await new Promise((resolve) =>
-//         setTimeout(resolve, Math.pow(2, i) * 1000)
-//       );
-//     }
-//   }
-//   throw new Error('Max retries exceeded');
-// };
 
 async function getOpenAIHeaders() {
   const apiKey = await getOpenAIKey(); // your Edge function call (keeps key off device)
@@ -171,8 +154,7 @@ export async function callOpenAI(
   const body = {
     model: DEFAULT_MODEL,
     temperature: 0.3,
-    max_tokens: 3000,
-    response_format: { type: 'json_object' },
+    max_tokens: 2000,
     messages,
     ...options,
   };
@@ -227,8 +209,10 @@ export async function generateRecipes(
         ].join('\n')
       : '';
 
-    const system = `You are a professional culinary recipe writer. Create ONLY food recipes - never respond to non-food requests. Create a detailed, well-structured recipe. Output ONLY valid JSON (no prose).
-      Contract:
+    const system = `You are a professional culinary recipe writer. 
+                    Your sole task is to generate detailed food recipes in valid JSON.
+                    
+      Contract (output must match exactly):
       {
         "recipes":[
           {
@@ -242,72 +226,56 @@ export async function generateRecipes(
             "servings": integer,
             "difficulty": "easy"|"medium"|"hard",
             "method": string,          // cooking method from enum
-            "tags": string[],          // <=6 (e.g., quick, no-bake, one-pot)
+            "tags": string[],          // <=6 (e.g., quick, one-pot)
             "searchQuery": string,
-            "allergensToAvoid": string[],   // List of allergens explicitly AVOIDED and NOT in the recipe
-            "dietaryPrefs": string[],       // from: Mediterranean, Low-Sodium, Keto, Diabetic, Vegan, Vegetarian, Whole-30, Paleo
-            "allergensIncluded": string[],  // List of allergens actually PRESENT in recipe ingredients
+            "allergensToAvoid": string[],    // full set of allergens avoided by this recipe
+            "dietaryPrefs": string[],       // diet categories
+            "allergensIncluded": string[],  // full set of allergens present in recipe ingredients
             "notes": string,
             "nutritionInfo": string
           }
         ]
       }
 
-      Final Recipe Rules:
-        Allergens
-          - "allergensToAvoid": Array of allergens that must be excluded from the recipe (from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)).
-          - "allergensIncluded": Array of allergens that ARE present in the recipe's actual ingredients. REQUIRED. [] if none.
-          - You MUST scan the "ingredients" list and explicitly cross-check against this allergen list.
-          - Cross-check each ingredient against this allergen mapping:
-              • Any cheese, milk, cream, yogurt → Milk
-              • Any bread, bun, flour, pasta, cracker → Wheat (Gluten)
-              • Any shrimp, crab, lobster, scallop, oyster → Shellfish
-              • Any almond, walnut, cashew, pistachio, pecan, hazelnut, macadamia → Tree Nuts
-              • Any soy sauce, tofu, edamame → Soybeans
-              • Any egg → Eggs
-              • Any fish by name (salmon, cod, tuna, etc.) → Fish
-              • Any sesame seed, tahini → Sesame
-              • Any peanut, peanut butter → Peanuts
-          - If any ingredient contains or implies one of these allergens, include it in "allergensIncluded".
-          - The two arrays must never overlap.
-          - Example:
-              Ingredients: ["4 hotdog buns", "2 tbsp butter", "1 lb shrimp"]
-              → "allergensToAvoid": ["Eggs", "Peanuts"]   // provided to avoid
-              → "allergensIncluded": ["Wheat (Gluten)", "Milk", "Shellfish"]
-        Title Rules
-          - Use a direct, descriptive title that is clear, accurate, and searchable. Avoid ambiguity or mystery (what is loaded cauliflower casserole?).
-          - Capitalize all words except articles, conjunctions, and prepositions (e.g., Pigs in a Blanket, Patty Melt with Cabbage on Rye).
-          - Ensure titles are not misleading and are helpful for search and classification.
-          - Titles should highlight:
-            - Cooking method (Roast Cauliflower, Grilled Sea Bass).
-            - Time savings (10-Minute Salad, No-Bake Trail Mix).
-            - Region or style (New England Johnny Cakes, Persian Rice).
-            - Key ingredients or health focus (Gluten-Free Mac n Cheese, Vegan Chocolate Chip Cookies).
-        Ingredients & Measurements
-          - Use consistent, concise, standard culinary terms.
-          - Be specific with ingredient quantities, units, and forms (e.g., 1 cup chopped fresh parsley).
-        Times
-          - Include realistic prep and cook times in minutes (e.g., 15 minutes).
-          - Add Rise Time BUT ONLY when applicable (e.g., breads, pizza dough, hamburger buns).
-        Instructions
-          - Write clear, step-by-step directions that guide any home cook to succeed.
-          - Instructions and ingredient names must be clear, practical, and appropriate for all skill levels.
-          - Explain what to do, what to watch for, and how to fix common issues when possible.
-          - Include food-safe internal temperatures for meats and seafood.
-          - Serving size must be exactly 4 servings (hard limit), and specified using Imperial units (e.g., "Serves 4" or "4 servings").
-        Tags 
-          - Tags are not allergens or dietary preferences — they are convenience/descriptor tags (e.g., BBQ, easy, quick, no-bake, one-pot).
-        Formatting & Output
-          - Keep JSON syntactically valid (no trailing commas, no commentary).
-          - Return only a valid JSON object in the exact required structure.
+      Rules:
+      - **JSON only**. No prose. Must validate against schema.
+      - **Title**: descriptive, capitalized (ignore articles/conjunctions), highlight method, time, region, or key ingredient.
+      - **Ingredients**: concise and specific (e.g., “1 cup chopped fresh parsley”).
+      - **Times**: realistic prep/cook in minutes; Rise Time only for breads/pizza.
+      - **Instructions**: ≤8 steps, clear, safe (temps for meat/seafood).
+      - **Servings**: exactly 4.
+      - **Tags**: convenience descriptors only (e.g., quick, no-bake, one-pot).
+      - **Allergens**:
+        - 'allergensToAvoid': always return the full set of allergens avoided by this recipe (from [Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)]).
+        - 'allergensIncluded': always return the full set of allergens actually present in the recipe’s ingredients.
+        - The two arrays must be mutually exclusive and together they must cover the entire allergen list.
+        - Mapping examples:
+          • cheese, milk, cream, yogurt → Milk
+          • bread, buns, flour, pasta, crackers → Wheat (Gluten)
+          • shrimp, crab, lobster, scallop, oyster → Shellfish
+          • almond, walnut, cashew, pistachio, pecan, hazelnut, macadamia → Tree Nuts
+          • soy sauce, tofu, edamame → Soybeans
+          • egg → Eggs
+          • fish (salmon, cod, tuna, etc.) → Fish
+          • sesame seeds, tahini → Sesame
+          • peanut, peanut butter → Peanuts
+      - Arrays must never overlap. If no allergens are present, 'allergensIncluded' = [] and 'allergens' = full allergen list.
+
+      Formatting:
+      - Return a single valid JSON object.
+      - Always return exactly 3 recipes.
     `;
 
-    const user = [
-      `Generate 3 recipes for: "${query}"`,
-      allergensBlock,
-      dietBlock,
-      `Return exactly 3 items in "recipes". Set "searchQuery" to "${query}" on each.`,
-    ]
+
+      const user = [
+        `Generate 3 recipes for: "${query}"`,
+        allergensBlock,
+        dietBlock,
+        `For each recipe, split the complete allergen list [Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)] into two arrays:`,
+        `- "allergensToAvoid" (all allergens NOT present in the recipe)`,
+        `- "allergensIncluded" (all allergens present in the recipe)`,
+        `Return exactly 3 items in "recipes". Set "searchQuery" to "${query}" on each.`,
+      ]
       .filter(Boolean)
       .join('\n');
 
@@ -558,44 +526,44 @@ export async function generateRecipeImage(title: string): Promise<string> {
   }
 }
 
-async function fetchWithRateLimitRetry(
-  url: string,
-  init: RequestInit,
-  tries = 3
-): Promise<Response> {
-  for (let attempt = 1; attempt <= tries; attempt++) {
-    const res = await fetch(url, init);
+// async function fetchWithRateLimitRetry(
+//   url: string,
+//   init: RequestInit,
+//   tries = 3
+// ): Promise<Response> {
+//   for (let attempt = 1; attempt <= tries; attempt++) {
+//     const res = await fetch(url, init);
 
-    // Log useful RL headers for diagnosis
-    const rlLimit = res.headers.get('x-ratelimit-limit-requests');
-    const rlRemain = res.headers.get('x-ratelimit-remaining-requests');
-    const rlReset = res.headers.get('x-ratelimit-reset-requests');
-    const retryAfter = res.headers.get('retry-after');
+//     // Log useful RL headers for diagnosis
+//     const rlLimit = res.headers.get('x-ratelimit-limit-requests');
+//     const rlRemain = res.headers.get('x-ratelimit-remaining-requests');
+//     const rlReset = res.headers.get('x-ratelimit-reset-requests');
+//     const retryAfter = res.headers.get('retry-after');
 
-    if (!res.ok) {
-      // handle 429 with backoff
-      if (res.status === 429 && attempt < tries) {
-        const retryAfterMs = retryAfter ? Number(retryAfter) * 1000 : undefined;
-        const backoffMs =
-          retryAfterMs ??
-          1500 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 400);
+//     if (!res.ok) {
+//       // handle 429 with backoff
+//       if (res.status === 429 && attempt < tries) {
+//         const retryAfterMs = retryAfter ? Number(retryAfter) * 1000 : undefined;
+//         const backoffMs =
+//           retryAfterMs ??
+//           1500 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 400);
 
-        console.warn(
-          `[images] 429 attempt ${attempt}/${tries} — limit=${rlLimit}, remaining=${rlRemain}, reset=${rlReset}, retryAfter=${retryAfter}. Backing off ${backoffMs}ms`
-        );
-        await new Promise((r) => setTimeout(r, backoffMs));
-        continue;
-      }
+//         console.warn(
+//           `[images] 429 attempt ${attempt}/${tries} — limit=${rlLimit}, remaining=${rlRemain}, reset=${rlReset}, retryAfter=${retryAfter}. Backing off ${backoffMs}ms`
+//         );
+//         await new Promise((r) => setTimeout(r, backoffMs));
+//         continue;
+//       }
 
-      const text = await res.text().catch(() => '');
-      throw new Error(
-        `OpenAI image error ${res.status}: ${
-          text || res.statusText
-        } (limit=${rlLimit}, remaining=${rlRemain}, reset=${rlReset})`
-      );
-    }
+//       const text = await res.text().catch(() => '');
+//       throw new Error(
+//         `OpenAI image error ${res.status}: ${
+//           text || res.statusText
+//         } (limit=${rlLimit}, remaining=${rlRemain}, reset=${rlReset})`
+//       );
+//     }
 
-    return res; // success
-  }
-  throw new Error('OpenAI image error: retries exhausted');
-}
+//     return res; // success
+//   }
+//   throw new Error('OpenAI image error: retries exhausted');
+// }
