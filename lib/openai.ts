@@ -29,7 +29,7 @@ const DEFAULT_IMG =
   'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg';
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
-const DEFAULT_TIMEOUT_MS = 25_000;
+const DEFAULT_TIMEOUT_MS = 60_000;
 // Cache for the API key to avoid multiple requests
 let cachedApiKey: string | null = null;
 
@@ -107,10 +107,11 @@ async function fetchWithRetry(
     const status = res?.status ?? 0;
 
     const isAbortError = lastErr instanceof DOMException && lastErr.name === "AbortError";
-    const shouldRetry = status === 429 || (status >= 500 && status < 600) || status === 408;
+    const shouldRetry =
+      status === 429 || (status >= 500 && status < 600) || status === 408 || isAbortError;
 
-    // Fail if not retryable OR if we're out of attempts
-    if ((!shouldRetry && !isAbortError) || attempt === tries) {
+  // ❌ Non-retryable OR out of attempts
+    if ((!shouldRetry) || attempt === tries) {
       if (res) {
         const text = await res.text().catch(() => "");
         throw new Error(`OpenAI API error ${status}: ${text || res.statusText}`);
