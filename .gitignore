@@ -49,3 +49,6 @@ certs/
 supabase/.env
 
 notes.txt
+
+# Local Netlify folder
+.netlify
