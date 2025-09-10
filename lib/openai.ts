@@ -120,10 +120,26 @@ async function fetchWithRetry(
     }
 
     // Backoff (use Retry-After when present)
-    const retryAfter = res?.headers.get('retry-after');
-    const retryMs = retryAfter
-      ? Number(retryAfter) * 1000
-      : 1000 * attempt; // (800 + Math.random() * 400) * Math.pow(2, attempt - 1);
+    const retryAfter = res?.headers.get("retry-after");
+    let retryMs: number;
+
+    if (retryAfter) {
+      retryMs = Number(retryAfter) * 1000;
+    } else {
+      if (attempt <= 2) {
+        // Quick retries for transient blips
+        retryMs = 1000 * attempt; // 1s, 2s
+      } else {
+        // Exponential for heavier load or throttling
+        retryMs = (1200 + Math.random() * 400) * Math.pow(2, attempt - 3);
+        // → ~1.2–1.6s (attempt 3), ~2.4–3.2s (attempt 4), ~4.8–6.4s (attempt 5)
+      }
+    }
+    console.warn(
+      `⚠️ Retry ${attempt}/${tries} after ${retryMs}ms (status ${status}${
+        isAbortError ? ", AbortError" : ""
+      })`
+    );
     await sleep(retryMs);
   }
 
