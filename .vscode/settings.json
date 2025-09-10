@@ -6,12 +6,11 @@
     "allergyawarerecipefinder",
     "BROWSABLE",
     "PKCE",
+    "retryable",
     "safeplate"
   ],
   "deno.enable": true,
-  "deno.enablePaths": [
-    "supabase/functions"
-  ],
+  "deno.enablePaths": ["supabase/functions"],
   "deno.lint": true,
   "deno.unstable": [
     "bare-node-builtins",

@@ -89,7 +89,7 @@ function sleep(ms: number) {
 async function fetchWithRetry(
   url: string,
   init: RequestInit,
-  tries = 4
+  tries = 5
 ): Promise<Response> {
   let lastErr: unknown;
 
@@ -98,29 +98,31 @@ async function fetchWithRetry(
     try {
       res = await fetch(url, init);
     } catch (err) {
-      lastErr = err;
+        lastErr = err;
     }
 
     if (res && res.ok) return res;
 
     // Decide whether to retry
     const status = res?.status ?? 0;
+
+    const isAbortError = lastErr instanceof DOMException && lastErr.name === "AbortError";
     const shouldRetry = status === 429 || (status >= 500 && status < 600) || status === 408;
-    if (!shouldRetry || attempt === tries) {
+
+    // Fail if not retryable OR if we're out of attempts
+    if ((!shouldRetry && !isAbortError) || attempt === tries) {
       if (res) {
-        const text = await res.text().catch(() => '');
-        throw new Error(
-          `OpenAI API error ${status}: ${text || res.statusText}`
-        );
+        const text = await res.text().catch(() => "");
+        throw new Error(`OpenAI API error ${status}: ${text || res.statusText}`);
       }
-      throw lastErr instanceof Error ? lastErr : new Error('Network error');
+      throw lastErr instanceof Error ? lastErr : new Error("Network error");
     }
 
     // Backoff (use Retry-After when present)
     const retryAfter = res?.headers.get('retry-after');
     const retryMs = retryAfter
       ? Number(retryAfter) * 1000
-      : (800 + Math.random() * 400) * Math.pow(2, attempt - 1);
+      : 1000 * attempt; // (800 + Math.random() * 400) * Math.pow(2, attempt - 1);
     await sleep(retryMs);
   }
 
