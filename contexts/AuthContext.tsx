@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Create platform-specific redirect URI
   const redirectUri = Platform.select({
-    web: 'https://bolt.new', // For Bolt.new testing
+    web: 'https://smartbites.food', // Your production domain
     default: makeRedirectUri({
       scheme: 'smartbites',
       preferLocalhost: true,
