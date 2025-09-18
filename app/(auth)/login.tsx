@@ -49,7 +49,7 @@ export default function LoginScreen() {
     emoji: undefined,
   });
 
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth(); // added Google
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = getStyles(colors, insets);
@@ -89,6 +89,30 @@ export default function LoginScreen() {
       if (error) {
         openModal({
           title: 'Login Failed',
+          subtitle: error.message || 'Please try again.',
+          emoji: '🚫',
+        });
+      } else {
+        router.replace('/(tabs)');
+      }
+    } catch (err) {
+      openModal({
+        title: 'Unexpected Error',
+        subtitle: 'Something went wrong. Please try again.',
+        emoji: '⚠️',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) {
+        openModal({
+          title: 'Google Login Failed',
           subtitle: error.message || 'Please try again.',
           emoji: '🚫',
         });
@@ -245,13 +269,7 @@ export default function LoginScreen() {
                       <View style={styles.socialButtonsRow}>
                         <TouchableOpacity
                           style={[styles.socialButton, styles.googleButton]}
-                          onPress={() =>
-                            openModal({
-                              title: 'Google Login Not Available',
-                              subtitle: "We're working on it — coming soon!",
-                              emoji: '😔',
-                            })
-                          }
+                          onPress={handleGoogleLogin}
                           disabled={loading}
                         >
                           <Text
@@ -263,7 +281,6 @@ export default function LoginScreen() {
                             Google Sign In
                           </Text>
                         </TouchableOpacity>
-
                         <TouchableOpacity
                           style={[styles.socialButton, styles.appleButton]}
                           onPress={() =>
