@@ -57,13 +57,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     preferLocalhost: true,
   });
 
-  // Debug logging for redirect URI
-  console.log('🔍 Google OAuth Debug Info:');
-  console.log('  Platform:', Platform.OS);
-  console.log('  Redirect URI:', redirectUri);
-  console.log('  Web Client ID:', webClientId);
-  console.log('  Request ready:', !!request);
-
   // Google sign-in (Expo AuthSession)
   const [request, response, promptAsync] = useAuthRequest({
     responseType: ResponseType.IdToken,
@@ -73,6 +66,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     scopes: ['openid', 'email', 'profile'],
     redirectUri,
   });
+
+  // Debug logging for redirect URI (after request is initialized)
+  useEffect(() => {
+    console.log('🔍 Google OAuth Debug Info:');
+    console.log('  Platform:', Platform.OS);
+    console.log('  Redirect URI:', redirectUri);
+    console.log('  Web Client ID:', webClientId);
+    console.log('  Request ready:', !!request);
+  }, [request, redirectUri]);
 
   useEffect(() => {
     console.log('🔍 Google response received:', response);
