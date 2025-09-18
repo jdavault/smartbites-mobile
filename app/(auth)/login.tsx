@@ -278,6 +278,43 @@ export default function LoginScreen() {
                         </TouchableOpacity>
                       </View>
 
+                      <View style={styles.socialButtonsRow}>
+                        <TouchableOpacity
+                          style={[styles.socialButton, styles.googleButton]}
+                          onPress={promptAsync}
+                          disabled={!request}
+                        >
+                          <Text
+                            style={[
+                              styles.socialButtonText,
+                              styles.googleButtonText,
+                            ]}
+                          >
+                            🔍 Google
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[
+                            styles.socialButton,
+                            styles.appleButton,
+                          ]}
+                          onPress={() => {
+                            // Apple Sign-In implementation would go here
+                            console.log('Apple Sign-In pressed');
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.socialButtonText,
+                              styles.appleButtonText,
+                            ]}
+                          >
+                            🍎 Apple
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+
                       {/* Sign up */}
                       <View style={styles.signupRow}>
                         <Text style={styles.footerText}>
