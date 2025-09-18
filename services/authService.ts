@@ -107,11 +107,24 @@ export class AuthService {
 
   static async signInWithOAuth(
     provider: 'google' | 'apple',
-    authUrl: string
+    authUrl: string,
+    isWeb: boolean = false
   ): Promise<AuthResult> {
     try {
-      // For authorization code flow, we need to exchange the full URL
-      const { data, error } = await supabase.auth.exchangeCodeForSession(authUrl);
+      if (isWeb) {
+        // For web, use the OAuth provider flow
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: authUrl,
+          },
+        });
+        return { error, user: data?.user || null, session: data?.session || null };
+      } else {
+        // For mobile, use the authorization code exchange
+        const { data, error } = await supabase.auth.exchangeCodeForSession(authUrl);
+        return { error, user: data?.user || null, session: data?.session || null };
+      }
 
       return { error, user: data?.user || null, session: data?.session || null };
     } catch (error) {
