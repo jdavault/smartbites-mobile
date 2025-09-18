@@ -110,16 +110,12 @@ export class AuthService {
     authCode: string
   ): Promise<AuthResult> {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: undefined, // Let Supabase handle the redirect
-        },
-      });
+      // For authorization code flow, we need to exchange the code
+      const { data, error } = await supabase.auth.exchangeCodeForSession(authCode);
 
-      return { error, user: data.user, session: data.session };
+      return { error, user: data?.user || null, session: data?.session || null };
     } catch (error) {
-      console.error('signInWithIdToken error:', error);
+      console.error('signInWithOAuth error:', error);
       return { error, user: null, session: null };
     }
   }
