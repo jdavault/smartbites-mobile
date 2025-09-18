@@ -280,8 +280,8 @@ export default function LoginScreen() {
                           ]}
                           onPress={() => {
                             openModal({
-                              title: 'Apple Sign In Coming Soon',
-                              subtitle: 'Apple Sign In will be available in a future update.',
+                              title: 'Apple Login Not Available',
+                              subtitle: "We'll add this soon.",
                               emoji: '🍎',
                             });
                           }}

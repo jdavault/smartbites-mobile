@@ -67,12 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     webClientId,
     scopes: ['openid', 'email', 'profile'],
     redirectUri,
-    additionalParameters: {
-      include_granted_scopes: 'true',
-    },
-    extraParams: {
-      nonce: undefined, // Let Expo handle nonce automatically
-    },
+    additionalParameters: {},
+    extraParams: {},
   });
 
   // Debug logging for redirect URI (after request is initialized)
