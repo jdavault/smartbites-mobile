@@ -65,8 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Google sign-in (Expo AuthSession)
   const [request, response, promptAsync] = useAuthRequest({
     responseType: ResponseType.Code,
-    codeChallenge: 'challenge',
-    codeChallengeMethod: CodeChallengeMethod.Plain,
+    codeChallengeMethod: CodeChallengeMethod.S256,
     iosClientId,
     androidClientId,
     webClientId,
