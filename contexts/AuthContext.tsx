@@ -31,7 +31,6 @@ interface AuthContextType {
   ) => Promise<{ error: any; data?: { user: any; session: any } }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  signInWithGoogle: () => Promise<{ error: any }>;
   promptGoogleAsync: () => Promise<void>;
 }
 
@@ -212,14 +211,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInWithGoogle = async () => {
-    if (request) {
-      await promptAsync();
-      return { error: null };
-    }
-    return { error: { message: 'Google sign-in not ready' } };
-  };
-
   const promptGoogleAsync = async () => {
     if (request) await promptAsync();
   };
@@ -233,7 +224,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signIn,
         signOut,
-        signInWithGoogle,
         promptGoogleAsync,
       }}
     >
