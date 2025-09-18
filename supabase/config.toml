@@ -69,7 +69,7 @@ max_frequency = "5s"
 [auth.external.google]
 enabled = true
 client_id = "1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com"
-secret = "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"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 redirect_uri = "https://supabase-api.ngrok.io/auth/v1/callback"
 
 # --- APPLE OAUTH PROVIDER (stub for later) ---
