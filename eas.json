@@ -32,9 +32,9 @@
       "distribution": "internal",
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_APP_ENV": "test",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://supabase-api.ngrok.io",
-        "EXPO_PUBLIC_SUPABASE_KEY": "test-anon-key"
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ahikcpeeuyaxyssscgqk.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_KEY": "sb_publishable_tEXAe_K7Oqkx7OETDgRTCw_YSFvjPpH"
       },
       "ios": { "simulator": true },
       "android": { "buildType": "apk" }

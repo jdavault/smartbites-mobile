@@ -1,6 +1,7 @@
 // Define allowed environments
 export type Environment = 'development' | 'local' | 'test' | 'production';
 
+
 // Figure out which environment we're in
 const getEnvironment = (): Environment => {
   const appEnv =
@@ -80,6 +81,11 @@ const configs: Record<
 // Get current environment and config
 export const CURRENT_ENV: Environment = getEnvironment();
 const currentConfig = configs[CURRENT_ENV];
+
+console.log("APP_ENV (from process.env.EXPO_PUBLIC_APP_ENV):", process.env.EXPO_PUBLIC_APP_ENV);
+console.log("CURRENT_ENV (after getEnvironment()):", CURRENT_ENV);
+
+
 
 // Export all constants
 export const APP_URL = currentConfig.APP_BASE_URL;

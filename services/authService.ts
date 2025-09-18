@@ -105,19 +105,30 @@ export class AuthService {
     }
   }
 
-  static async signInWithIdToken(
-    provider: string,
-    token: string
+  static async signInWithOAuth(
+    provider: 'google' | 'apple',
+    authUrl: string,
+    isWeb: boolean = false
   ): Promise<AuthResult> {
     try {
-      const { data, error } = await supabase.auth.signInWithIdToken({
-        provider: provider as any,
-        token,
-      });
+      if (isWeb) {
+        // For web, use the OAuth provider flow
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: authUrl,
+          },
+        });
+        return { error, user: data?.user || null, session: data?.session || null };
+      } else {
+        // For mobile, use the authorization code exchange
+        const { data, error } = await supabase.auth.exchangeCodeForSession(authUrl);
+        return { error, user: data?.user || null, session: data?.session || null };
+      }
 
-      return { error, user: data.user, session: data.session };
+      return { error, user: data?.user || null, session: data?.session || null };
     } catch (error) {
-      console.error('signInWithIdToken error:', error);
+      console.error('signInWithOAuth error:', error);
       return { error, user: null, session: null };
     }
   }
