@@ -49,7 +49,7 @@ export default function LoginScreen() {
     emoji: undefined,
   });
 
-  const { signIn } = useAuth();
+  const { signIn, promptGoogleAsync, request, promptAsync } = useAuth();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = getStyles(colors, insets);
@@ -95,6 +95,22 @@ export default function LoginScreen() {
       } else {
         router.replace('/(tabs)');
       }
+    } catch (err) {
+      openModal({
+        title: 'Unexpected Error',
+        subtitle: 'Something went wrong. Please try again.',
+        emoji: '⚠️',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      await promptGoogleAsync();
+      // The actual sign-in is handled by the response useEffect in AuthContext
     } catch (err) {
       openModal({
         title: 'Unexpected Error',
@@ -241,18 +257,11 @@ export default function LoginScreen() {
                         <View style={styles.dividerLine} />
                       </View>
 
-                      {/* Social signin buttons side by side */}
                       <View style={styles.socialButtonsRow}>
                         <TouchableOpacity
                           style={[styles.socialButton, styles.googleButton]}
-                          onPress={() =>
-                            openModal({
-                              title: 'Google Login Not Available',
-                              subtitle: "We're working on it — coming soon!",
-                              emoji: '😔',
-                            })
-                          }
-                          disabled={loading}
+                          onPress={handleGoogleLogin}
+                          disabled={loading || !request}
                         >
                           <Text
                             style={[
@@ -260,20 +269,22 @@ export default function LoginScreen() {
                               styles.googleButtonText,
                             ]}
                           >
-                            Google Sign In
+                            🤖 Google
                           </Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                          style={[styles.socialButton, styles.appleButton]}
-                          onPress={() =>
+                          style={[
+                            styles.socialButton,
+                            styles.appleButton,
+                          ]}
+                          onPress={() => {
                             openModal({
                               title: 'Apple Login Not Available',
-                              subtitle: "We're working on it — coming soon!",
-                              emoji: '😔',
-                            })
-                          }
-                          disabled={loading}
+                              subtitle: "We'll add this soon.",
+                              emoji: '🍎',
+                            });
+                          }}
                         >
                           <Text
                             style={[
@@ -281,7 +292,7 @@ export default function LoginScreen() {
                               styles.appleButtonText,
                             ]}
                           >
-                            Apple Sign In
+                            🍎 Apple
                           </Text>
                         </TouchableOpacity>
                       </View>
@@ -479,6 +490,16 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     socialButtonText: {
       fontFamily: Fonts.heading,
       fontSize: FontSizes.md,
+    },
+    socialNote: {
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    socialNoteText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      fontStyle: 'italic',
     },
     signupRow: {
       flexDirection: 'row',
