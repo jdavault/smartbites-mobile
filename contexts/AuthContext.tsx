@@ -97,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Google prompt error:', error);
       return { error };
     }
+  }
   // Initial session restore + subscribe to auth changes
   useEffect(() => {
     let mounted = true;
