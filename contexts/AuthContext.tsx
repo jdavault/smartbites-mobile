@@ -67,8 +67,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     webClientId,
     scopes: ['openid', 'email', 'profile'],
     redirectUri,
-    additionalParameters: {},
-    extraParams: {},
+    additionalParameters: {
+      include_granted_scopes: 'true',
+    },
+    extraParams: {
+      nonce: undefined,
+    },
   });
 
   // Debug logging for redirect URI (after request is initialized)
