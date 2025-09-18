@@ -150,7 +150,7 @@ export default function WelcomeScreen() {
                           { color: colors.textPrimary },
                         ]}
                       >
-                        🤖 Android (Alpha-Testers)
+                        🤖 Android
                       </Text>
                     </TouchableOpacity>
                   </View>
