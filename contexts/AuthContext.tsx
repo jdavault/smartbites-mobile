@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!authCode) return;
     try {
       // Exchange the authorization code for tokens via Supabase
-      const { error } = await AuthService.signInWithOAuth('google', response?.url || '');
+      const { error } = await AuthService.signInWithOAuth('google', response?.url || '', Platform.OS === 'web');
       console.log('🔍 Supabase Google sign-in result:', error ? 'ERROR' : 'SUCCESS');
       if (error) throw error;
     } catch (error) {
