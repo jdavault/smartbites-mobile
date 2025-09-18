@@ -106,30 +106,6 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    try {
-      const { error } = await signInWithGoogle();
-      if (error) {
-        openModal({
-          title: 'Google Login Failed',
-          subtitle: error.message || 'Please try again.',
-          emoji: '🚫',
-        });
-      } else {
-        router.replace('/(tabs)');
-      }
-    } catch (err) {
-      openModal({
-        title: 'Unexpected Error',
-        subtitle: 'Something went wrong. Please try again.',
-        emoji: '⚠️',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <View style={{ flex: 1 }}>
       {/* Background */}
@@ -265,42 +241,11 @@ export default function LoginScreen() {
                         <View style={styles.dividerLine} />
                       </View>
 
-                      {/* Social signin buttons side by side */}
-                      <View style={styles.socialButtonsRow}>
-                        <TouchableOpacity
-                          style={[styles.socialButton, styles.googleButton]}
-                          onPress={handleGoogleLogin}
-                          disabled={loading}
-                        >
-                          <Text
-                            style={[
-                              styles.socialButtonText,
-                              styles.googleButtonText,
-                            ]}
-                          >
-                            Google Sign In
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[styles.socialButton, styles.appleButton]}
-                          onPress={() =>
-                            openModal({
-                              title: 'Apple Login Not Available',
-                              subtitle: "We're working on it — coming soon!",
-                              emoji: '😔',
-                            })
-                          }
-                          disabled={loading}
-                        >
-                          <Text
-                            style={[
-                              styles.socialButtonText,
-                              styles.appleButtonText,
-                            ]}
-                          >
-                            Apple Sign In
-                          </Text>
-                        </TouchableOpacity>
+                      {/* Note: Social login not available in Bolt.new environment */}
+                      <View style={styles.socialNote}>
+                        <Text style={styles.socialNoteText}>
+                          Social login available in the mobile app
+                        </Text>
                       </View>
 
                       {/* Sign up */}
@@ -496,6 +441,16 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     socialButtonText: {
       fontFamily: Fonts.heading,
       fontSize: FontSizes.md,
+    },
+    socialNote: {
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    socialNoteText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      fontStyle: 'italic',
     },
     signupRow: {
       flexDirection: 'row',
