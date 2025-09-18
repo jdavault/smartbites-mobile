@@ -6,6 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useRouter } from 'expo-router';
 import { AuthService } from '@/services/authService';
 import type { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
@@ -62,27 +63,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     preferLocalhost: Platform.OS === 'web',
   });
 
-  // Google sign-in (Expo AuthSession)
-  const [request, response, promptAsync] = useAuthRequest({
-    responseType: ResponseType.Code,
-    codeChallengeMethod: CodeChallengeMethod.S256,
-    iosClientId,
-    androidClientId,
-    webClientId,
-    scopes: ['openid', 'email', 'profile'],
-    redirectUri,
-    additionalParameters: {},
-    extraParams: {},
-  }, {
-    // Configure WebBrowser options for better CORS handling
-    ...(Platform.OS === 'web' && {
-      browserParams: {
-        showInRecents: false,
-        enableBarCollapsing: false,
-        showTitle: false,
-      },
-    }),
-  });
+  // Google sign-in (Expo AuthSession) - only for mobile
+  const [request, response, promptAsync] = useAuthRequest(
+    Platform.OS === 'web' ? null : {
+      responseType: ResponseType.Code,
+      codeChallengeMethod: CodeChallengeMethod.S256,
+      iosClientId,
+      androidClientId,
+      webClientId,
+      scopes: ['openid', 'email', 'profile'],
+      redirectUri,
+      additionalParameters: {},
+      extraParams: {},
+    }
+  );
 
   // Debug logging for redirect URI (after request is initialized)
   useEffect(() => {
@@ -94,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [request, redirectUri]);
 
   useEffect(() => {
+    if (Platform.OS === 'web') return; // Skip for web
     console.log('🔍 Google response received:', response);
     if (response?.type === 'success') {
       console.log('🔍 Google success response:', response);
@@ -108,11 +103,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [response]);
 
   const handleGoogleSignIn = async (authCode?: string) => {
+    if (Platform.OS === 'web') return; // This should not be called on web
     console.log('🔍 Attempting Google sign-in with auth code:', !!authCode);
     if (!authCode) return;
     try {
       // Exchange the authorization code for tokens via Supabase
-      const { error } = await AuthService.signInWithOAuth('google', response?.url || '', Platform.OS === 'web');
+      const { error } = await AuthService.signInWithOAuth('google', response?.url || '', false);
       console.log('🔍 Supabase Google sign-in result:', error ? 'ERROR' : 'SUCCESS');
       if (error) throw error;
     } catch (error) {
@@ -230,17 +226,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const promptGoogleAsync = async () => {
-    if (request) {
+    if (Platform.OS === 'web') {
+      // Use Supabase's built-in OAuth for web
       try {
-        // For web, use a different approach to avoid CORS issues
-        if (Platform.OS === 'web') {
-          await promptAsync({
-            showInRecents: false,
-            createTask: false,
-          });
-        } else {
-          await promptAsync();
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+          },
+        });
+        
+        if (error) {
+          console.error('Supabase OAuth error:', error);
+          throw error;
         }
+      } catch (error) {
+        console.error('Google OAuth error:', error);
+      }
+    } else if (request) {
+      try {
+        await promptAsync();
       } catch (error) {
         console.error('Google OAuth prompt error:', error);
       }
@@ -259,7 +264,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         promptGoogleAsync,
         request,
         promptAsync,
-        promptGoogleAsync,
       }}
     >
       {children}
