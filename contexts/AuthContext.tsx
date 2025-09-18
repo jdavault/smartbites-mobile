@@ -34,6 +34,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ error: any }>;
   request: any;
   promptAsync: () => void;
+  promptAsync: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -96,8 +97,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Google prompt error:', error);
       return { error };
     }
-  };
-
   // Initial session restore + subscribe to auth changes
   useEffect(() => {
     let mounted = true;
@@ -218,6 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         signInWithGoogle,
         request,
+        promptAsync,
         promptAsync,
       }}
     >
