@@ -107,11 +107,11 @@ export class AuthService {
 
   static async signInWithOAuth(
     provider: 'google' | 'apple',
-    authCode: string
+    authUrl: string
   ): Promise<AuthResult> {
     try {
-      // For authorization code flow, we need to exchange the code
-      const { data, error } = await supabase.auth.exchangeCodeForSession(authCode);
+      // For authorization code flow, we need to exchange the full URL
+      const { data, error } = await supabase.auth.exchangeCodeForSession(authUrl);
 
       return { error, user: data?.user || null, session: data?.session || null };
     } catch (error) {
