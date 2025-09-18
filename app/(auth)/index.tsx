@@ -299,7 +299,7 @@ const getStyles = (
     },
     storeButtonText: {
       fontFamily: 'Inter-Regular',
-      fontSize: width <= 480 ? 10 : width <= 768 ? 12 : 14,
+      fontSize: width <= 480 ? 14 : width <= 768 ? 16 : 18,
       textAlign: 'center',
     },
 
