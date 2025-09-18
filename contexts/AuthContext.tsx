@@ -64,19 +64,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Google sign-in (Expo AuthSession) - only for mobile
-  const [request, response, promptAsync] = useAuthRequest(
-    Platform.OS === 'web' ? null : {
-      responseType: ResponseType.Code,
-      codeChallengeMethod: CodeChallengeMethod.S256,
-      iosClientId,
-      androidClientId,
-      webClientId,
-      scopes: ['openid', 'email', 'profile'],
-      redirectUri,
-      additionalParameters: {},
-      extraParams: {},
-    }
-  );
+  const [request, response, promptAsync] = useAuthRequest({
+    responseType: ResponseType.Code,
+    codeChallengeMethod: Platform.OS === 'web' ? undefined : CodeChallengeMethod.S256,
+    iosClientId: Platform.OS === 'ios' ? iosClientId : undefined,
+    androidClientId: Platform.OS === 'android' ? androidClientId : undefined,
+    webClientId: Platform.OS === 'web' ? webClientId : undefined,
+    scopes: ['openid', 'email', 'profile'],
+    redirectUri,
+    additionalParameters: {},
+    extraParams: {},
+  });
 
   // Debug logging for redirect URI (after request is initialized)
   useEffect(() => {
