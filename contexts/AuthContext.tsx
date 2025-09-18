@@ -57,6 +57,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     preferLocalhost: true,
   });
 
+  // Debug logging for redirect URI
+  console.log('🔍 Google OAuth Debug Info:');
+  console.log('  Platform:', Platform.OS);
+  console.log('  Redirect URI:', redirectUri);
+  console.log('  Web Client ID:', webClientId);
+  console.log('  Request ready:', !!request);
+
   // Google sign-in (Expo AuthSession)
   const [request, response, promptAsync] = useAuthRequest({
     responseType: ResponseType.IdToken,
@@ -68,18 +75,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
+    console.log('🔍 Google response received:', response);
     if (response?.type === 'success') {
+      console.log('🔍 Google success response:', response);
       const idToken =
         response.authentication?.idToken ?? response.params?.id_token ?? null;
+      console.log('🔍 ID Token found:', !!idToken);
       if (idToken) handleGoogleSignIn(idToken);
       else console.error('No ID token found in Google response');
+    } else if (response?.type === 'error') {
+      console.error('🔍 Google OAuth error:', response.error);
+      console.error('🔍 Google OAuth error params:', response.params);
     }
   }, [response]);
 
   const handleGoogleSignIn = async (idToken?: string) => {
+    console.log('🔍 Attempting Google sign-in with token:', !!idToken);
     if (!idToken) return;
     try {
       const { error } = await AuthService.signInWithIdToken('google', idToken);
+      console.log('🔍 Supabase Google sign-in result:', error ? 'ERROR' : 'SUCCESS');
       if (error) throw error;
     } catch (error) {
       console.error('Google sign-in error:', error);
