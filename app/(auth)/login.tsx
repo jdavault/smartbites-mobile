@@ -269,7 +269,7 @@ export default function LoginScreen() {
                               styles.googleButtonText,
                             ]}
                           >
-                            🔍 Google
+                            🤖 Google
                           </Text>
                         </TouchableOpacity>
 
@@ -292,7 +292,7 @@ export default function LoginScreen() {
                               styles.appleButtonText,
                             ]}
                           >
-                            Apple Sign In
+                            🍎 Apple
                           </Text>
                         </TouchableOpacity>
                       </View>
