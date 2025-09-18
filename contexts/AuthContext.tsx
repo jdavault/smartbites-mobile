@@ -73,35 +73,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Debug Google auth response
   useEffect(() => {
+    console.log('🔍 Google auth response changed:', response);
+    console.log('🔍 Response type:', response?.type);
+    console.log('🔍 Response params:', response?.params);
+    console.log('🔍 Response authentication:', response?.authentication);
+    
     if (response?.type === 'success') {
       console.log('🔍 Google auth success response:', response);
       const idToken =
         response.authentication?.idToken ?? response.params?.id_token ?? null;
+      console.log('🔍 Extracted ID token exists:', !!idToken);
+      console.log('🔍 ID token preview:', idToken ? `${idToken.substring(0, 20)}...` : 'null');
+      
       if (idToken) {
         console.log('✅ ID token found, signing in...');
         handleGoogleSignIn(idToken);
       } else {
         console.error('❌ No ID token found in Google response:', response);
+        console.error('❌ Available response keys:', Object.keys(response));
+        console.error('❌ Authentication object:', response.authentication);
+        console.error('❌ Params object:', response.params);
       }
     } else if (response?.type === 'error') {
       console.error('❌ Google auth error:', response.error);
+      console.error('❌ Full error response:', response);
     } else if (response?.type === 'cancel') {
       console.log('🚫 Google auth cancelled by user');
+    } else if (response) {
+      console.log('🤔 Unknown response type:', response.type);
+      console.log('🤔 Full response:', response);
     }
   }, [response]);
 
   const handleGoogleSignIn = async (idToken?: string) => {
+    console.log('🔑 handleGoogleSignIn called with token:', !!idToken);
     if (!idToken) return;
+    
     try {
       console.log('🔑 Attempting Supabase signInWithIdToken...');
+      console.log('🔑 Using provider: google');
+      console.log('🔑 Token length:', idToken.length);
+      
       const { error } = await AuthService.signInWithIdToken('google', idToken);
+      
+      console.log('🔑 Supabase response error:', error);
+      
       if (error) {
         console.error('❌ Supabase Google sign-in error:', error);
+        console.error('❌ Error message:', error.message);
+        console.error('❌ Error code:', error.code);
+        console.error('❌ Full error object:', JSON.stringify(error, null, 2));
         throw error;
       }
       console.log('✅ Google sign-in successful!');
     } catch (error) {
       console.error('Google sign-in error:', error);
+      console.error('🔍 Error type:', typeof error);
+      console.error('🔍 Error constructor:', error?.constructor?.name);
       throw error;
     }
   };
@@ -219,19 +247,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('🚀 Starting Google sign-in flow...');
     console.log('📱 Platform:', Platform.OS);
     console.log('🔗 Redirect URI:', redirectUri);
+    console.log('🔗 Request object exists:', !!request);
+    console.log('🔗 Request ready:', request?.url ? 'YES' : 'NO');
     
     if (request) {
       try {
         console.log('📋 Google auth request ready, prompting...');
+        console.log('📋 Request URL:', request.url);
         const result = await promptAsync();
         console.log('📋 Prompt result:', result);
+        console.log('📋 Prompt result type:', result?.type);
         return { error: null };
       } catch (error) {
         console.error('❌ Google prompt error:', error);
+        console.error('❌ Prompt error details:', JSON.stringify(error, null, 2));
         return { error };
       }
     } else {
       console.error('❌ Google auth request not ready');
+      console.error('❌ Request state:', request);
       return { error: null };
     }
   };
