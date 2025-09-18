@@ -49,7 +49,7 @@ export default function LoginScreen() {
     emoji: undefined,
   });
 
-  const { signIn, signInWithGoogle, request, promptAsync } = useAuth();
+  const { signIn, promptGoogleAsync, request, promptAsync } = useAuth();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = getStyles(colors, insets);
@@ -95,6 +95,22 @@ export default function LoginScreen() {
       } else {
         router.replace('/(tabs)');
       }
+    } catch (err) {
+      openModal({
+        title: 'Unexpected Error',
+        subtitle: 'Something went wrong. Please try again.',
+        emoji: '⚠️',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      await promptGoogleAsync();
+      // The actual sign-in is handled by the response useEffect in AuthContext
     } catch (err) {
       openModal({
         title: 'Unexpected Error',
@@ -244,8 +260,8 @@ export default function LoginScreen() {
                       <View style={styles.socialButtonsRow}>
                         <TouchableOpacity
                           style={[styles.socialButton, styles.googleButton]}
-                          onPress={promptAsync}
-                          disabled={!request}
+                          onPress={handleGoogleLogin}
+                          disabled={loading || !request}
                         >
                           <Text
                             style={[
