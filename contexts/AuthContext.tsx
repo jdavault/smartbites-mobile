@@ -20,19 +20,6 @@ const GOOGLE_CLIENT_IDS = {
   web: '1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com',
 };
 
-import { makeRedirectUri } from 'expo-auth-session';
-import { useAuthRequest } from 'expo-auth-session/providers/google';
-import { ResponseType } from 'expo-auth-session';
-
-WebBrowser.maybeCompleteAuthSession();
-
-// Google OAuth Client IDs
-const GOOGLE_CLIENT_IDS = {
-  ios: '1010197305867-f3kuf70gl65tapvmj3kouiaff9bt36tb.apps.googleusercontent.com',
-  android: '1010197305867-skot0d309k02prooif9o3vci80fhlb0r.apps.googleusercontent.com',
-  web: '1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com',
-};
-
 interface AuthContextType {
   user: User | null;
   session: Session | null;
