@@ -9,7 +9,7 @@ import type { User, Session } from '@supabase/supabase-js';
 
 import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
-import { ResponseType } from 'expo-auth-session';
+import { ResponseType, CodeChallengeMethod } from 'expo-auth-session';
 
 // Configure WebBrowser for better OAuth handling
 if (Platform.OS === 'web') {
@@ -64,18 +64,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Google sign-in (Expo AuthSession)
   const [request, response, promptAsync] = useAuthRequest({
-    responseType: ResponseType.IdToken,
+    responseType: ResponseType.Code,
+    codeChallenge: 'challenge',
+    codeChallengeMethod: CodeChallengeMethod.Plain,
     iosClientId,
     androidClientId,
     webClientId,
     scopes: ['openid', 'email', 'profile'],
     redirectUri,
-    additionalParameters: {
-      include_granted_scopes: 'true',
-    },
-    extraParams: {
-      nonce: undefined,
-    },
+    additionalParameters: {},
+    extraParams: {},
   }, {
     // Configure WebBrowser options for better CORS handling
     ...(Platform.OS === 'web' && {
@@ -100,22 +98,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('🔍 Google response received:', response);
     if (response?.type === 'success') {
       console.log('🔍 Google success response:', response);
-      const idToken =
-        response.authentication?.idToken ?? response.params?.id_token ?? null;
-      console.log('🔍 ID Token found:', !!idToken);
-      if (idToken) handleGoogleSignIn(idToken);
-      else console.error('No ID token found in Google response');
+      const authCode = response.params?.code;
+      console.log('🔍 Auth Code found:', !!authCode);
+      if (authCode) handleGoogleSignIn(authCode);
+      else console.error('No auth code found in Google response');
     } else if (response?.type === 'error') {
       console.error('🔍 Google OAuth error:', response.error);
       console.error('🔍 Google OAuth error params:', response.params);
     }
   }, [response]);
 
-  const handleGoogleSignIn = async (idToken?: string) => {
-    console.log('🔍 Attempting Google sign-in with token:', !!idToken);
-    if (!idToken) return;
+  const handleGoogleSignIn = async (authCode?: string) => {
+    console.log('🔍 Attempting Google sign-in with auth code:', !!authCode);
+    if (!authCode) return;
     try {
-      const { error } = await AuthService.signInWithIdToken('google', idToken);
+      // Exchange the authorization code for tokens via Supabase
+      const { error } = await AuthService.signInWithOAuth('google', authCode);
       console.log('🔍 Supabase Google sign-in result:', error ? 'ERROR' : 'SUCCESS');
       if (error) throw error;
     } catch (error) {
