@@ -279,8 +279,11 @@ export default function LoginScreen() {
                             styles.appleButton,
                           ]}
                           onPress={() => {
-                            // Apple Sign-In implementation would go here
-                            console.log('Apple Sign-In pressed');
+                            openModal({
+                              title: 'Apple Sign In Coming Soon',
+                              subtitle: 'Apple Sign In will be available in a future update.',
+                              emoji: '🍎',
+                            });
                           }}
                         >
                           <Text
@@ -289,7 +292,7 @@ export default function LoginScreen() {
                               styles.appleButtonText,
                             ]}
                           >
-                            🍎 Apple
+                            Apple Sign In
                           </Text>
                         </TouchableOpacity>
                       </View>
