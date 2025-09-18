@@ -6,6 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useRouter } from 'expo-router';
 import { AuthService } from '@/services/authService';
 import type { User, Session } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
 
 import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
@@ -13,12 +14,12 @@ import { ResponseType } from 'expo-auth-session';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const iosClientId =
-  '1010197305867-f3kuf70gl65tapvmj3kouiaff9bt36tb.apps.googleusercontent.com';
-const androidClientId =
-  '1010197305867-skot0d309k02prooif9o3vci80fhlb0r.apps.googleusercontent.com';
-const webClientId =
-  '1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com';
+// Google OAuth Client IDs
+const GOOGLE_CLIENT_IDS = {
+  ios: '1010197305867-f3kuf70gl65tapvmj3kouiaff9bt36tb.apps.googleusercontent.com',
+  android: '1010197305867-skot0d309k02prooif9o3vci80fhlb0r.apps.googleusercontent.com',
+  web: '1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com',
+};
 
 interface AuthContextType {
   user: User | null;
@@ -52,37 +53,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const redirectUri = makeRedirectUri({
-    scheme: 'smartbites',
-    preferLocalhost: true,
+  // Create platform-specific redirect URI
+  const redirectUri = Platform.select({
+    web: 'https://bolt.new', // For Bolt.new testing
+    default: makeRedirectUri({
+      scheme: 'smartbites',
+      preferLocalhost: true,
+    }),
   });
 
   // Google sign-in (Expo AuthSession)
   const [request, response, promptAsync] = useAuthRequest({
     responseType: ResponseType.IdToken,
-    iosClientId,
-    androidClientId,
-    webClientId,
+    iosClientId: GOOGLE_CLIENT_IDS.ios,
+    androidClientId: GOOGLE_CLIENT_IDS.android,
+    webClientId: GOOGLE_CLIENT_IDS.web,
     scopes: ['openid', 'email', 'profile'],
     redirectUri,
   });
 
+  // Debug Google auth response
   useEffect(() => {
     if (response?.type === 'success') {
+      console.log('🔍 Google auth success response:', response);
       const idToken =
         response.authentication?.idToken ?? response.params?.id_token ?? null;
-      if (idToken) handleGoogleSignIn(idToken);
-      else console.error('No ID token found in Google response');
+      if (idToken) {
+        console.log('✅ ID token found, signing in...');
+        handleGoogleSignIn(idToken);
+      } else {
+        console.error('❌ No ID token found in Google response:', response);
+      }
+    } else if (response?.type === 'error') {
+      console.error('❌ Google auth error:', response.error);
+    } else if (response?.type === 'cancel') {
+      console.log('🚫 Google auth cancelled by user');
     }
   }, [response]);
 
   const handleGoogleSignIn = async (idToken?: string) => {
     if (!idToken) return;
     try {
+      console.log('🔑 Attempting Supabase signInWithIdToken...');
       const { error } = await AuthService.signInWithIdToken('google', idToken);
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase Google sign-in error:', error);
+        throw error;
+      }
+      console.log('✅ Google sign-in successful!');
     } catch (error) {
       console.error('Google sign-in error:', error);
+      throw error;
     }
   };
 
@@ -196,11 +217,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    console.log('🚀 Starting Google sign-in flow...');
+    console.log('📱 Platform:', Platform.OS);
+    console.log('🔗 Redirect URI:', redirectUri);
+    
     if (request) {
-      await promptAsync();
+      try {
+        console.log('📋 Google auth request ready, prompting...');
+        const result = await promptAsync();
+        console.log('📋 Prompt result:', result);
+        return { error: null };
+      } catch (error) {
+        console.error('❌ Google prompt error:', error);
+        return { error };
+      }
+    } else {
+      console.error('❌ Google auth request not ready');
       return { error: null };
     }
-    return { error: { message: 'Google sign-in not ready' } };
   };
 
   const promptGoogleAsync = async () => {
