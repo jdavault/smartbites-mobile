@@ -105,14 +105,16 @@ export class AuthService {
     }
   }
 
-  static async signInWithIdToken(
-    provider: string,
-    token: string
+  static async signInWithOAuth(
+    provider: 'google' | 'apple',
+    authCode: string
   ): Promise<AuthResult> {
     try {
-      const { data, error } = await supabase.auth.signInWithIdToken({
-        provider: provider as any,
-        token,
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: undefined, // Let Supabase handle the redirect
+        },
       });
 
       return { error, user: data.user, session: data.session };
