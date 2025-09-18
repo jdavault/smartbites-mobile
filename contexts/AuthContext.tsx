@@ -11,7 +11,10 @@ import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
 import { ResponseType } from 'expo-auth-session';
 
-WebBrowser.maybeCompleteAuthSession();
+// Configure WebBrowser for better OAuth handling
+if (Platform.OS === 'web') {
+  WebBrowser.maybeCompleteAuthSession();
+}
 
 const iosClientId =
   '1010197305867-f3kuf70gl65tapvmj3kouiaff9bt36tb.apps.googleusercontent.com';
@@ -56,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const redirectUri = makeRedirectUri({
     scheme: 'smartbites',
-    preferLocalhost: true,
+    preferLocalhost: Platform.OS === 'web',
   });
 
   // Google sign-in (Expo AuthSession)
@@ -73,6 +76,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     extraParams: {
       nonce: undefined,
     },
+  }, {
+    // Configure WebBrowser options for better CORS handling
+    ...(Platform.OS === 'web' && {
+      browserParams: {
+        showInRecents: false,
+        enableBarCollapsing: false,
+        showTitle: false,
+      },
+    }),
   });
 
   // Debug logging for redirect URI (after request is initialized)
@@ -221,7 +233,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const promptGoogleAsync = async () => {
-    if (request) await promptAsync();
+    if (request) {
+      try {
+        // For web, use a different approach to avoid CORS issues
+        if (Platform.OS === 'web') {
+          await promptAsync({
+            showInRecents: false,
+            createTask: false,
+          });
+        } else {
+          await promptAsync();
+        }
+      } catch (error) {
+        console.error('Google OAuth prompt error:', error);
+      }
+    }
   };
 
   return (
