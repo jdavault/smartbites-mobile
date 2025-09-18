@@ -13,12 +13,12 @@ import { ResponseType } from 'expo-auth-session';
 
 WebBrowser.maybeCompleteAuthSession();
 
-// Google OAuth Client IDs
-const GOOGLE_CLIENT_IDS = {
-  ios: '1010197305867-f3kuf70gl65tapvmj3kouiaff9bt36tb.apps.googleusercontent.com',
-  android: '1010197305867-skot0d309k02prooif9o3vci80fhlb0r.apps.googleusercontent.com',
-  web: '1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com',
-};
+const iosClientId =
+  '1010197305867-f3kuf70gl65tapvmj3kouiaff9bt36tb.apps.googleusercontent.com';
+const androidClientId =
+  '1010197305867-skot0d309k02prooif9o3vci80fhlb0r.apps.googleusercontent.com';
+const webClientId =
+  '1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com';
 
 interface AuthContextType {
   user: User | null;
@@ -32,8 +32,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<{ error: any }>;
-  request: any;
-  promptAsync: () => void;
+  promptGoogleAsync: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,21 +52,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Google OAuth setup
-  const [request, response, promptAsync] = useAuthRequest(
-    {
-      responseType: ResponseType.IdToken,
-      clientId: GOOGLE_CLIENT_IDS[Platform.OS as keyof typeof GOOGLE_CLIENT_IDS] || GOOGLE_CLIENT_IDS.web,
-      scopes: ['openid', 'profile', 'email'],
-      redirectUri: makeRedirectUri({
-        scheme: 'smartbites',
-        path: 'auth',
-      }),
-    },
-    {
-      authorizationEndpoint: 'https://accounts.google.com/oauth/authorize',
+  const redirectUri = makeRedirectUri({
+    scheme: 'smartbites',
+    preferLocalhost: true,
+  });
+
+  // Google sign-in (Expo AuthSession)
+  const [request, response, promptAsync] = useAuthRequest({
+    responseType: ResponseType.IdToken,
+    iosClientId,
+    androidClientId,
+    webClientId,
+    scopes: ['openid', 'email', 'profile'],
+    redirectUri,
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const idToken =
+        response.authentication?.idToken ?? response.params?.id_token ?? null;
+      if (idToken) handleGoogleSignIn(idToken);
+      else console.error('No ID token found in Google response');
     }
-  );
+  }, [response]);
 
   const handleGoogleSignIn = async (idToken?: string) => {
     if (!idToken) return;
@@ -79,24 +86,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const idToken =
-        response.authentication?.idToken ?? response.params?.id_token ?? null;
-      if (idToken) handleGoogleSignIn(idToken);
-      else console.error('No ID token found in Google response');
-    }
-  }, [response]);
-
-  const signInWithGoogle = async () => {
-    try {
-      await promptAsync();
-      return { error: null };
-    } catch (error) {
-      console.error('Google prompt error:', error);
-      return { error };
-    }
-  }
   // Initial session restore + subscribe to auth changes
   useEffect(() => {
     let mounted = true;
@@ -206,6 +195,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    if (request) {
+      await promptAsync();
+      return { error: null };
+    }
+    return { error: { message: 'Google sign-in not ready' } };
+  };
+
+  const promptGoogleAsync = async () => {
+    if (request) await promptAsync();
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -216,8 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signOut,
         signInWithGoogle,
-        request,
-        promptAsync,
+        promptGoogleAsync,
       }}
     >
       {children}

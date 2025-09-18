@@ -224,8 +224,7 @@ export default function LoginScreen() {
                     <View style={styles.actions}>
                       <TouchableOpacity
                         style={[
-                          styles.button,
-                          loading && styles.buttonDisabled,
+                        onPress={promptGoogleAsync}
                         ]}
                         onPress={handleLogin}
                         disabled={loading}
