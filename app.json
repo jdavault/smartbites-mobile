@@ -2,8 +2,8 @@
   "expo": {
     "name": "SmartBites",
     "slug": "allergy-aware-recipe-finder",
-    "runtimeVersion": "1.0.10",
-    "version": "1.0.10",
+    "runtimeVersion": "1.0.11",
+    "version": "1.0.11",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "smartbites",
@@ -33,7 +33,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.allergy-aware-recipe-finder",
-      "buildNumber": "56",
+      "buildNumber": "72",
       "associatedDomains": ["applinks:smartbites.food"],
       "urlSchemes": ["smartbites"],
       "infoPlist": {
@@ -46,7 +46,7 @@
       "appleTeamId": "GEVW9YV737"
     },
     "android": {
-      "versionCode": 30,
+      "versionCode": 31,
       "package": "cooking.safeplate.allergyawarerecipefinder",
       "intentFilters": [
         {

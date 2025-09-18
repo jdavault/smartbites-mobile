@@ -37,7 +37,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Simple helper to check if URL contains auth parameters
 const isAuthURL = (url: string): boolean => {
   return (
     url.includes('type=recovery') ||
@@ -49,18 +48,16 @@ const isAuthURL = (url: string): boolean => {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Redirect URI used for Google OAuth only (not for Supabase email links)
   const redirectUri = makeRedirectUri({
-    scheme: 'smartbites', // must match app.json/app.config
+    scheme: 'smartbites',
     preferLocalhost: true,
   });
 
-  // ---- Google sign-in (Expo AuthSession)
+  // Google sign-in (Expo AuthSession)
   const [request, response, promptAsync] = useAuthRequest({
     responseType: ResponseType.IdToken,
     iosClientId,
@@ -89,18 +86,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // ---- Initial session restore + subscribe to auth changes
+  // Initial session restore + subscribe to auth changes
   useEffect(() => {
     let mounted = true;
-
     (async () => {
       try {
         const { session, error } = await AuthService.getSession();
         if (!mounted) return;
-
         if (error) {
           console.error('getSession error:', error);
-          // If refresh token is borked, clear it
           if (
             error.message?.includes('refresh_token_not_found') ||
             error.message?.includes('Invalid Refresh Token')
@@ -131,93 +125,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
-      // guard for older SDKs
       sub?.subscription?.unsubscribe?.();
     };
   }, []);
 
-  // ---- Handle auth links on WEB (simplified)
+  // Handle auth links
   useEffect(() => {
     if (Platform.OS !== 'web') return;
-
     const url = window.location.href;
     if (isAuthURL(url)) {
-      try {
-        // For web, the reset-password page handles its own URL parsing
-        console.log('Web auth URL detected, letting reset-password handle it');
-      } catch (e) {
-        console.error('Web auth redirect failed:', e);
-      }
+      console.log('Web auth URL detected, letting reset-password handle it');
     }
   }, []);
 
-  // ---- Handle auth links on NATIVE (simplified - direct to reset screen)
   useEffect(() => {
     if (Platform.OS === 'web') return;
-
     const handleAuthLink = (incomingUrl: string) => {
       console.log('🔗 URL received in AuthContext:', incomingUrl);
-
-      // Log URL details for debugging
-      try {
-        let url: URL;
-        if (incomingUrl.startsWith('smartbites://')) {
-          // Custom scheme deeplink
-          url = new URL(
-            incomingUrl.replace('smartbites://', 'https://temp.com/')
-          );
-        } else {
-          // Universal link
-          url = new URL(incomingUrl);
-        }
-
-        console.log('🔍 URL pathname:', url.pathname);
-        console.log('🔍 URL params:', Object.fromEntries(url.searchParams));
-        console.log('🔍 URL hash:', url.hash);
-      } catch (e) {
-        console.log('Could not parse URL for logging:', e);
-      }
-
-      // Check if it's an auth-related URL
       if (isAuthURL(incomingUrl)) {
         console.log('✅ Detected as auth URL, routing to reset-password');
-
-        // Navigate to reset-password and pass the original URL
         router.replace({
           pathname: '/reset-password',
           params: { originalUrl: encodeURIComponent(incomingUrl) },
         });
         return true;
-      } else {
-        console.log('❌ Not detected as auth URL');
       }
       return false;
     };
-
-    // Handle cold start (app opens from link)
-    Linking.getInitialURL()
-      .then((url) => {
-        if (url) {
-          console.log('🚀 App cold start with URL:', url);
-          handleAuthLink(url);
-        } else {
-          console.log('🚀 App cold start with no URL');
-        }
-      })
-      .catch((e) => {
-        console.error('Failed to get initial URL:', e);
-      });
-
-    // Handle warm start (app already running)
-    const subscription = Linking.addEventListener('url', ({ url }) => {
-      console.log('📱 App received URL while running:', url);
-      handleAuthLink(url);
-    });
-
+    Linking.getInitialURL().then((url) => url && handleAuthLink(url));
+    const subscription = Linking.addEventListener('url', ({ url }) =>
+      handleAuthLink(url)
+    );
     return () => subscription.remove();
   }, [router]);
 
-  // ---- Public API
+  // Public API
   const signUp = async (
     email: string,
     password: string,
@@ -235,7 +177,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       zip: additionalData?.zip,
       phone: additionalData?.phone,
     });
-
     return { error, data: { user, session } };
   };
 
@@ -244,29 +185,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    setUser(null);
+    setSession(null);
     try {
-      // Optimistically clear local state
-      setUser(null);
-      setSession(null);
-
       const { error } = await AuthService.signOut();
       if (error) console.error('signOut error:', error);
-
-      if (Platform.OS === 'web') {
-        try {
-          localStorage.clear();
-          sessionStorage.clear();
-          document.cookie.split(';').forEach((c) => {
-            document.cookie = c
-              .replace(/^ +/, '')
-              .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
-          });
-        } catch {}
-      }
     } catch (e) {
       console.error('Sign out exception:', e);
-      setUser(null);
-      setSession(null);
     }
   };
 

@@ -228,9 +228,9 @@ export async function generateRecipes(
         ].join('\n')
       : '';
 
-    const system = `You are a professional culinary recipe writer. 
-                    Your sole task is to generate detailed food recipes in valid JSON.
-                    
+      const system = `You are a professional culinary recipe writer. 
+      Your sole task is to generate detailed food recipes in valid JSON.
+
       Contract (output must match exactly):
       {
         "recipes":[
@@ -242,14 +242,14 @@ export async function generateRecipes(
             "instructions": string[],  // <=8
             "prepTime": string,        // e.g. "15 minutes"
             "cookTime": string,        // e.g. "15 minutes"
-            "servings": integer,
+            "servings": integer,       // must be 4
             "difficulty": "easy"|"medium"|"hard",
             "method": string,          // cooking method from enum
             "tags": string[],          // <=6 (e.g., quick, one-pot)
             "searchQuery": string,
-            "allergensToAvoid": string[],    // full set of allergens avoided by this recipe
+            "allergensToAvoid": string[],    // allergens avoided
             "dietaryPrefs": string[],       // diet categories
-            "allergensIncluded": string[],  // full set of allergens present in recipe ingredients
+            "allergensIncluded": string[],  // allergens present
             "notes": string,
             "nutritionInfo": string
           }
@@ -258,16 +258,20 @@ export async function generateRecipes(
 
       Rules:
       - **JSON only**. No prose. Must validate against schema.
-      - **Title**: descriptive, capitalized (ignore articles/conjunctions), highlight method, time, region, or key ingredient.
-      - **Ingredients**: concise and specific (e.g., “1 cup chopped fresh parsley”).
-      - **Times**: realistic prep/cook in minutes; Rise Time only for breads/pizza.
-      - **Instructions**: ≤8 steps, clear, safe (temps for meat/seafood).
+      - **Always return exactly 3 recipes.**
+      - **Title**:
+        - Descriptive, capitalized (capitalize all words except articles/conjunctions/prepositions).
+        - Highlight cooking method, time, region, or key ingredient.
+      - **HeadNote**: max 160 characters.
+      - **Ingredients**: ≤12 items, concise and specific (e.g., "1 cup chopped fresh parsley").
+      - **Instructions**: ≤8 clear, safe steps (include food-safe temps for meat/seafood).
+      - **Times**: realistic prep/cook in minutes; include Rise Time only for breads/pizza dough.
       - **Servings**: exactly 4.
-      - **Tags**: convenience descriptors only (e.g., quick, no-bake, one-pot).
+      - **Tags**: ≤6 convenience descriptors only (e.g., quick, no-bake, one-pot). Never allergens or diets.
       - **Allergens**:
-        - 'allergensToAvoid': always return the full set of allergens avoided by this recipe (from [Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)]).
-        - 'allergensIncluded': always return the full set of allergens actually present in the recipe’s ingredients.
-        - The two arrays must be mutually exclusive and together they must cover the entire allergen list.
+        - 'allergensToAvoid': full set of allergens NOT present in recipe (from [Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)]).
+        - 'allergensIncluded': full set of allergens present in recipe ingredients.
+        - The two arrays must be mutually exclusive and together must cover the entire allergen list.
         - Mapping examples:
           • cheese, milk, cream, yogurt → Milk
           • bread, buns, flour, pasta, crackers → Wheat (Gluten)
@@ -278,13 +282,8 @@ export async function generateRecipes(
           • fish (salmon, cod, tuna, etc.) → Fish
           • sesame seeds, tahini → Sesame
           • peanut, peanut butter → Peanuts
-      - Arrays must never overlap. If no allergens are present, 'allergensIncluded' = [] and 'allergens' = full allergen list.
-
-      Formatting:
-      - Return a single valid JSON object.
-      - Always return exactly 3 recipes.
-    `;
-
+      - If no allergens are present: allergensIncluded = [], allergensToAvoid = full allergen list.
+      `;
 
       const user = [
         `Generate 3 recipes for: "${query}"`,
@@ -459,6 +458,7 @@ export async function generateRecipes(
       `First choice snippet: ${
         data.choices?.[0]?.message?.content?.substring(0, 200) || 'EMPTY'
       }`
+
     );
 
     // DEBUG: Log the complete OpenAI response
