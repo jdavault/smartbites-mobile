@@ -6,7 +6,6 @@ import * as WebBrowser from 'expo-web-browser';
 import { useRouter } from 'expo-router';
 import { AuthService } from '@/services/authService';
 import type { User, Session } from '@supabase/supabase-js';
-import { Platform } from 'react-native';
 
 import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
