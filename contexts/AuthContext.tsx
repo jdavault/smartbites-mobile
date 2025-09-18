@@ -32,6 +32,9 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   promptGoogleAsync: () => Promise<void>;
+  request: any;
+  promptAsync: any;
+  promptGoogleAsync: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -224,6 +227,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signIn,
         signOut,
+        promptGoogleAsync,
+        request,
+        promptAsync,
         promptGoogleAsync,
       }}
     >
