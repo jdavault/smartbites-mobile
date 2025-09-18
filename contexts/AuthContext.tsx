@@ -20,6 +20,19 @@ const GOOGLE_CLIENT_IDS = {
   web: '1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com',
 };
 
+import { makeRedirectUri } from 'expo-auth-session';
+import { useAuthRequest } from 'expo-auth-session/providers/google';
+import { ResponseType } from 'expo-auth-session';
+
+WebBrowser.maybeCompleteAuthSession();
+
+// Google OAuth Client IDs
+const GOOGLE_CLIENT_IDS = {
+  ios: '1010197305867-f3kuf70gl65tapvmj3kouiaff9bt36tb.apps.googleusercontent.com',
+  android: '1010197305867-skot0d309k02prooif9o3vci80fhlb0r.apps.googleusercontent.com',
+  web: '1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com',
+};
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -31,6 +44,9 @@ interface AuthContextType {
   ) => Promise<{ error: any; data?: { user: any; session: any } }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<{ error: any }>;
+  request: any;
+  promptAsync: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,6 +65,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Google OAuth setup
+  const [request, response, promptAsync] = useAuthRequest(
+    {
+      responseType: ResponseType.IdToken,
+      clientId: GOOGLE_CLIENT_IDS[Platform.OS as keyof typeof GOOGLE_CLIENT_IDS] || GOOGLE_CLIENT_IDS.web,
+      scopes: ['openid', 'profile', 'email'],
+      redirectUri: makeRedirectUri({
+        scheme: 'smartbites',
+        path: 'auth',
+      }),
+    },
+    {
+      authorizationEndpoint: 'https://accounts.google.com/oauth/authorize',
+    }
+  );
+
+  const handleGoogleSignIn = async (idToken?: string) => {
+    if (!idToken) return;
+    try {
+      const { error } = await AuthService.signInWithIdToken('google', idToken);
+      if (error) throw error;
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const idToken =
+        response.authentication?.idToken ?? response.params?.id_token ?? null;
+      if (idToken) handleGoogleSignIn(idToken);
+      else console.error('No ID token found in Google response');
+    }
+  }, [response]);
+
+  const signInWithGoogle = async () => {
+    try {
+      await promptAsync();
+      return { error: null };
+    } catch (error) {
+      console.error('Google prompt error:', error);
+      return { error };
+    }
+  };
 
   // Initial session restore + subscribe to auth changes
   useEffect(() => {
@@ -168,6 +229,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signIn,
         signOut,
+        signInWithGoogle,
+        request,
+        promptAsync,
       }}
     >
       {children}

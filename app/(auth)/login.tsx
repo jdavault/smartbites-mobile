@@ -49,7 +49,7 @@ export default function LoginScreen() {
     emoji: undefined,
   });
 
-  const { signIn, signInWithGoogle } = useAuth(); // added Google
+  const { signIn, signInWithGoogle, request, promptAsync } = useAuth();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = getStyles(colors, insets);
@@ -241,11 +241,41 @@ export default function LoginScreen() {
                         <View style={styles.dividerLine} />
                       </View>
 
-                      {/* Note: Social login not available in Bolt.new environment */}
-                      <View style={styles.socialNote}>
-                        <Text style={styles.socialNoteText}>
-                          Social login available in the mobile app
-                        </Text>
+                      <View style={styles.socialButtonsRow}>
+                        <TouchableOpacity
+                          style={[styles.socialButton, styles.googleButton]}
+                          onPress={promptAsync}
+                          disabled={!request}
+                        >
+                          <Text
+                            style={[
+                              styles.socialButtonText,
+                              styles.googleButtonText,
+                            ]}
+                          >
+                            🔍 Google
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[
+                            styles.socialButton,
+                            styles.appleButton,
+                          ]}
+                          onPress={() => {
+                            // Apple Sign-In implementation would go here
+                            console.log('Apple Sign-In pressed');
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.socialButtonText,
+                              styles.appleButtonText,
+                            ]}
+                          >
+                            🍎 Apple
+                          </Text>
+                        </TouchableOpacity>
                       </View>
 
                       {/* Sign up */}
