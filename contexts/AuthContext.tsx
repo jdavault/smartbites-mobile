@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 
 import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
+import { useAuthRequest as useAppleAuthRequest } from 'expo-auth-session/providers/apple';
 import { ResponseType, CodeChallengeMethod } from 'expo-auth-session';
 
 // Configure WebBrowser for better OAuth handling
@@ -37,7 +38,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   request: any;
   promptAsync: any;
-  signInWithApple: () => Promise<{ error: any }>;
+  appleRequest: any;
+  promptAppleAsync: () => Promise<void>;
   promptGoogleAsync: () => Promise<void>;
 }
 
@@ -77,6 +79,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     extraParams: {},
   });
 
+  // Apple sign-in (Expo AuthSession) - only for mobile
+  const [appleRequest, appleResponse, promptAppleAsync] = useAppleAuthRequest({
+    responseType: ResponseType.Code,
+    codeChallengeMethod:
+      Platform.OS === 'web' ? undefined : CodeChallengeMethod.S256,
+    scopes: ['email', 'name'],
+    redirectUri,
+  });
   // Debug logging for redirect URI (after request is initialized)
   useEffect(() => {
     console.log('🔍 Google OAuth Debug Info:');
@@ -84,6 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('  Redirect URI:', redirectUri);
     console.log('  Web Client ID:', webClientId);
     console.log('  Request ready:', !!request);
+    console.log('🔍 Apple OAuth Debug Info:');
+    console.log('  Apple Request ready:', !!appleRequest);
   }, [request, redirectUri]);
 
   useEffect(() => {
@@ -101,6 +113,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [response]);
 
+  useEffect(() => {
+    if (Platform.OS === 'web') return; // Skip for web
+    console.log('🔍 Apple response received:', appleResponse);
+    if (appleResponse?.type === 'success') {
+      console.log('🔍 Apple success response:', appleResponse);
+      const authCode = appleResponse.params?.code;
+      console.log('🔍 Apple Auth Code found:', !!authCode);
+      if (authCode) handleAppleSignIn(authCode);
+      else console.error('No auth code found in Apple response');
+    } else if (appleResponse?.type === 'error') {
+      console.error('🔍 Apple OAuth error:', appleResponse.error);
+      console.error('🔍 Apple OAuth error params:', appleResponse.params);
+    }
+  }, [appleResponse]);
   const handleGoogleSignIn = async (authCode?: string) => {
     if (Platform.OS === 'web') return; // This should not be called on web
     console.log('🔍 Attempting Google sign-in with auth code:', !!authCode);
@@ -122,6 +148,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handleAppleSignIn = async (authCode?: string) => {
+    if (Platform.OS === 'web') return; // This should not be called on web
+    console.log('🔍 Attempting Apple sign-in with auth code:', !!authCode);
+    if (!authCode) return;
+    try {
+      // Exchange the authorization code for tokens via Supabase
+      const { error } = await AuthService.signInWithOAuth(
+        'apple',
+        appleResponse?.url || '',
+        false
+      );
+      console.log(
+        '🔍 Supabase Apple sign-in result:',
+        error ? 'ERROR' : 'SUCCESS'
+      );
+      if (error) throw error;
+    } catch (error) {
+      console.error('Apple sign-in error:', error);
+    }
+  };
   // Initial session restore + subscribe to auth changes
   useEffect(() => {
     let mounted = true;
@@ -258,6 +304,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const promptAppleSignIn = async () => {
+    if (Platform.OS === 'web') {
+      // Use Supabase's built-in OAuth for web
+      try {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+          options: {
+            redirectTo: window.location.origin,
+          },
+        });
+
+        if (error) {
+          console.error('Supabase Apple OAuth error:', error);
+          throw error;
+        }
+      } catch (error) {
+        console.error('Apple OAuth error:', error);
+      }
+    } else if (appleRequest) {
+      try {
+        await promptAppleAsync();
+      } catch (error) {
+        console.error('Apple OAuth prompt error:', error);
+      }
+    }
+  };
   return (
     <AuthContext.Provider
       value={{
@@ -270,6 +342,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         promptGoogleAsync,
         request,
         promptAsync,
+        appleRequest,
+        promptAppleAsync: promptAppleSignIn,
       }}
     >
       {children}

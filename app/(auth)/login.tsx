@@ -49,7 +49,7 @@ export default function LoginScreen() {
     emoji: undefined,
   });
 
-  const { signIn, promptGoogleAsync, request, promptAsync } = useAuth();
+  const { signIn, promptGoogleAsync, request, promptAsync, promptAppleAsync, appleRequest } = useAuth();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = getStyles(colors, insets);
@@ -122,6 +122,21 @@ export default function LoginScreen() {
     }
   };
 
+  const handleAppleLogin = async () => {
+    setLoading(true);
+    try {
+      await promptAppleAsync();
+      // The actual sign-in is handled by the response useEffect in AuthContext
+    } catch (err) {
+      openModal({
+        title: 'Unexpected Error',
+        subtitle: 'Something went wrong. Please try again.',
+        emoji: '⚠️',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <View style={{ flex: 1 }}>
       {/* Background */}
@@ -278,13 +293,8 @@ export default function LoginScreen() {
                             styles.socialButton,
                             styles.appleButton,
                           ]}
-                          onPress={() => {
-                            openModal({
-                              title: 'Apple Login Not Available',
-                              subtitle: "We'll add this soon.",
-                              emoji: '🍎',
-                            });
-                          }}
+                          onPress={handleAppleLogin}
+                          disabled={loading || (Platform.OS !== 'web' && !appleRequest)}
                         >
                           <Text
                             style={[
