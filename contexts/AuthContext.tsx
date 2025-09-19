@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 
 import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
+import { useAuthRequest as useAppleAuthRequest } from 'expo-auth-session/providers/apple';
 import { ResponseType, CodeChallengeMethod } from 'expo-auth-session';
 
 // Configure WebBrowser for better OAuth handling
@@ -35,9 +36,9 @@ interface AuthContextType {
   ) => Promise<{ error: any; data?: { user: any; session: any } }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  promptGoogleAsync: () => Promise<void>;
   request: any;
   promptAsync: any;
+  promptAppleAsync: () => Promise<void>;
   promptGoogleAsync: () => Promise<void>;
 }
 
@@ -66,7 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Google sign-in (Expo AuthSession) - only for mobile
   const [request, response, promptAsync] = useAuthRequest({
     responseType: ResponseType.Code,
-    codeChallengeMethod: Platform.OS === 'web' ? undefined : CodeChallengeMethod.S256,
+    codeChallengeMethod:
+      Platform.OS === 'web' ? undefined : CodeChallengeMethod.S256,
     iosClientId: Platform.OS === 'ios' ? iosClientId : undefined,
     androidClientId: Platform.OS === 'android' ? androidClientId : undefined,
     webClientId: Platform.OS === 'web' ? webClientId : undefined,
@@ -106,8 +108,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!authCode) return;
     try {
       // Exchange the authorization code for tokens via Supabase
-      const { error } = await AuthService.signInWithOAuth('google', response?.url || '', false);
-      console.log('🔍 Supabase Google sign-in result:', error ? 'ERROR' : 'SUCCESS');
+      const { error } = await AuthService.signInWithOAuth(
+        'google',
+        response?.url || '',
+        false
+      );
+      console.log(
+        '🔍 Supabase Google sign-in result:',
+        error ? 'ERROR' : 'SUCCESS'
+      );
       if (error) throw error;
     } catch (error) {
       console.error('Google sign-in error:', error);
@@ -233,7 +242,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             redirectTo: window.location.origin,
           },
         });
-        
+
         if (error) {
           console.error('Supabase OAuth error:', error);
           throw error;
@@ -250,6 +259,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const promptAppleSignIn = async () => {
+    if (Platform.OS === 'web') {
+      // Use Supabase's built-in OAuth for web
+      try {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+          options: {
+            redirectTo: window.location.origin,
+          },
+        });
+
+        if (error) {
+          console.error('Supabase Apple OAuth error:', error);
+          throw error;
+        }
+      } catch (error) {
+        console.error('Apple OAuth error:', error);
+      }
+    } else if (Platform.OS === 'ios') {
+      try {
+        const credential = await AppleAuthentication.signInAsync({
+          requestedScopes: [
+            AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+            AppleAuthentication.AppleAuthenticationScope.EMAIL,
+          ],
+        });
+        
+        if (credential.identityToken) {
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: 'apple',
+            token: credential.identityToken,
+          });
+          
+          if (error) {
+            console.error('Supabase Apple sign-in error:', error);
+            throw error;
+          }
+        }
+      } catch (error) {
+        console.error('Apple OAuth prompt error:', error);
+      }
+    } else {
+      console.log('Apple Sign-In is only available on iOS');
+    }
+  };
   return (
     <AuthContext.Provider
       value={{
@@ -262,6 +316,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         promptGoogleAsync,
         request,
         promptAsync,
+        promptAppleAsync: promptAppleSignIn,
       }}
     >
       {children}
