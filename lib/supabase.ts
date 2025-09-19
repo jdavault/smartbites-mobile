@@ -4,18 +4,14 @@ import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/config/constants';
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const anon = process.env.EXPO_PUBLIC_SUPABASE_KEY!;
-
-export { url };
-
-if (!url || !anon) {
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error('Missing Supabase environment variables');
 }
 
 // Web: implicit flow, auto-detect tokens in URL, no custom storage
-export const supabaseWeb = createClient(url, anon, {
+export const supabaseWeb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     flowType: 'implicit',
     detectSessionInUrl: true,
@@ -26,7 +22,7 @@ export const supabaseWeb = createClient(url, anon, {
 });
 
 // Mobile: PKCE flow, store verifier/session in AsyncStorage, do NOT sniff URL
-export const supabaseMobile = createClient(url, anon, {
+export const supabaseMobile = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     flowType: 'pkce',
     detectSessionInUrl: false,
