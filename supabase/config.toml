@@ -75,8 +75,7 @@ redirect_uri = "https://supabase-api.ngrok.io/auth/v1/callback"
 # --- APPLE OAUTH PROVIDER (stub for later) ---
 [auth.external.apple]
 enabled = false
-client_id = ""
+client_id = "com.anonymous.allergy-aware-recipe-finder.signin"
 secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
-redirect_uri = ""
-url = ""
+redirect_uri = "https://supabase-api.ngrok.io/auth/v1/callback"
 skip_nonce_check = false

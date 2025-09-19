@@ -19,7 +19,8 @@
     "ios:sim": "npx expo run:ios --device 'iPhone 13 Pro Max'",
     "ios": "npx expo run:ios --device",
     "ios:prod": "npx expo run:ios --configuration Release",
-    "web": "rimraf -rf node_modules/.cache/babel-loader/* && rimraf -rf .expo && npx expo start -w -c"
+    "web": "rimraf -rf node_modules/.cache/babel-loader/* && rimraf -rf .expo && npx expo start -w -c",
+    "apple:secret": "ts-node ./tools/generate-apple-secret.ts"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.1",
@@ -71,8 +72,10 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/react": "~19.0.10",
     "babel-plugin-module-resolver": "^5.0.2",
+    "jsonwebtoken": "^9.0.2",
     "typescript": "~5.8.3"
   },
   "expo": {

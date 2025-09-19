@@ -13,7 +13,8 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "types": ["react", "react-native"]
+    "types": ["react", "react-native"],
+    "esModuleInterop": true
   },
   "exclude": ["supabase/functions"],
   "include": ["**/*.ts", "**/*.tsx", "expo-env.d.ts", ".expo/types/**/*.ts"],
