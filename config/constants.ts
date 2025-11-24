@@ -1,76 +1,72 @@
 // Expo automatically loads .env files, so we just read from process.env
+// ⚠️  IMPORTANT: All process.env.EXPO_PUBLIC_* must be accessed STATICALLY
+//     Dynamic access like process.env[key] will NOT work on web builds!
 
 export type Environment = 'development' | 'local' | 'test' | 'production';
 
-// Helper to get required env var with validation
-const getRequiredEnv = (key: string): string => {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(
-      `❌ Missing required environment variable: ${key}\n` +
-        `💡 Make sure your .env file is set up correctly.\n` +
-        `   Run: npm run env:local`
-    );
-  }
-  return value;
-};
+// ===================================
+// STATIC ENV ACCESS (required for web)
+// ===================================
 
-// Helper to get optional env var with default
-const getOptionalEnv = (key: string, defaultValue: string): string => {
-  return process.env[key] || defaultValue;
-};
+// Core configuration - STATIC access required
+export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY ?? '';
+export const APP_URL = process.env.EXPO_PUBLIC_APP_BASE_URL ?? '';
 
-// Helper to get boolean env var
-const getBooleanEnv = (key: string, defaultValue: boolean): boolean => {
-  const value = process.env[key];
-  if (!value) return defaultValue;
-  return value.toLowerCase() === 'true';
-};
+// Application settings - STATIC access with defaults
+export const SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE =
+  process.env.EXPO_PUBLIC_RECIPE_IMAGES_PUBLIC_ROUTE ||
+  '/storage/v1/object/public/recipe-images';
 
-// Determine current environment from .env (loaded by Expo)
+export const CONTACT_EMAIL =
+  process.env.EXPO_PUBLIC_CONTACT_EMAIL || 'support@smartbites.food';
+
+export const SUPPORT_EMAIL =
+  process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@smartbites.food';
+
+export const SUPPORT_PHONE =
+  process.env.EXPO_PUBLIC_SUPPORT_PHONE || '623-220-9724';
+
+export const RESET_PASSWORD_ROUTE =
+  process.env.EXPO_PUBLIC_RESET_PASSWORD_ROUTE || '/reset-password';
+
+export const LOGIN_ROUTE = '/sign-in';
+
+// Debug and environment flags
+export const DEBUG_APP = process.env.EXPO_PUBLIC_DEBUG_APP === 'true';
+
+// OpenAI Configuration
+export const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY || '';
+
+export const OPENAI_ORG_ID =
+  process.env.EXPO_PUBLIC_OPENAI_ORG_ID || 'org-pigNWK6KQYXhW9KadKfDpVGu';
+
+export const OPENAI_PROJECT =
+  process.env.EXPO_PUBLIC_OPENAI_PROJECT || 'proj_WQLJGYZRj2GPZSmGchawQ5Bu';
+
+export const USE_EDGE_FUNCTION_FOR_OPENAI =
+  process.env.EXPO_PUBLIC_USE_EDGE_FUNCTION_FOR_OPENAI !== 'false'; // default true
+
+// ===================================
+// DERIVED VALUES
+// ===================================
+
+// Determine current environment
 const getEnvironment = (): Environment => {
   const env = process.env.EXPO_PUBLIC_APP_ENV || 'development';
-
   if (env === 'production') return 'production';
   if (env === 'local') return 'local';
   if (env === 'test') return 'test';
   return 'development';
 };
 
-// ===================================
-// EXPORTED CONSTANTS
-// ===================================
-
 export const CURRENT_ENV: Environment = getEnvironment();
 
-// Core configuration (loaded from .env by Expo)
-export const SUPABASE_URL = getRequiredEnv('EXPO_PUBLIC_SUPABASE_URL');
-export const SUPABASE_ANON_KEY = getRequiredEnv('EXPO_PUBLIC_SUPABASE_KEY');
-
-export const APP_URL = getRequiredEnv('EXPO_PUBLIC_APP_BASE_URL');
-
-// Application settings
-export const SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE = getOptionalEnv(
-  'EXPO_PUBLIC_RECIPE_IMAGES_PUBLIC_ROUTE',
-  '/storage/v1/object/public/recipe-images'
-);
-export const CONTACT_EMAIL = getOptionalEnv(
-  'EXPO_PUBLIC_CONTACT_EMAIL',
-  'support@smartbites.food'
-);
-export const SUPPORT_EMAIL = getOptionalEnv(
-  'EXPO_PUBLIC_SUPPORT_EMAIL',
-  'support@smartbites.food'
-);
-export const SUPPORT_PHONE = getOptionalEnv(
-  'EXPO_PUBLIC_SUPPORT_PHONE',
-  '623-220-9724'
-);
-export const RESET_PASSWORD_ROUTE = getOptionalEnv(
-  'EXPO_PUBLIC_RESET_PASSWORD_ROUTE',
-  '/reset-password'
-);
-export const LOGIN_ROUTE = '/sign-in';
+// Environment flags
+export const isDevelopment = CURRENT_ENV === 'development';
+export const isLocal = CURRENT_ENV === 'local';
+export const isTest = CURRENT_ENV === 'test';
+export const isProduction = CURRENT_ENV === 'production';
 
 // Redirect URLs
 export const REDIRECT_URLS = {
@@ -78,27 +74,31 @@ export const REDIRECT_URLS = {
   signIn: `${APP_URL}${LOGIN_ROUTE}`,
 };
 
-// Debug and environment flags
-export const DEBUG_APP = getBooleanEnv('EXPO_PUBLIC_DEBUG_APP', false);
-export const isDevelopment = CURRENT_ENV === 'development';
-export const isLocal = CURRENT_ENV === 'local';
-export const isTest = CURRENT_ENV === 'test';
-export const isProduction = CURRENT_ENV === 'production';
+// ===================================
+// RUNTIME VALIDATION
+// ===================================
 
-// OpenAI Configuration
-export const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY || '';
-export const OPENAI_ORG_ID = getOptionalEnv(
-  'EXPO_PUBLIC_OPENAI_ORG_ID',
-  'org-pigNWK6KQYXhW9KadKfDpVGu'
-);
-export const OPENAI_PROJECT = getOptionalEnv(
-  'EXPO_PUBLIC_OPENAI_PROJECT',
-  'proj_WQLJGYZRj2GPZSmGchawQ5Bu'
-);
-export const USE_EDGE_FUNCTION_FOR_OPENAI = getBooleanEnv(
-  'EXPO_PUBLIC_USE_EDGE_FUNCTION_FOR_OPENAI',
-  true // default to true for security
-);
+// Validate required vars at runtime (catches issues in dev, shows helpful errors)
+const validateRequiredEnvVars = () => {
+  const missing: string[] = [];
+
+  if (!SUPABASE_URL) missing.push('EXPO_PUBLIC_SUPABASE_URL');
+  if (!SUPABASE_ANON_KEY) missing.push('EXPO_PUBLIC_SUPABASE_KEY');
+  if (!APP_URL) missing.push('EXPO_PUBLIC_APP_BASE_URL');
+
+  if (missing.length > 0) {
+    throw new Error(
+      `❌ Missing required environment variables:\n` +
+        missing.map((v) => `   - ${v}`).join('\n') +
+        `\n\n💡 Make sure your .env file is set up correctly.\n` +
+        `   Run: npm run env:local`
+    );
+  }
+};
+
+// Run validation
+validateRequiredEnvVars();
+
 // ===================================
 // SAFETY CHECKS
 // ===================================

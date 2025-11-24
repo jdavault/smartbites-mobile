@@ -32,5 +32,6 @@ const getStyles = (colors: ThemeColors, width?: number, height?: number) =>
       width: width || 300,
       height: height || 300,
       marginVertical: 20,
+      resizeMode: 'contain',
     },
   });
