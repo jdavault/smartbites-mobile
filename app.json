@@ -2,8 +2,8 @@
   "expo": {
     "name": "SmartBites",
     "slug": "allergy-aware-recipe-finder",
-    "runtimeVersion": "1.0.12",
-    "version": "1.0.12",
+    "runtimeVersion": "1.1.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "smartbites",
@@ -16,7 +16,7 @@
     },
     "platforms": ["ios", "android", "web"],
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/splash-ios.png",
       "resizeMode": "contain",
       "backgroundColor": "#f9f8f2"
     },
@@ -46,11 +46,11 @@
       "appleTeamId": "GEVW9YV737"
     },
     "android": {
-      "versionCode": 33,
+      "versionCode": 34,
       "package": "cooking.safeplate.allergyawarerecipefinder",
       "splash": {
-        "image": "./assets/images/splash.png",
-        "resizeMode": "cover",
+        "image": "./assets/images/splash-android.png",
+        "resizeMode": "contain",
         "backgroundColor": "#f9f8f2"
       },
       "intentFilters": [
@@ -77,6 +77,16 @@
       "expo-font",
       "expo-web-browser",
       "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "android": {
+            "backgroundColor": "#f9f8f2",
+            "image": "./assets/images/splash-android12.png",
+            "imageWidth": 200
+          }
+        }
+      ],
       [
         "expo-navigation-bar",
         {
