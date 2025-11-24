@@ -48,6 +48,11 @@
     "android": {
       "versionCode": 33,
       "package": "cooking.safeplate.allergyawarerecipefinder",
+      "splash": {
+        "image": "./assets/images/splash.png",
+        "resizeMode": "cover",
+        "backgroundColor": "#f9f8f2"
+      },
       "intentFilters": [
         {
           "action": "VIEW",

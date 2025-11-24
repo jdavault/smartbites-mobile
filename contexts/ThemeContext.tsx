@@ -244,6 +244,65 @@ interface ThemeContextType {
   isDark: boolean;
 }
 
+// Add after the ColorScheme definition, before ThemeColors interface
+
+// ============================================
+// DESIGN TOKENS
+// ============================================
+export const SPACING = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+} as const;
+
+export const RADIUS = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  full: 999,
+} as const;
+
+export const SHADOWS = {
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+} as const;
+
+// Platform-specific font sizes
+import { Platform } from 'react-native';
+
+export const FONT_SIZES = {
+  xs: Platform.select({ ios: 11, android: 10, web: 11 }) as number,
+  sm: Platform.select({ ios: 13, android: 12, web: 13 }) as number,
+  md: Platform.select({ ios: 15, android: 14, web: 15 }) as number,
+  lg: Platform.select({ ios: 17, android: 16, web: 17 }) as number,
+  xl: Platform.select({ ios: 20, android: 18, web: 20 }) as number,
+  xxl: Platform.select({ ios: 24, android: 22, web: 24 }) as number,
+} as const;
+
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
