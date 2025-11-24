@@ -1,4 +1,3 @@
-// contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Platform } from 'react-native';
 import * as Linking from 'expo-linking';
@@ -10,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 
 import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
-import { useAuthRequest as useAppleAuthRequest } from 'expo-auth-session/providers/apple';
+//import { useAuthRequest as useAppleAuthRequest } from 'expo-auth-session/providers/apple';
 import { ResponseType, CodeChallengeMethod } from 'expo-auth-session';
 
 // Configure WebBrowser for better OAuth handling
@@ -38,8 +37,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   request: any;
   promptAsync: any;
-  promptAppleAsync: () => Promise<void>;
   promptGoogleAsync: () => Promise<void>;
+  promptAppleAsync: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,7 +73,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     webClientId: Platform.OS === 'web' ? webClientId : undefined,
     scopes: ['openid', 'email', 'profile'],
     redirectUri,
-    additionalParameters: {},
     extraParams: {},
   });
 
@@ -259,7 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const promptAppleSignIn = async () => {
+  const promptAppleAsync = async () => {
     if (Platform.OS === 'web') {
       // Use Supabase's built-in OAuth for web
       try {
@@ -277,31 +275,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Apple OAuth error:', error);
       }
-    } else if (Platform.OS === 'ios') {
-      try {
-        const credential = await AppleAuthentication.signInAsync({
-          requestedScopes: [
-            AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-            AppleAuthentication.AppleAuthenticationScope.EMAIL,
-          ],
-        });
-        
-        if (credential.identityToken) {
-          const { error } = await supabase.auth.signInWithIdToken({
-            provider: 'apple',
-            token: credential.identityToken,
-          });
-          
-          if (error) {
-            console.error('Supabase Apple sign-in error:', error);
-            throw error;
-          }
-        }
-      } catch (error) {
-        console.error('Apple OAuth prompt error:', error);
-      }
     } else {
-      console.log('Apple Sign-In is only available on iOS');
+      // const credential = await AppleAuthentication.signInAsync({
+      //   requestedScopes: [
+      //     AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+      //     AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      //   ],
+      // });
+
+      // if (credential.identityToken) {
+      //   const { error } = await supabase.auth.signInWithIdToken({
+      //     provider: 'apple',
+      //     token: credential.identityToken,
+      //   });
+
+      //   if (error) {
+      //     console.error('Supabase Apple sign-in error:', error);
+      //     throw error;
+      //   }
+      throw new Error('Apple Sign-In not yet implemented');
     }
   };
   return (
@@ -316,7 +308,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         promptGoogleAsync,
         request,
         promptAsync,
-        promptAppleAsync: promptAppleSignIn,
+        promptAppleAsync,
       }}
     >
       {children}

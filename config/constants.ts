@@ -1,126 +1,135 @@
-// Define allowed environments
+// Expo automatically loads .env files, so we just read from process.env
+
 export type Environment = 'development' | 'local' | 'test' | 'production';
 
-
-// Figure out which environment we're in
-const getEnvironment = (): Environment => {
-  const appEnv =
-    process.env.EXPO_PUBLIC_APP_ENV ||
-    process.env.APP_ENV ||
-    process.env.NODE_ENV ||
-    (__DEV__ ? 'development' : 'production');
-
-  if (appEnv === 'production') return 'production';
-  if (appEnv === 'local') return 'local';
-  if (appEnv === 'test') return 'test';
-  return 'development'; // default
-};
-
-// Environment-specific configuration
-const configs: Record<
-  Environment,
-  {
-    SUPABASE_URL: string;
-    SUPABASE_ANON_KEY: string;
-    APP_BASE_URL: string;
-    RECIPE_IMAGES_PUBLIC_ROUTE: string;
-    CONTACT_EMAIL: string;
-    SUPPORT_EMAIL: string;
-    SUPPORT_PHONE: string;
-    RESET_PASSWORD_ROUTE: string;
-    DEBUG_APP: boolean;
+// Helper to get required env var with validation
+const getRequiredEnv = (key: string): string => {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(
+      `❌ Missing required environment variable: ${key}\n` +
+        `💡 Make sure your .env file is set up correctly.\n` +
+        `   Run: npm run env:local`
+    );
   }
-> = {
-  development: {
-    SUPABASE_URL: 'https://ahikcpeeuyaxyssscgqk.supabase.co',
-    SUPABASE_ANON_KEY: 'sb_publishable_tEXAe_K7Oqkx7OETDgRTCw_YSFvjPpH',
-    APP_BASE_URL: 'https://smartbites.food',
-    RECIPE_IMAGES_PUBLIC_ROUTE: '/storage/v1/object/public/recipe-images',
-    CONTACT_EMAIL: 'support@smartbites.food',
-    SUPPORT_EMAIL: 'support@smartbites.food',
-    SUPPORT_PHONE: '623-220-9724',
-    RESET_PASSWORD_ROUTE: '/reset-password',
-    DEBUG_APP: false,
-  },
-  local: {
-    SUPABASE_URL: 'https://supabase-api.ngrok.io',
-    SUPABASE_ANON_KEY:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
-    APP_BASE_URL: 'https://dev.smartbites.food',
-    RECIPE_IMAGES_PUBLIC_ROUTE: '/storage/v1/object/public/recipe-images',
-    CONTACT_EMAIL: 'support@smartbites.food',
-    SUPPORT_EMAIL: 'support@smartbites.food',
-    SUPPORT_PHONE: '623-220-9724',
-    RESET_PASSWORD_ROUTE: '/reset-password',
-    DEBUG_APP: true,
-  },
-  test: {
-    SUPABASE_URL: 'https://supabase-api.ngrok.io',
-    SUPABASE_ANON_KEY: 'test-anon-key', // dummy or mock key
-    APP_BASE_URL: 'http://localhost:9999', // can be a mock server
-    RECIPE_IMAGES_PUBLIC_ROUTE: '/storage/v1/object/public/recipe-images',
-    CONTACT_EMAIL: 'test@smartbites.food',
-    SUPPORT_EMAIL: 'test@smartbites.food',
-    SUPPORT_PHONE: '000-000-0000',
-    RESET_PASSWORD_ROUTE: '/reset-password',
-    DEBUG_APP: true,
-  },
-  production: {
-    SUPABASE_URL: 'https://ahikcpeeuyaxyssscgqk.supabase.co',
-    SUPABASE_ANON_KEY: 'sb_publishable_tEXAe_K7Oqkx7OETDgRTCw_YSFvjPpH',
-    APP_BASE_URL: 'https://smartbites.food',
-    RECIPE_IMAGES_PUBLIC_ROUTE: '/storage/v1/object/public/recipe-images',
-    CONTACT_EMAIL: 'support@smartbites.food',
-    SUPPORT_EMAIL: 'support@smartbites.food',
-    SUPPORT_PHONE: '623-220-9724',
-    RESET_PASSWORD_ROUTE: '/reset-password',
-    DEBUG_APP: false,
-  },
+  return value;
 };
 
-// Get current environment and config
+// Helper to get optional env var with default
+const getOptionalEnv = (key: string, defaultValue: string): string => {
+  return process.env[key] || defaultValue;
+};
+
+// Helper to get boolean env var
+const getBooleanEnv = (key: string, defaultValue: boolean): boolean => {
+  const value = process.env[key];
+  if (!value) return defaultValue;
+  return value.toLowerCase() === 'true';
+};
+
+// Determine current environment from .env (loaded by Expo)
+const getEnvironment = (): Environment => {
+  const env = process.env.EXPO_PUBLIC_APP_ENV || 'development';
+
+  if (env === 'production') return 'production';
+  if (env === 'local') return 'local';
+  if (env === 'test') return 'test';
+  return 'development';
+};
+
+// ===================================
+// EXPORTED CONSTANTS
+// ===================================
+
 export const CURRENT_ENV: Environment = getEnvironment();
-const currentConfig = configs[CURRENT_ENV];
 
-console.log("APP_ENV (from process.env.EXPO_PUBLIC_APP_ENV):", process.env.EXPO_PUBLIC_APP_ENV);
-console.log("CURRENT_ENV (after getEnvironment()):", CURRENT_ENV);
+// Core configuration (loaded from .env by Expo)
+export const SUPABASE_URL = getRequiredEnv('EXPO_PUBLIC_SUPABASE_URL');
+export const SUPABASE_ANON_KEY = getRequiredEnv('EXPO_PUBLIC_SUPABASE_KEY');
 
+export const APP_URL = getRequiredEnv('EXPO_PUBLIC_APP_BASE_URL');
 
-
-// Export all constants
-export const APP_URL = currentConfig.APP_BASE_URL;
-export const SUPABASE_URL = currentConfig.SUPABASE_URL;
-export const SUPABASE_ANON_KEY = currentConfig.SUPABASE_ANON_KEY;
-export const SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE =
-  currentConfig.RECIPE_IMAGES_PUBLIC_ROUTE;
-export const CONTACT_EMAIL = currentConfig.CONTACT_EMAIL;
-export const SUPPORT_EMAIL = currentConfig.SUPPORT_EMAIL;
-export const SUPPORT_PHONE = currentConfig.SUPPORT_PHONE;
-export const RESET_PASSWORD_ROUTE = currentConfig.RESET_PASSWORD_ROUTE;
+// Application settings
+export const SUPABASE_RECIPE_IMAGES_PUBLIC_ROUTE = getOptionalEnv(
+  'EXPO_PUBLIC_RECIPE_IMAGES_PUBLIC_ROUTE',
+  '/storage/v1/object/public/recipe-images'
+);
+export const CONTACT_EMAIL = getOptionalEnv(
+  'EXPO_PUBLIC_CONTACT_EMAIL',
+  'support@smartbites.food'
+);
+export const SUPPORT_EMAIL = getOptionalEnv(
+  'EXPO_PUBLIC_SUPPORT_EMAIL',
+  'support@smartbites.food'
+);
+export const SUPPORT_PHONE = getOptionalEnv(
+  'EXPO_PUBLIC_SUPPORT_PHONE',
+  '623-220-9724'
+);
+export const RESET_PASSWORD_ROUTE = getOptionalEnv(
+  'EXPO_PUBLIC_RESET_PASSWORD_ROUTE',
+  '/reset-password'
+);
 export const LOGIN_ROUTE = '/sign-in';
 
+// Redirect URLs
 export const REDIRECT_URLS = {
   resetPassword: `${APP_URL}${RESET_PASSWORD_ROUTE}`,
   signIn: `${APP_URL}${LOGIN_ROUTE}`,
 };
 
-export const DEBUG_APP = currentConfig.DEBUG_APP;
+// Debug and environment flags
+export const DEBUG_APP = getBooleanEnv('EXPO_PUBLIC_DEBUG_APP', false);
 export const isDevelopment = CURRENT_ENV === 'development';
 export const isLocal = CURRENT_ENV === 'local';
 export const isTest = CURRENT_ENV === 'test';
 export const isProduction = CURRENT_ENV === 'production';
 
-// 🚨 Safety checks
+// OpenAI Configuration
+export const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY || '';
+export const OPENAI_ORG_ID = getOptionalEnv(
+  'EXPO_PUBLIC_OPENAI_ORG_ID',
+  'org-pigNWK6KQYXhW9KadKfDpVGu'
+);
+export const OPENAI_PROJECT = getOptionalEnv(
+  'EXPO_PUBLIC_OPENAI_PROJECT',
+  'proj_WQLJGYZRj2GPZSmGchawQ5Bu'
+);
+export const USE_EDGE_FUNCTION_FOR_OPENAI = getBooleanEnv(
+  'EXPO_PUBLIC_USE_EDGE_FUNCTION_FOR_OPENAI',
+  true // default to true for security
+);
+// ===================================
+// SAFETY CHECKS
+// ===================================
+
 if (isProduction && SUPABASE_URL.includes('ngrok')) {
-  throw new Error('❌ Production build is pointing at ngrok! Check eas.json envs.');
+  throw new Error(
+    '❌ Production build is pointing at ngrok! Check your .env file.\n' +
+      '   Expected EXPO_PUBLIC_APP_ENV=production with production Supabase URL.'
+  );
 }
 
 if (isLocal && !SUPABASE_URL.includes('ngrok')) {
-  console.warn('⚠️ Local build is not pointing at ngrok. Did you forget to update eas.json?');
+  console.warn(
+    '⚠️  Local environment is not pointing at ngrok.\n' +
+      '    Current URL: ' +
+      SUPABASE_URL +
+      '\n' +
+      '    Expected: https://supabase-api.ngrok.io\n' +
+      '    Run: npm run env:local'
+  );
 }
 
-// Log current environment for debugging
-console.log(`🌍 Environment: ${CURRENT_ENV}`);
-console.log(`🔗 Supabase URL: ${SUPABASE_URL}`);
-console.log(`🏠 App URL: ${APP_URL}`);
-console.log(`🐛 Debug: ${DEBUG_APP}`);
+// ===================================
+// STARTUP LOGS (dev mode only)
+// ===================================
+
+if (DEBUG_APP && __DEV__) {
+  console.log('');
+  console.log('📱 SmartBites Configuration');
+  console.log(`   Environment: ${CURRENT_ENV}`);
+  console.log(`   Supabase: ${SUPABASE_URL.substring(0, 30)}...`);
+  console.log(`   Debug: ${DEBUG_APP}`);
+  console.log('');
+}

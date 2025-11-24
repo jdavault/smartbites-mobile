@@ -49,7 +49,8 @@ export default function LoginScreen() {
     emoji: undefined,
   });
 
-  const { signIn, promptGoogleAsync, request, promptAsync, promptAppleAsync, appleRequest } = useAuth();
+  const { signIn, promptGoogleAsync, request, promptAsync, promptAppleAsync } =
+    useAuth();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = getStyles(colors, insets);
@@ -126,13 +127,23 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await promptAppleAsync();
-      // The actual sign-in is handled by the response useEffect in AuthContext
-    } catch (err) {
-      openModal({
-        title: 'Unexpected Error',
-        subtitle: 'Something went wrong. Please try again.',
-        emoji: '⚠️',
-      });
+      // Success - auth context will handle navigation
+    } catch (err: any) {
+      if (err.message === 'APPLE_NOT_AVAILABLE') {
+        // Mobile: Show coming soon modal
+        openModal({
+          title: 'Apple Login Not Available',
+          subtitle: "We're working on it -- coming soon!",
+          emoji: '😢',
+        });
+      } else {
+        // Other errors
+        openModal({
+          title: 'Login Failed',
+          subtitle: err.message || 'Please try again.',
+          emoji: '🚫',
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -274,36 +285,44 @@ export default function LoginScreen() {
 
                       <View style={styles.socialButtonsRow}>
                         <TouchableOpacity
-                          style={[styles.socialButton, styles.googleButton]}
+                          style={[
+                            styles.socialButton,
+                            styles.googleButton,
+                            Platform.OS === 'android' &&
+                              styles.socialButtonFull,
+                          ]}
                           onPress={handleGoogleLogin}
                           disabled={loading || !request}
                         >
-                          <Text
-                            style={[
-                              styles.socialButtonText,
-                              styles.googleButtonText,
-                            ]}
-                          >
-                            🤖 Google
-                          </Text>
+                          <View style={styles.socialButtonContent}>
+                            <Text style={styles.googleColoredG}>G</Text>
+                            <Text
+                              style={[
+                                styles.socialButtonText,
+                                styles.googleButtonText,
+                              ]}
+                            >
+                              Google
+                            </Text>
+                          </View>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                          style={[
-                            styles.socialButton,
-                            styles.appleButton,
-                          ]}
+                          style={[styles.socialButton, styles.appleButton]}
                           onPress={handleAppleLogin}
-                          disabled={loading || (Platform.OS !== 'web' && !appleRequest)}
+                          disabled={loading}
                         >
-                          <Text
-                            style={[
-                              styles.socialButtonText,
-                              styles.appleButtonText,
-                            ]}
-                          >
-                            🍎 Apple
-                          </Text>
+                          <View style={styles.socialButtonContent}>
+                            <Text style={styles.appleIcon}></Text>
+                            <Text
+                              style={[
+                                styles.socialButtonText,
+                                styles.appleButtonText,
+                              ]}
+                            >
+                              Apple
+                            </Text>
+                          </View>
                         </TouchableOpacity>
                       </View>
 
@@ -587,5 +606,26 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     emoji: {
       fontSize: 40,
       marginBottom: 12,
+    },
+    googleIcon: {
+      fontWeight: 'bold',
+      fontSize: 18,
+      color: '#4285F4',
+    },
+    appleIcon: {
+      fontSize: 18,
+    },
+    socialButtonFull: {
+      flex: 1,
+    },
+    socialButtonContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    googleColoredG: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: '#4285F4',
     },
   });

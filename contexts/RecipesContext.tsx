@@ -1,9 +1,46 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { RecipeService, type UserRecipeData, type SaveRecipeData } from '@/services/recipeService';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+} from 'react';
+import {
+  RecipeService,
+  type UserRecipeData,
+  type SaveRecipeData,
+} from '@/services/recipeService';
 import { useAuth } from './AuthContext';
 import { useAllergens } from './AllergensContext';
 import { useDietary } from './DietaryContext';
 
+// interface RecipeDbRow {
+//   id: string;
+//   title: string;
+//   headNote: string;
+//   description: string;
+//   ingredients: string[];
+//   instructions: string[];
+//   prepTime: string;
+//   cookTime: string;
+//   method?: string;
+//   servings: number;
+//   difficulty: 'easy' | 'medium' | 'hard';
+//   tags: string[];
+//   searchQuery: string;
+//   searchKey?: string;
+//   allergens: string | string[]; // Could be JSON string or array
+//   allergensIncluded: string | string[]; // Could be JSON string or array
+//   dietaryPrefs: string | string[]; // Could be JSON string or array
+//   notes: string;
+//   nutritionInfo: string;
+//   image?: string;
+//   isFavorite?: boolean;
+//   actions?: any;
+//   createdAt: string;
+// }
+
+// User recipe data type (what your context expects)
 export interface Recipe {
   id?: string;
   title: string;
@@ -18,7 +55,7 @@ export interface Recipe {
   method: string;
   tags: string[];
   searchQuery: string;
-  searchKey: string;
+  searchKey?: string;
   allergensToAvoid: string[];
   dietaryPrefs: string[];
   notes: string;
@@ -54,13 +91,13 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   const { userAllergens } = useAllergens();
   const { userDietaryPrefs } = useDietary();
 
-  const favoriteRecipes = useMemo(() => 
-    savedRecipes.filter(recipe => recipe.isFavorite), 
+  const favoriteRecipes = useMemo(
+    () => savedRecipes.filter((recipe) => recipe.isFavorite),
     [savedRecipes]
   );
-  
-  const recentRecipes = useMemo(() => 
-    savedRecipes.filter(recipe => !recipe.isFavorite).slice(0, 5), 
+
+  const recentRecipes = useMemo(
+    () => savedRecipes.filter((recipe) => !recipe.isFavorite).slice(0, 5),
     [savedRecipes]
   );
 
@@ -69,34 +106,47 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLoading(true);
-      const recipeData = await RecipeService.getUserRecipes(user.id);
-      const formattedRecipes: Recipe[] = recipeData.map(item => ({
-        id: item.id,
-        title: item.title,
-        headNote: item.headNote,
-        description: item.description,
-        ingredients: item.ingredients,
-        instructions: item.instructions,
-        prepTime: item.prepTime,
-        cookTime: item.cookTime,
-        servings: item.servings,
-        difficulty: item.difficulty,
-        tags: item.tags,
-        searchQuery: item.searchQuery,
-        searchKey: item.searchKey,
-        allergensToAvoid: item.allergens,
-        dietaryPrefs: item.dietaryPrefs,
-        notes: item.notes,
-        nutritionInfo: item.nutritionInfo,
-        allergensIncluded: item.allergensIncluded,
-        image: item.image,
-        isFavorite: item.isFavorite,
-        actions: item.actions,
-        createdAt: item.createdAt,
-        method: item.method || 'Bake',
-      }));
+      const recipes = await RecipeService.getUserRecipes(user.id);
+      // const formattedRecipes: UserRecipeData[] = recipeData.map((item) => ({
+      //   id: item.id,
+      //   title: item.title,
+      //   headNote: item.headNote,
+      //   description: item.description,
+      //   ingredients: item.ingredients,
+      //   instructions: item.instructions,
+      //   prepTime: item.prepTime,
+      //   cookTime: item.cookTime,
+      //   method: item.method || 'Bake',
+      //   servings: item.servings,
+      //   difficulty: item.difficulty,
+      //   tags: item.tags,
+      //   searchQuery: item.searchQuery,
+      //   searchKey: item.searchKey,
+      //   // allergensToAvoid: item.allergens,
+      //   // allergensIncluded: item.allergensIncluded,
+      //   // dietaryPrefs: item.dietaryPrefs,
+      //   // Parse JSON strings to arrays
+      //   allergensToAvoid:
+      //     typeof item.allergensToAvoid === 'string'
+      //       ? JSON.parse(item.allergensToAvoid)
+      //       : item.allergensToAvoid || [],
+      //   allergensIncluded:
+      //     typeof item.allergensIncluded === 'string'
+      //       ? JSON.parse(item.allergensIncluded)
+      //       : item.allergensIncluded || [],
+      //   dietaryPrefs:
+      //     typeof item.dietaryPrefs === 'string'
+      //       ? JSON.parse(item.dietaryPrefs)
+      //       : item.dietaryPrefs || [],
+      //   notes: item.notes,
+      //   nutritionInfo: item.nutritionInfo,
+      //   image: item.image,
+      //   isFavorite: item.isFavorite,
+      //   actions: item.actions,
+      //   createdAt: item.createdAt,
+      // }));
 
-      setSavedRecipes(formattedRecipes);
+      setSavedRecipes(recipes);
     } catch (error) {
       console.error('Error fetching recipes:', error);
     } finally {
@@ -123,44 +173,18 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
   // Load 5 random recipes that match user's allergens and dietary preferences
   const loadRandomFeaturedRecipes = async () => {
     if (!user) return;
-    
+
     try {
-      const userAllergenNames = userAllergens.map(a => a.name);
-      const userDietaryNames = userDietaryPrefs.map(d => d.name);
-      
-      const recipeData = await RecipeService.getFeaturedRecipes(
-        user.id, 
-        userAllergenNames, 
+      const userAllergenNames = userAllergens.map((a) => a.name);
+      const userDietaryNames = userDietaryPrefs.map((d) => d.name);
+
+      const recipes = await RecipeService.getFeaturedRecipes(
+        user.id,
+        userAllergenNames,
         userDietaryNames
       );
-      
-      const formattedRecipes: Recipe[] = recipeData.map(item => ({
-        id: item.id,
-        title: item.title,
-        headNote: item.headNote,
-        description: item.description,
-        ingredients: item.ingredients,
-        instructions: item.instructions,
-        prepTime: item.prepTime,
-        cookTime: item.cookTime,
-        servings: item.servings,
-        difficulty: item.difficulty,
-        tags: item.tags,
-        searchQuery: item.searchQuery,
-        searchKey: item.searchKey,
-        allergensToAvoid: item.allergens,
-        dietaryPrefs: item.dietaryPrefs,
-        notes: item.notes,
-        nutritionInfo: item.nutritionInfo,
-        allergensIncluded: item.allergensIncluded,
-        image: item.image,
-        isFavorite: item.isFavorite,
-        actions: item.actions,
-        createdAt: item.createdAt,
-        method: item.method || 'Bake',
-      }));
 
-      setFeaturedRecipes(formattedRecipes);
+      setFeaturedRecipes(recipes);
     } catch (error) {
       console.error('Error loading featured recipes:', error);
       setFeaturedRecipes([]);
@@ -173,7 +197,11 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
       console.log('🔄 Loading featured recipes due to preference change');
       loadRandomFeaturedRecipes();
     }
-  }, [user?.id, JSON.stringify(userAllergens.map(a => a.$id)), JSON.stringify(userDietaryPrefs.map(d => d.$id))]);
+  }, [
+    user?.id,
+    JSON.stringify(userAllergens.map((a) => a.$id)),
+    JSON.stringify(userDietaryPrefs.map((d) => d.$id)),
+  ]);
 
   const generateFeaturedRecipes = async () => {
     await loadRandomFeaturedRecipes();
@@ -183,10 +211,10 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      const userAllergenNames = userAllergens.map(a => a.name);
-      const userDietaryNames = userDietaryPrefs.map(d => d.name);
-      
-      const recipeId = await RecipeService.saveRecipe({
+      const userAllergenNames = userAllergens.map((a) => a.name);
+      const userDietaryNames = userDietaryPrefs.map((d) => d.name);
+
+      await RecipeService.saveRecipe({
         recipe,
         userId: user.id,
         userAllergens: userAllergenNames,
@@ -207,9 +235,9 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      const userAllergenNames = userAllergens.map(a => a.name);
-      const userDietaryNames = userDietaryPrefs.map(d => d.name);
-      
+      const userAllergenNames = userAllergens.map((a) => a.name);
+      const userDietaryNames = userDietaryPrefs.map((d) => d.name);
+
       const recipeId = await RecipeService.saveRecipe({
         recipe,
         userId: user.id,
@@ -231,42 +259,48 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
     try {
       await RecipeService.toggleFavorite(user.id, recipeId);
-      
+
       // Update local state
-      const savedRecipe = savedRecipes.find(r => r.id === recipeId);
+      const savedRecipe = savedRecipes.find((r) => r.id === recipeId);
       if (savedRecipe) {
         // Update existing saved recipe
-        setSavedRecipes(prev =>
-          prev.map(r =>
-            r.id === recipeId ? { 
-              ...r, 
-              isFavorite: !r.isFavorite,
-              actions: r.isFavorite 
-                ? r.actions?.filter(action => action !== 'favorite') || []
-                : [...(r.actions || []), 'favorite']
-            } : r
+        setSavedRecipes((prev) =>
+          prev.map((r) =>
+            r.id === recipeId
+              ? {
+                  ...r,
+                  isFavorite: !r.isFavorite,
+                  actions: r.isFavorite
+                    ? r.actions?.filter(
+                        (action: string) => action !== 'favorite'
+                      ) || []
+                    : [...(r.actions || []), 'favorite'],
+                }
+              : r
           )
         );
       } else {
         // Featured recipe - add to saved recipes
-        const featuredRecipe = featuredRecipes.find(r => r.id === recipeId);
+        const featuredRecipe = featuredRecipes.find((r) => r.id === recipeId);
         if (featuredRecipe) {
           const newSavedRecipe = {
             ...featuredRecipe,
             isFavorite: true,
             actions: ['favorite'],
           };
-          setSavedRecipes(prev => [newSavedRecipe, ...prev]);
+          setSavedRecipes((prev) => [newSavedRecipe, ...prev]);
         }
       }
 
       // Update featured recipes state to reflect favorite status
-      setFeaturedRecipes(prev =>
-        prev.map(r =>
-          r.id === recipeId ? { 
-            ...r, 
-            isFavorite: true 
-          } : r
+      setFeaturedRecipes((prev) =>
+        prev.map((r) =>
+          r.id === recipeId
+            ? {
+                ...r,
+                isFavorite: true,
+              }
+            : r
         )
       );
     } catch (error) {
@@ -279,7 +313,7 @@ export function RecipesProvider({ children }: { children: React.ReactNode }) {
 
     try {
       await RecipeService.deleteUserRecipe(user.id, recipeId);
-      setSavedRecipes(prev => prev.filter(r => r.id !== recipeId));
+      setSavedRecipes((prev) => prev.filter((r) => r.id !== recipeId));
     } catch (error) {
       console.error('Error deleting recipe:', error);
     }

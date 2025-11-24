@@ -23,9 +23,13 @@ import { useAllergens } from '@/contexts/AllergensContext';
 import { useDietary } from '@/contexts/DietaryContext';
 import { ALLERGENS } from '@/contexts/AllergensContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
-import { generateRecipes } from '@/lib/openai';
+import {
+  generateRecipesParallel,
+  VARIANT_LABELS,
+  type RecipeVariant,
+} from '@/utils/generateAIRecipes';
 import { validateFoodQuery } from '@/utils/validation';
-import { Search, RefreshCw } from 'lucide-react-native';
+import { Search, ChevronDown } from 'lucide-react-native';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeSection from '@/components/RecipeSection';
 import AllergenFilter from '@/components/AllergenFilter';
@@ -38,6 +42,19 @@ type ModalInfo = {
   subtitle?: string;
   emoji?: string;
 };
+
+// Count options for dropdown
+const COUNT_OPTIONS = [3, 4, 5, 6, 7, 8, 9, 10];
+
+// Type/Variant options for dropdown
+const TYPE_OPTIONS: { value: RecipeVariant; label: string }[] = [
+  { value: 'mix', label: 'Mix (Variety)' },
+  { value: 'quick', label: 'Quick (< 30 min)' },
+  { value: 'standard', label: 'Standard' },
+  { value: 'gourmet', label: 'Gourmet' },
+  { value: 'budget', label: 'Budget' },
+  { value: 'comfort', label: 'Comfort' },
+];
 
 export default function SearchScreen() {
   const { user } = useAuth();
@@ -66,6 +83,15 @@ export default function SearchScreen() {
   const [favoritingRecipeId, setFavoritingRecipeId] = useState<string | null>(
     null
   );
+  const [isSearching, setIsSearching] = useState(false);
+  const [recipesLoaded, setRecipesLoaded] = useState(0);
+
+  // NEW: Recipe count and type settings
+  const [recipeCount, setRecipeCount] = useState(3);
+  const [recipeType, setRecipeType] = useState<RecipeVariant>('mix');
+  const [showCountPicker, setShowCountPicker] = useState(false);
+  const [showTypePicker, setShowTypePicker] = useState(false);
+
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [selectedAllergens, setSelectedAllergens] = useState<
     { $id: string; name: string }[]
@@ -80,7 +106,7 @@ export default function SearchScreen() {
 
   const { width } = useWindowDimensions();
   const containerMax = 1024;
-  const padX = 8; // Just a tiny bit of padding for search and filters
+  const padX = 8;
 
   const openModal = (info: Omit<ModalInfo, 'visible'>) =>
     setModalInfo({ ...info, visible: true });
@@ -91,6 +117,38 @@ export default function SearchScreen() {
     setSelectedAllergens(userAllergens);
     setSelectedDietary(userDietaryPrefs);
   }, [userAllergens, userDietaryPrefs]);
+
+  // Create allergen filter array for UI
+  const allergensFilter = ALLERGENS.map((allergen) => ({
+    ...allergen,
+    selected: selectedAllergens.some((a) => a.$id === allergen.$id),
+  }));
+
+  // Create dietary filter array for UI
+  const dietaryFilter = DIETARY_PREFERENCES.map((dietary) => ({
+    ...dietary,
+    selected: selectedDietary.some((d) => d.$id === dietary.$id),
+  }));
+
+  // Helper function to get progress message (only for 3+ recipes)
+  const getProgressMessage = (loaded: number, total: number) => {
+    if (loaded === 0) return 'Analyzing your preferences...';
+    const halfway = Math.floor(total / 2);
+    const almostDone = total - 1;
+    if (loaded === halfway) return 'Halfway there!';
+    if (loaded === almostDone) return 'Almost done...';
+    return 'Cooking up recipes...';
+  };
+
+  // Helper function to get progress emoji (only for 3+ recipes)
+  const getProgressEmoji = (loaded: number, total: number) => {
+    if (loaded === 0) return '🤖';
+    const halfway = Math.floor(total / 2);
+    const almostDone = total - 1;
+    if (loaded === halfway) return '🎯';
+    if (loaded >= almostDone) return '🎉';
+    return '🍳';
+  };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -115,30 +173,58 @@ export default function SearchScreen() {
       return;
     }
 
-    setLoading(true);
-    const debugMessages: string[] = [];
     try {
-      const allergenNames = selectedAllergens.map((a) => a.name);
-      const dietaryNames = selectedDietary.map((d) => d.name);
-      debugMessages.push(`=== SEARCH DEBUG START ===`);
+      setIsSearching(true);
+      setSearchResults([]); // Clear previous results
+      setRecipesLoaded(0); // Reset progress
 
-      const recipes = await generateRecipes(
+      const allergenNames = allergensFilter
+        .filter((a) => a.selected)
+        .map((a) => a.name);
+      const dietaryNames = dietaryFilter
+        .filter((d) => d.selected)
+        .map((d) => d.name);
+
+      console.log('🔍 Searching for:', searchQuery);
+      console.log('📊 Count:', recipeCount, 'Type:', recipeType);
+      console.log('🚫 Avoiding allergens:', allergenNames);
+      console.log('🥗 Dietary preferences:', dietaryNames);
+
+      // ✨ PARALLEL GENERATION with configurable count and type
+      const generatedRecipes = await generateRecipesParallel(
         searchQuery,
         allergenNames,
-        dietaryNames
-      );
-      
-      // Map OpenAI recipes to our Recipe interface
-      const mappedRecipes = recipes.map(mapOpenAIRecipeToRecipe);
-      setSearchResults(mappedRecipes);
-      debugMessages.push(`=== SEARCH DEBUG END (no error )===`);
-    } catch (error) {
-      console.error('Search error:', error);
-      debugMessages.push(
-        `Parsed recipeData: ${JSON.stringify(error).substring(0, 300)}...`
+        dietaryNames,
+        recipeCount,
+        recipeType,
+        // 🎯 Callback: fires as EACH recipe completes
+        (recipe, index) => {
+          console.log(
+            `✅ Recipe ${index + 1}/${recipeCount} ready: "${recipe.title}"`
+          );
+
+          // Map OpenAI recipe to your Recipe interface
+          const mappedRecipe = mapOpenAIRecipeToRecipe(recipe);
+
+          // Add to list immediately (progressive display)
+          setSearchResults((prev) => {
+            const newResults = [...prev];
+            newResults[index] = mappedRecipe;
+            return newResults.filter((r) => r); // Remove undefined slots
+          });
+
+          // Update progress counter
+          setRecipesLoaded((prev) => prev + 1);
+        }
       );
 
-      debugMessages.push(`=== SEARCH DEBUG END ( ERROR )===`);
+      // Final update (ensures all recipes are there)
+      const allMappedRecipes = generatedRecipes.map(mapOpenAIRecipeToRecipe);
+      setSearchResults(allMappedRecipes);
+
+      console.log(`🎉 All ${recipeCount} recipes generated successfully!`);
+    } catch (error) {
+      console.error('Search error:', error);
 
       // Handle different types of errors with appropriate messages and emojis
       if (error instanceof Error) {
@@ -165,9 +251,11 @@ export default function SearchScreen() {
           emoji: '❌',
         });
       }
+
+      setSearchResults([]); // Clear on error
     } finally {
-      console.log('[SEARCH DEBUG]', debugMessages.join('\n'));
-      setLoading(false);
+      setIsSearching(false);
+      setRecipesLoaded(0);
     }
   };
 
@@ -212,25 +300,20 @@ export default function SearchScreen() {
   };
 
   const handleToggleAllergenFilter = (allergenName: string) => {
-    // Find the allergen object from the ALLERGENS constant
     const allergen = ALLERGENS.find((a) => a.name === allergenName);
     if (allergen) {
-      // Use the context method to toggle the allergen (this updates the database)
       toggleAllergen(allergen);
     }
   };
 
   const handleToggleDietaryFilter = (dietaryName: string) => {
-    // Find the dietary preference object from the DIETARY_PREFERENCES constant
     const dietary = DIETARY_PREFERENCES.find((d) => d.name === dietaryName);
     if (dietary) {
-      // Use the context method to toggle the dietary preference (this updates the database)
       toggleDietaryPref(dietary);
     }
   };
 
   const handleClearAllergenFilters = () => {
-    // Clear all allergens by toggling off each selected one
     selectedAllergens.forEach((allergen) => {
       const allergenObj = ALLERGENS.find((a) => a.name === allergen.name);
       if (allergenObj) {
@@ -240,7 +323,6 @@ export default function SearchScreen() {
   };
 
   const handleClearDietaryFilters = () => {
-    // Clear all dietary preferences by toggling off each selected one
     selectedDietary.forEach((dietary) => {
       const dietaryObj = DIETARY_PREFERENCES.find(
         (d) => d.name === dietary.name
@@ -262,6 +344,10 @@ export default function SearchScreen() {
     }
   };
 
+  // Get current type label for display
+  const currentTypeLabel =
+    TYPE_OPTIONS.find((t) => t.value === recipeType)?.label || 'Mix';
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -269,15 +355,15 @@ export default function SearchScreen() {
     },
     responsiveShell: {
       width: '100%',
-      maxWidth: '100%', // Allow full width
+      maxWidth: '100%',
       alignSelf: 'center',
-      paddingHorizontal: 0, // No padding at all
+      paddingHorizontal: 0,
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 24, // reverted back
+      paddingHorizontal: 24,
       paddingTop: Platform.OS === 'android' ? 32 : 4,
       paddingBottom: 2,
       backgroundColor: colors.surface,
@@ -334,7 +420,13 @@ export default function SearchScreen() {
     searchContainer: {
       marginBottom: 6,
     },
+    searchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
     searchInputContainer: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: colors.surface,
@@ -346,12 +438,12 @@ export default function SearchScreen() {
       minHeight: Platform.OS === 'android' ? 40 : 'auto',
     },
     searchIcon: {
-      marginRight: 12,
+      marginRight: 8,
     },
     searchInput: {
       flex: 1,
       fontSize: Platform.select({
-        ios: 16,
+        ios: 14,
         android: 11,
         web: 13,
       }),
@@ -362,17 +454,72 @@ export default function SearchScreen() {
       textAlignVertical: Platform.OS === 'android' ? 'center' : 'auto',
       includeFontPadding: false,
     },
-    searchButton: {
-      backgroundColor: colors.primary,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+    dropdownButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
       borderRadius: 8,
-      marginLeft: 8,
+      paddingHorizontal: 10,
+      paddingVertical: Platform.OS === 'android' ? 8 : 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+      minHeight: Platform.OS === 'android' ? 40 : 'auto',
     },
-    searchButtonText: {
-      fontSize: 14,
+    dropdownButtonSmall: {
+      minWidth: 50,
+    },
+    dropdownButtonMedium: {
+      minWidth: Platform.OS === 'web' ? 130 : 100,
+    },
+    dropdownText: {
+      fontSize: Platform.select({
+        ios: 13,
+        android: 10,
+        web: 12,
+      }),
+      fontFamily: 'Inter-Medium',
+      color: colors.textPrimary,
+      marginRight: 4,
+    },
+    dropdownLabel: {
+      fontSize: Platform.select({
+        ios: 10,
+        android: 8,
+        web: 10,
+      }),
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      marginBottom: 2,
+    },
+    pickerOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    pickerContent: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 8,
+      minWidth: 200,
+      maxHeight: 300,
+    },
+    pickerOption: {
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+    },
+    pickerOptionSelected: {
+      backgroundColor: '#FF886620',
+    },
+    pickerOptionText: {
+      fontSize: 16,
+      fontFamily: 'Inter-Regular',
+      color: colors.text,
+    },
+    pickerOptionTextSelected: {
       fontFamily: 'Inter-SemiBold',
-      color: '#FFFFFF',
+      color: '#FF8866',
     },
     content: {
       flex: 1,
@@ -469,7 +616,6 @@ export default function SearchScreen() {
       fontSize: 40,
       marginBottom: 12,
     },
-
     saveModalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.7)',
@@ -490,13 +636,12 @@ export default function SearchScreen() {
       borderColor: colors.border,
       minWidth: 280,
     },
-
     saveModalText: {
       fontSize: 16,
       fontFamily: 'Inter-Medium',
       color: colors.text,
       textAlign: 'center',
-      marginTop: 4, // small spacing between lines
+      marginTop: 4,
     },
     mobileBetaFooter: {
       paddingHorizontal: 24,
@@ -513,9 +658,141 @@ export default function SearchScreen() {
     },
   });
 
+  // Determine if we should show detailed progress (3+ recipes)
+  const showDetailedProgress = recipeCount >= 3;
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Full Screen Save Modal */}
+      {/* LOADING MODAL */}
+      {isSearching && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={isSearching}
+          onRequestClose={() => {}}
+        >
+          <View style={styles.saveModalOverlay}>
+            <View style={styles.saveModalContent}>
+              <ActivityIndicator size="large" color="#FF8866" />
+              {showDetailedProgress ? (
+                <>
+                  <Text style={[styles.saveModalText, styles.modalEmoji]}>
+                    {getProgressEmoji(recipesLoaded, recipeCount)}
+                  </Text>
+                  <Text style={styles.saveModalText}>
+                    {getProgressMessage(recipesLoaded, recipeCount)}
+                  </Text>
+                  {recipesLoaded > 0 && (
+                    <Text style={styles.saveModalText}>
+                      {recipesLoaded}/{recipeCount} recipes loaded
+                    </Text>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Text style={[styles.saveModalText, styles.modalEmoji]}>
+                    🤖
+                  </Text>
+                  <Text style={styles.saveModalText}>
+                    Analyzing your preferences...
+                  </Text>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {/* COUNT PICKER MODAL */}
+      {showCountPicker && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={showCountPicker}
+          onRequestClose={() => setShowCountPicker(false)}
+        >
+          <TouchableWithoutFeedback onPress={() => setShowCountPicker(false)}>
+            <View style={styles.pickerOverlay}>
+              <TouchableWithoutFeedback>
+                <View style={styles.pickerContent}>
+                  <ScrollView>
+                    {COUNT_OPTIONS.map((count) => (
+                      <TouchableOpacity
+                        key={count}
+                        style={[
+                          styles.pickerOption,
+                          recipeCount === count && styles.pickerOptionSelected,
+                        ]}
+                        onPress={() => {
+                          setRecipeCount(count);
+                          setShowCountPicker(false);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.pickerOptionText,
+                            recipeCount === count &&
+                              styles.pickerOptionTextSelected,
+                          ]}
+                        >
+                          {count} recipes
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
+
+      {/* TYPE PICKER MODAL */}
+      {showTypePicker && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={showTypePicker}
+          onRequestClose={() => setShowTypePicker(false)}
+        >
+          <TouchableWithoutFeedback onPress={() => setShowTypePicker(false)}>
+            <View style={styles.pickerOverlay}>
+              <TouchableWithoutFeedback>
+                <View style={styles.pickerContent}>
+                  <ScrollView>
+                    {TYPE_OPTIONS.map((type) => (
+                      <TouchableOpacity
+                        key={type.value}
+                        style={[
+                          styles.pickerOption,
+                          recipeType === type.value &&
+                            styles.pickerOptionSelected,
+                        ]}
+                        onPress={() => {
+                          setRecipeType(type.value);
+                          setShowTypePicker(false);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.pickerOptionText,
+                            recipeType === type.value &&
+                              styles.pickerOptionTextSelected,
+                          ]}
+                        >
+                          {type.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      )}
+
+      {/* SAVE MODAL */}
       {showSaveModal && (
         <Modal
           transparent
@@ -534,7 +811,7 @@ export default function SearchScreen() {
         </Modal>
       )}
 
-      {/* Success/Error Modal */}
+      {/* SUCCESS/ERROR MODAL */}
       {modalInfo.visible && (
         <Modal
           transparent
@@ -558,7 +835,7 @@ export default function SearchScreen() {
         </Modal>
       )}
 
-      {/* Static full-width header */}
+      {/* HEADER */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>Hi, {profile?.firstName || 'there'}!</Text>
@@ -580,24 +857,47 @@ export default function SearchScreen() {
         </View>
       </View>
 
-      {/* Responsive shell for search + filters */}
+      {/* SEARCH + DROPDOWNS */}
       <View style={[styles.responsiveShell, { paddingHorizontal: padX }]}>
         <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
-            <Search
-              size={20}
-              color={colors.textSecondary}
-              style={styles.searchIcon}
-            />
-            <TextInput
-              style={styles.searchInput}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search for recipes or ingredients..."
-              placeholderTextColor={colors.textSecondary}
-              onSubmitEditing={handleSearch}
-              returnKeyType="search"
-            />
+          <View style={styles.searchRow}>
+            {/* Search Input (shorter) */}
+            <View style={styles.searchInputContainer}>
+              <Search
+                size={18}
+                color={colors.textSecondary}
+                style={styles.searchIcon}
+              />
+              <TextInput
+                style={styles.searchInput}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Search recipes..."
+                placeholderTextColor={colors.textSecondary}
+                onSubmitEditing={handleSearch}
+                returnKeyType="search"
+              />
+            </View>
+
+            {/* Count Dropdown */}
+            <TouchableOpacity
+              style={[styles.dropdownButton, styles.dropdownButtonSmall]}
+              onPress={() => setShowCountPicker(true)}
+            >
+              <Text style={styles.dropdownText}>{recipeCount}</Text>
+              <ChevronDown size={14} color={colors.textSecondary} />
+            </TouchableOpacity>
+
+            {/* Type Dropdown */}
+            <TouchableOpacity
+              style={[styles.dropdownButton, styles.dropdownButtonMedium]}
+              onPress={() => setShowTypePicker(true)}
+            >
+              <Text style={styles.dropdownText} numberOfLines={1}>
+                {currentTypeLabel.split(' ')[0]}
+              </Text>
+              <ChevronDown size={14} color={colors.textSecondary} />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -614,6 +914,7 @@ export default function SearchScreen() {
         />
       </View>
 
+      {/* CONTENT */}
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
@@ -644,6 +945,7 @@ export default function SearchScreen() {
         )}
 
         <View style={styles.contentContainer}>
+          {/* SEARCH RESULTS */}
           {searchResults.length > 0 && (
             <View style={[styles.responsiveShell, { paddingHorizontal: padX }]}>
               <View style={styles.searchResultsHeader}>
@@ -660,10 +962,8 @@ export default function SearchScreen() {
               </View>
               {searchResults.map((recipe, index) => (
                 <RecipeCard
-                  key={index}
-                  recipe={{
-                    ...recipe,
-                  }}
+                  key={recipe.id || index}
+                  recipe={recipe}
                   onSave={() => handleSaveRecipe(recipe)}
                   onSaveAndFavorite={() => handleSaveAndFavoriteRecipe(recipe)}
                   showSaveButton={true}
@@ -674,6 +974,7 @@ export default function SearchScreen() {
             </View>
           )}
 
+          {/* DEFAULT CONTENT */}
           {!loading && searchResults.length === 0 && (
             <>
               {featuredRecipes.length > 0 && (
@@ -706,6 +1007,7 @@ export default function SearchScreen() {
                 />
               )}
 
+              {/* EMPTY STATE */}
               {savedRecipes.length === 0 &&
                 featuredRecipes.length === 0 &&
                 recentRecipes.length === 0 && (
@@ -727,7 +1029,7 @@ export default function SearchScreen() {
         </View>
       </ScrollView>
 
-      {/* Mobile Beta Footer */}
+      {/* MOBILE BETA FOOTER */}
       {Platform.OS !== 'web' && (
         <View style={styles.mobileBetaFooter}>
           <Text style={styles.mobileBetaText}>
