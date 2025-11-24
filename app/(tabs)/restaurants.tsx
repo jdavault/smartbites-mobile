@@ -5,365 +5,279 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
-  Image,
+  TouchableOpacity,
   Platform,
+  Linking,
+  Image,
 } from 'react-native';
-import { useTheme } from '@/contexts/ThemeContext';
-import { ChefHat, MapPin, Calendar, Globe, Star, Clock } from 'lucide-react-native';
+import Header from '@/components/Header';
+import {
+  useTheme,
+  ThemeColors,
+  SPACING,
+  RADIUS,
+  SHADOWS,
+  FONT_SIZES,
+} from '@/contexts/ThemeContext';
+
+import {
+  MapPin,
+  Star,
+  Clock,
+  Sparkles,
+  ArrowRight,
+  Utensils,
+} from 'lucide-react-native';
+import BetaFooter from '@/components/BetaFooter';
+
+const FEATURES = [
+  {
+    icon: MapPin,
+    color: '#FF8866',
+    title: 'Find Nearby',
+    description: 'Discover allergen-friendly restaurants in your area',
+  },
+  {
+    icon: Star,
+    color: '#FFB347',
+    title: 'User Reviews',
+    description: 'Read reviews from others with similar dietary needs',
+  },
+  {
+    icon: Clock,
+    color: '#77DD77',
+    title: 'Real-Time Info',
+    description: 'Get up-to-date menus and allergen information',
+  },
+];
 
 export default function RestaurantsScreen() {
   const { colors } = useTheme();
+  const styles = getStyles(colors);
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 24,
-      paddingTop: Platform.OS === 'android' ? 32 : 4,
-      paddingBottom: 2,
-      backgroundColor: colors.surface,
-      marginBottom: 12,
-    },
-    headerContent: {
-      flex: 1,
-    },
-    headerLogoContainer: {
-      alignItems: 'center',
-      position: 'relative',
-    },
-    headerLogo: {
-      width: 72,
-      height: 72,
-      marginLeft: 16,
-    },
-    betaBadge: {
-      position: 'absolute',
-      top: -4,
-      right: -8,
-      backgroundColor: '#FF8866',
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 8,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
-      elevation: 2,
-    },
-    betaBadgeText: {
-      fontSize: 10,
-      fontFamily: 'Inter-SemiBold',
-      color: '#FFFFFF',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    title: {
-      fontSize: 20,
-      fontFamily: 'Inter-Bold',
-      color: '#FF8866',
-      marginBottom: 8,
-    },
-    subtitle: {
-      fontSize: Platform.select({
-        ios: 16,
-        android: 11,
-        web: 13,
-      }),
-      fontFamily: 'Lato-Regular',
-      color: colors.textSecondary,
-    },
-    content: {
-      flex: 1,
-      paddingHorizontal: 12, // keep reduced for body content
-    },
+  return (
+    <SafeAreaView style={styles.container}>
+      <Header title="Restaurants" subtitle="Find allergen-friendly dining" />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.contentContainer}>
+          {/* Hero Section */}
+          <View style={styles.heroSection}>
+            <View style={styles.comingSoonBadge}>
+              <Sparkles size={14} color="#FFFFFF" />
+              <Text style={styles.comingSoonText}>Coming Soon</Text>
+            </View>
+            <Text style={styles.heroTitle}>Restaurant Finder</Text>
+            <Text style={styles.heroSubtitle}>
+              We're building a comprehensive tool to help you find restaurants
+              that accommodate your dietary needs and allergen restrictions.
+            </Text>
+          </View>
+
+          {/* Features */}
+          <Text style={styles.sectionTitle}>What to Expect</Text>
+          {FEATURES.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <View key={index} style={styles.featureCard}>
+                <View
+                  style={[
+                    styles.featureIconContainer,
+                    { backgroundColor: `${feature.color}20` },
+                  ]}
+                >
+                  <Icon size={24} color={feature.color} />
+                </View>
+                <View style={styles.featureContent}>
+                  <Text style={styles.featureTitle}>{feature.title}</Text>
+                  <Text style={styles.featureDescription}>
+                    {feature.description}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+
+          {/* Resource Card */}
+          <View style={styles.resourceCard}>
+            <Text style={styles.resourceTitle}>In the Meantime</Text>
+            <Text style={styles.resourceDescription}>
+              Check out AllergyAwareMenu for current restaurant allergen
+              information.
+            </Text>
+            <TouchableOpacity
+              style={styles.resourceButton}
+              onPress={() => Linking.openURL('https://allergyawaremenu.com')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.resourceButtonText}>
+                Visit AllergyAwareMenu
+              </Text>
+              <ArrowRight size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Brand Section */}
+          <View style={styles.brandSection}>
+            <Text style={styles.brandText}>SmartBites™</Text>
+            <Text style={styles.brandSubtext}>
+              Allergy-aware cooking, simplified
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+
+      <BetaFooter enabled={true} />
+    </SafeAreaView>
+  );
+}
+
+const getStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    scrollContent: { paddingBottom: SPACING.xxl },
     contentContainer: {
       width: '100%',
-      maxWidth: 1024,
+      maxWidth: 600,
       alignSelf: 'center',
-    },
-    comingSoonSection: {
-      backgroundColor: colors.surface,
-      padding: 24,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    comingSoonBadge: {
-      backgroundColor: colors.primary,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 20,
-      marginBottom: 16,
-    },
-    comingSoonBadgeText: {
-      fontSize: 12,
-      fontFamily: 'Inter-SemiBold',
-      color: '#FFFFFF',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    comingSoonTitle: {
-      fontSize: Platform.OS === 'android' ? 16 : 18,
-      fontFamily: 'Inter-SemiBold',
-      color: colors.text,
-      marginBottom: 8,
-      textAlign: 'center',
-    },
-    comingSoonText: {
-      fontSize: Platform.OS === 'android' ? 12 : 14,
-      fontFamily: 'Inter-Regular',
-      color: colors.textSecondary,
-      textAlign: 'center',
-      lineHeight: 20,
+      paddingHorizontal: SPACING.lg,
     },
     heroSection: {
       alignItems: 'center',
-      marginBottom: 16,
+      paddingVertical: SPACING.xxxl,
+      marginTop: SPACING.lg,
     },
-    heroIcon: {
-      marginBottom: 12,
+    heroIconContainer: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: `${colors.primary}10`,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: SPACING.xl,
+    },
+    comingSoonBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: SPACING.xs,
+      backgroundColor: colors.primary,
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.sm,
+      borderRadius: RADIUS.full,
+      marginBottom: SPACING.lg,
+    },
+    comingSoonText: {
+      fontSize: FONT_SIZES.sm,
+      fontFamily: 'Inter-Bold',
+      color: '#FFFFFF',
     },
     heroTitle: {
-      fontSize: Platform.OS === 'android' ? 20 : 24,
+      fontSize: FONT_SIZES.xxl,
       fontFamily: 'Inter-Bold',
-      color: '#FF8866',
+      color: colors.text,
+      marginBottom: SPACING.md,
       textAlign: 'center',
-      marginBottom: 8,
+      letterSpacing: -0.5,
     },
     heroSubtitle: {
-      fontSize: Platform.OS === 'android' ? 14 : 16,
+      fontSize: FONT_SIZES.md,
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       textAlign: 'center',
       lineHeight: 24,
-      marginBottom: 16,
+      maxWidth: 320,
     },
-    featuresGrid: {
-      gap: 16,
-      marginBottom: 16,
+    sectionTitle: {
+      fontSize: FONT_SIZES.lg,
+      fontFamily: 'Inter-Bold',
+      color: colors.primary,
+      marginBottom: SPACING.lg,
+      letterSpacing: -0.3,
     },
     featureCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
       backgroundColor: colors.surface,
-      padding: Platform.OS === 'android' ? 16 : 20,
-      borderRadius: 16,
+      borderRadius: RADIUS.lg,
+      padding: SPACING.lg,
+      marginBottom: SPACING.md,
       borderWidth: 1,
       borderColor: colors.border,
-      flexDirection: 'row',
-      alignItems: 'flex-start',
+      ...SHADOWS.sm,
     },
-    featureIcon: {
-      marginRight: 16,
-      marginTop: 2,
+    featureIconContainer: {
+      width: 48,
+      height: 48,
+      borderRadius: RADIUS.md,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: SPACING.lg,
     },
-    featureContent: {
-      flex: 1,
-    },
+    featureContent: { flex: 1 },
     featureTitle: {
-      fontSize: Platform.OS === 'android' ? 14 : 16,
+      fontSize: FONT_SIZES.md,
       fontFamily: 'Inter-SemiBold',
-      color: '#FF8866',
-      marginBottom: 8,
+      color: colors.text,
+      marginBottom: SPACING.xs,
     },
     featureDescription: {
-      fontSize: Platform.OS === 'android' ? 12 : 14,
-      fontFamily: 'Inter-Regular',
+      fontSize: FONT_SIZES.sm,
+      fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       lineHeight: 20,
     },
-    websiteSection: {
+    resourceCard: {
       backgroundColor: colors.surface,
-      padding: Platform.OS === 'android' ? 16 : 20,
-      borderRadius: 16,
+      borderRadius: RADIUS.lg,
+      padding: SPACING.xl,
+      marginTop: SPACING.xl,
       borderWidth: 1,
       borderColor: colors.border,
-      flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 16,
+      ...SHADOWS.md,
     },
-    websiteIcon: {
-      marginRight: 16,
-    },
-    websiteContent: {
-      flex: 1,
-    },
-    websiteTitle: {
-      fontSize: Platform.OS === 'android' ? 14 : 16,
-      fontFamily: 'Inter-SemiBold',
-      color: '#FF8866',
-      marginBottom: 4,
-    },
-    websiteText: {
-      fontSize: Platform.OS === 'android' ? 12 : 14,
-      fontFamily: 'Inter-Regular',
-      color: colors.textSecondary,
-    },
-    websiteUrl: {
-      fontSize: Platform.OS === 'android' ? 12 : 14,
-      fontFamily: 'Inter-Medium',
-      color: colors.primary,
-      marginTop: 4,
-    },
-    brandName: {
+    resourceTitle: {
+      fontSize: FONT_SIZES.lg,
       fontFamily: 'Inter-Bold',
-      color: colors.primary,
+      color: colors.text,
+      marginBottom: SPACING.sm,
     },
-    trademark: {
-      fontFamily: 'Inter-Regular',
-    },
-    mobileBetaFooter: {
-      paddingHorizontal: 24,
-      paddingVertical: 8,
-      backgroundColor: colors.surface,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    mobileBetaText: {
-      fontSize: Platform.OS === 'android' ? 10 : 12,
-      fontFamily: 'Inter-Regular',
+    resourceDescription: {
+      fontSize: FONT_SIZES.md,
+      fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       textAlign: 'center',
+      marginBottom: SPACING.lg,
+      lineHeight: 22,
     },
-    futureFeatures: {
-      gap: 16,
-      marginBottom: 16,
-    },
-    futureFeature: {
+    resourceButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.surface,
-      padding: 16,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
+      gap: SPACING.sm,
+      backgroundColor: colors.primary,
+      paddingHorizontal: SPACING.xl,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.md,
+      ...SHADOWS.sm,
     },
-    futureFeatureIcon: {
-      marginRight: 12,
+    resourceButtonText: {
+      fontSize: FONT_SIZES.md,
+      fontFamily: 'Inter-SemiBold',
+      color: '#FFFFFF',
     },
-    futureFeatureText: {
-      fontSize: 14,
-      fontFamily: 'Inter-Regular',
-      color: colors.text,
-      flex: 1,
+    brandSection: { alignItems: 'center', paddingVertical: SPACING.xxxl },
+    brandText: {
+      fontSize: FONT_SIZES.lg,
+      fontFamily: 'Inter-Bold',
+      color: colors.primary,
+      letterSpacing: -0.3,
+    },
+    brandSubtext: {
+      fontSize: FONT_SIZES.sm,
+      fontFamily: 'Lato-Regular',
+      color: colors.textSecondary,
+      marginTop: SPACING.xs,
     },
   });
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.title}>Restaurants</Text>
-          <Text style={styles.subtitle}>Find allergy-friendly dining options</Text>
-        </View>
-        <View style={styles.headerLogoContainer}>
-          <Image
-            source={require('@/assets/images/smart-bites-logo.png')}
-            style={styles.headerLogo}
-            resizeMode="contain"
-          />
-          {Platform.OS !== 'web' && (
-            <View style={styles.betaBadge}>
-              <Text style={styles.betaBadgeText}>Beta</Text>
-            </View>
-          )}
-        </View>
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.contentContainer}>
-          <View style={styles.comingSoonSection}>
-          <View style={styles.comingSoonBadge}>
-            <Text style={styles.comingSoonBadgeText}>Coming Soon</Text>
-          </View>
-          <Text style={styles.comingSoonTitle}>Launching Early 2026</Text>
-          <Text style={styles.comingSoonText}>
-            We're working hard to bring you the most comprehensive allergy-aware restaurant database. 
-            Stay tuned for updates!
-          </Text>
-        </View>
-
-          <View style={styles.heroSection}>
-          <View style={styles.heroIcon}>
-            <ChefHat size={64} color={colors.primary} />
-          </View>
-          <Text style={styles.heroTitle}>Restaurant & Menu Search</Text>
-          <Text style={styles.heroSubtitle}>
-            Discover allergy-aware restaurants and menus tailored to your dietary needs
-          </Text>
-        </View>
-
-          <View style={styles.featuresGrid}>
-          <View style={styles.featureCard}>
-            <View style={styles.featureIcon}>
-              <MapPin size={24} color={colors.primary} />
-            </View>
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>Location-Based Search</Text>
-              <Text style={styles.featureDescription}>
-                Find nearby restaurants that accommodate your specific allergens and dietary preferences
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.featureCard}>
-            <View style={styles.featureIcon}>
-              <Star size={24} color={colors.secondary} />
-            </View>
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>Verified Safe Options</Text>
-              <Text style={styles.featureDescription}>
-                Browse menu items that have been verified as safe for your specific allergies
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.featureCard}>
-            <View style={styles.featureIcon}>
-              <Clock size={24} color={colors.accent} />
-            </View>
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>Real-Time Updates</Text>
-              <Text style={styles.featureDescription}>
-                Get up-to-date information on menu changes and allergen warnings
-              </Text>
-            </View>
-          </View>
-        </View>
-
-          <View style={styles.websiteSection}>
-          <View style={styles.websiteIcon}>
-            <Globe size={24} color={colors.primary} />
-          </View>
-          <View style={styles.websiteContent}>
-            <Text style={styles.websiteTitle}>Current Resources</Text>
-            <Text style={styles.websiteText}>
-              For immediate restaurant information, visit our partner site
-            </Text>
-            <Text style={styles.websiteUrl}>allergyawaremenu.com</Text>
-          </View>
-        </View>
-
-          <Text style={styles.heroSubtitle}>
-          Part of the <Text style={styles.brandName}>SmartBites</Text>
-          <Text style={styles.trademark}>™</Text> ecosystem for safer dining experiences.
-        </Text>
-        </View>
-      </ScrollView>
-
-      {/* Mobile Beta Footer */}
-      {Platform.OS !== 'web' && (
-        <View style={styles.mobileBetaFooter}>
-          <Text style={styles.mobileBetaText}>
-            Currently in beta — thanks for testing!
-          </Text>
-        </View>
-      )}
-    </SafeAreaView>
-  );
-}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Header from '@/components/Header';
 import {
   View,
   Text,
@@ -11,33 +12,54 @@ import {
   Image,
   ActivityIndicator,
   Modal,
-  TouchableWithoutFeedback,
+  Pressable,
   useWindowDimensions,
   Platform,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
+import {
+  useTheme,
+  SPACING,
+  RADIUS,
+  SHADOWS,
+  FONT_SIZES,
+} from '@/contexts/ThemeContext';
 import { useRecipes } from '@/contexts/RecipesContext';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { useAllergens } from '@/contexts/AllergensContext';
 import { useDietary } from '@/contexts/DietaryContext';
 import { ALLERGENS } from '@/contexts/AllergensContext';
 import { DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
-import { generateRecipes } from '@/lib/openai';
+import {
+  generateRecipesParallel,
+  type RecipeVariant,
+} from '@/utils/generateAIRecipes';
 import { validateFoodQuery } from '@/utils/validation';
-import { Search, RefreshCw } from 'lucide-react-native';
+import { Search, ChevronDown, X } from 'lucide-react-native';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeSection from '@/components/RecipeSection';
 import AllergenFilter from '@/components/AllergenFilter';
 import DietaryFilter from '@/components/DietaryFilter';
 import { mapOpenAIRecipeToRecipe } from '@/utils/recipeMapping';
 
+// Then DELETE the local SPACING, RADIUS, SHADOWS, FONT_SIZES definitions from each file
 type ModalInfo = {
   visible: boolean;
   title: string;
   subtitle?: string;
   emoji?: string;
 };
+
+const COUNT_OPTIONS = [3, 4, 5, 6, 7, 8, 9, 10];
+
+const TYPE_OPTIONS: { value: RecipeVariant; label: string }[] = [
+  { value: 'mix', label: 'Mix (Variety)' },
+  { value: 'quick', label: 'Quick (< 30 min)' },
+  { value: 'standard', label: 'Standard' },
+  { value: 'gourmet', label: 'Gourmet' },
+  { value: 'budget', label: 'Budget' },
+  { value: 'comfort', label: 'Comfort' },
+];
 
 export default function SearchScreen() {
   const { user } = useAuth();
@@ -66,6 +88,14 @@ export default function SearchScreen() {
   const [favoritingRecipeId, setFavoritingRecipeId] = useState<string | null>(
     null
   );
+  const [isSearching, setIsSearching] = useState(false);
+  const [recipesLoaded, setRecipesLoaded] = useState(0);
+
+  const [recipeCount, setRecipeCount] = useState(3);
+  const [recipeType, setRecipeType] = useState<RecipeVariant>('mix');
+  const [showCountPicker, setShowCountPicker] = useState(false);
+  const [showTypePicker, setShowTypePicker] = useState(false);
+
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [selectedAllergens, setSelectedAllergens] = useState<
     { $id: string; name: string }[]
@@ -79,18 +109,39 @@ export default function SearchScreen() {
   });
 
   const { width } = useWindowDimensions();
-  const containerMax = 1024;
-  const padX = 8; // Just a tiny bit of padding for search and filters
+  const isWeb = Platform.OS === 'web';
 
   const openModal = (info: Omit<ModalInfo, 'visible'>) =>
     setModalInfo({ ...info, visible: true });
   const closeModal = () => setModalInfo((m) => ({ ...m, visible: false }));
 
-  // Initialize filters with user's preferences
   useEffect(() => {
     setSelectedAllergens(userAllergens);
     setSelectedDietary(userDietaryPrefs);
   }, [userAllergens, userDietaryPrefs]);
+
+  const allergensFilter = ALLERGENS.map((a) => ({
+    ...a,
+    selected: selectedAllergens.some((s) => s.$id === a.$id),
+  }));
+  const dietaryFilter = DIETARY_PREFERENCES.map((d) => ({
+    ...d,
+    selected: selectedDietary.some((s) => s.$id === d.$id),
+  }));
+
+  const getProgressMessage = (loaded: number, total: number) => {
+    if (loaded === 0) return 'Analyzing your preferences...';
+    if (loaded === Math.floor(total / 2)) return 'Halfway there!';
+    if (loaded === total - 1) return 'Almost done...';
+    return 'Cooking up recipes...';
+  };
+
+  const getProgressEmoji = (loaded: number, total: number) => {
+    if (loaded === 0) return '🤖';
+    if (loaded === Math.floor(total / 2)) return '🎯';
+    if (loaded >= total - 1) return '🎉';
+    return '🍳';
+  };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -101,8 +152,6 @@ export default function SearchScreen() {
       });
       return;
     }
-
-    // Validate food query BEFORE showing loading modal
     const validation = validateFoodQuery(searchQuery);
     if (!validation.isValid) {
       openModal({
@@ -114,60 +163,47 @@ export default function SearchScreen() {
       });
       return;
     }
-
-    setLoading(true);
-    const debugMessages: string[] = [];
     try {
-      const allergenNames = selectedAllergens.map((a) => a.name);
-      const dietaryNames = selectedDietary.map((d) => d.name);
-      debugMessages.push(`=== SEARCH DEBUG START ===`);
-
-      const recipes = await generateRecipes(
+      setIsSearching(true);
+      setSearchResults([]);
+      setRecipesLoaded(0);
+      const allergenNames = allergensFilter
+        .filter((a) => a.selected)
+        .map((a) => a.name);
+      const dietaryNames = dietaryFilter
+        .filter((d) => d.selected)
+        .map((d) => d.name);
+      const generatedRecipes = await generateRecipesParallel(
         searchQuery,
         allergenNames,
-        dietaryNames
-      );
-      
-      // Map OpenAI recipes to our Recipe interface
-      const mappedRecipes = recipes.map(mapOpenAIRecipeToRecipe);
-      setSearchResults(mappedRecipes);
-      debugMessages.push(`=== SEARCH DEBUG END (no error )===`);
-    } catch (error) {
-      console.error('Search error:', error);
-      debugMessages.push(
-        `Parsed recipeData: ${JSON.stringify(error).substring(0, 300)}...`
-      );
-
-      debugMessages.push(`=== SEARCH DEBUG END ( ERROR )===`);
-
-      // Handle different types of errors with appropriate messages and emojis
-      if (error instanceof Error) {
-        if (error.message.includes('OpenAI API key')) {
-          openModal({
-            title: 'API Key Required',
-            subtitle:
-              'OpenAI API key is required for recipe generation. Please configure your API key.',
-            emoji: '🔑',
+        dietaryNames,
+        recipeCount,
+        recipeType,
+        (recipe, index) => {
+          const mappedRecipe = mapOpenAIRecipeToRecipe(recipe);
+          setSearchResults((prev) => {
+            const n = [...prev];
+            n[index] = mappedRecipe;
+            return n.filter((r) => r);
           });
-        } else {
-          openModal({
-            title: 'Search Error',
-            subtitle:
-              error.message ||
-              'Failed to search for recipes. Please try again.',
-            emoji: '❌',
-          });
+          setRecipesLoaded((prev) => prev + 1);
         }
-      } else {
-        openModal({
-          title: 'Search Error',
-          subtitle: 'Failed to search for recipes. Please try again.',
-          emoji: '❌',
-        });
-      }
+      );
+      setSearchResults(generatedRecipes.map(mapOpenAIRecipeToRecipe));
+    } catch (error) {
+      const msg =
+        error instanceof Error
+          ? error.message
+          : 'Failed to search for recipes.';
+      openModal({
+        title: msg.includes('API key') ? 'API Key Required' : 'Search Error',
+        subtitle: msg,
+        emoji: msg.includes('API key') ? '🔑' : '❌',
+      });
+      setSearchResults([]);
     } finally {
-      console.log('[SEARCH DEBUG]', debugMessages.join('\n'));
-      setLoading(false);
+      setIsSearching(false);
+      setRecipesLoaded(0);
     }
   };
 
@@ -178,11 +214,10 @@ export default function SearchScreen() {
       await saveRecipe(recipe);
       setSearchResults([]);
       setSearchQuery('');
-    } catch (error) {
-      console.error('Save recipe error:', error);
+    } catch {
       openModal({
         title: 'Save Failed',
-        subtitle: 'Failed to save recipe. Please try again.',
+        subtitle: 'Failed to save recipe.',
         emoji: '❌',
       });
     } finally {
@@ -198,11 +233,10 @@ export default function SearchScreen() {
       await saveAndFavoriteRecipe(recipe);
       setSearchResults([]);
       setSearchQuery('');
-    } catch (error) {
-      console.error('Save and favorite recipe error:', error);
+    } catch {
       openModal({
         title: 'Save Failed',
-        subtitle: 'Failed to save recipe. Please try again.',
+        subtitle: 'Failed to save recipe.',
         emoji: '❌',
       });
     } finally {
@@ -211,198 +245,187 @@ export default function SearchScreen() {
     }
   };
 
-  const handleToggleAllergenFilter = (allergenName: string) => {
-    // Find the allergen object from the ALLERGENS constant
-    const allergen = ALLERGENS.find((a) => a.name === allergenName);
-    if (allergen) {
-      // Use the context method to toggle the allergen (this updates the database)
-      toggleAllergen(allergen);
-    }
+  const handleToggleAllergenFilter = (name: string) => {
+    const a = ALLERGENS.find((x) => x.name === name);
+    if (a) toggleAllergen(a);
   };
-
-  const handleToggleDietaryFilter = (dietaryName: string) => {
-    // Find the dietary preference object from the DIETARY_PREFERENCES constant
-    const dietary = DIETARY_PREFERENCES.find((d) => d.name === dietaryName);
-    if (dietary) {
-      // Use the context method to toggle the dietary preference (this updates the database)
-      toggleDietaryPref(dietary);
-    }
+  const handleToggleDietaryFilter = (name: string) => {
+    const d = DIETARY_PREFERENCES.find((x) => x.name === name);
+    if (d) toggleDietaryPref(d);
   };
-
-  const handleClearAllergenFilters = () => {
-    // Clear all allergens by toggling off each selected one
-    selectedAllergens.forEach((allergen) => {
-      const allergenObj = ALLERGENS.find((a) => a.name === allergen.name);
-      if (allergenObj) {
-        toggleAllergen(allergenObj);
-      }
+  const handleClearAllergenFilters = () =>
+    selectedAllergens.forEach((a) => {
+      const o = ALLERGENS.find((x) => x.name === a.name);
+      if (o) toggleAllergen(o);
     });
-  };
-
-  const handleClearDietaryFilters = () => {
-    // Clear all dietary preferences by toggling off each selected one
-    selectedDietary.forEach((dietary) => {
-      const dietaryObj = DIETARY_PREFERENCES.find(
-        (d) => d.name === dietary.name
-      );
-      if (dietaryObj) {
-        toggleDietaryPref(dietaryObj);
-      }
+  const handleClearDietaryFilters = () =>
+    selectedDietary.forEach((d) => {
+      const o = DIETARY_PREFERENCES.find((x) => x.name === d.name);
+      if (o) toggleDietaryPref(o);
     });
-  };
 
   const onRefresh = async () => {
     setRefreshing(true);
     try {
       await generateFeaturedRecipes();
-    } catch (error) {
-      console.error('Refresh error:', error);
     } finally {
       setRefreshing(false);
     }
   };
 
+  const currentTypeLabel =
+    TYPE_OPTIONS.find((t) => t.value === recipeType)?.label || 'Mix';
+  const showDetailedProgress = recipeCount >= 3;
+
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
+    container: { flex: 1, backgroundColor: colors.background },
+    searchSection: {
+      paddingHorizontal: SPACING.lg,
+      paddingTop: SPACING.lg,
+      paddingBottom: SPACING.sm,
     },
-    responsiveShell: {
-      width: '100%',
-      maxWidth: '100%', // Allow full width
-      alignSelf: 'center',
-      paddingHorizontal: 0, // No padding at all
-    },
-    header: {
+    searchRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 24, // reverted back
-      paddingTop: Platform.OS === 'android' ? 32 : 4,
-      paddingBottom: 2,
-      backgroundColor: colors.surface,
-      marginBottom: 12,
-    },
-    headerContent: {
-      flex: 1,
-    },
-    headerLogoContainer: {
-      alignItems: 'center',
-      position: 'relative',
-    },
-    headerLogo: {
-      width: 72,
-      height: 72,
-      marginLeft: 16,
-    },
-    betaBadge: {
-      position: 'absolute',
-      top: -4,
-      right: -8,
-      backgroundColor: '#FF8866',
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 8,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
-      elevation: 2,
-    },
-    betaBadgeText: {
-      fontSize: 10,
-      fontFamily: 'Inter-SemiBold',
-      color: '#FFFFFF',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    title: {
-      fontSize: 20,
-      fontFamily: 'Inter-Bold',
-      color: '#FF8866',
-      marginBottom: 8,
-    },
-    subtitle: {
-      fontSize: Platform.select({
-        ios: 16,
-        android: 11,
-        web: 13,
+      gap: Platform.select({
+        android: SPACING.xs,
+        ios: SPACING.xs,
+        web: SPACING.sm,
       }),
-      fontFamily: 'Lato-Regular',
-      color: colors.textSecondary,
-    },
-    searchContainer: {
-      marginBottom: 6,
     },
     searchInputContainer: {
+      flex: 1,
+      flexShrink: 1, // 👈 Allow it to shrink
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: colors.surface,
-      borderRadius: 12,
-      paddingHorizontal: 10,
-      paddingVertical: Platform.OS === 'android' ? 4 : 8,
-      borderWidth: 1,
+      borderRadius: RADIUS.lg,
+      paddingHorizontal: Platform.select({
+        android: SPACING.sm,
+        ios: SPACING.sm,
+        web: SPACING.lg,
+      }),
+      paddingVertical: Platform.select({
+        android: SPACING.sm - 2,
+        ios: SPACING.sm,
+        web: SPACING.md,
+      }),
+      borderWidth: 1.5,
       borderColor: colors.border,
-      minHeight: Platform.OS === 'android' ? 40 : 'auto',
+      ...SHADOWS.sm,
     },
-    searchIcon: {
-      marginRight: 12,
-    },
+    searchIcon: { marginRight: SPACING.md, opacity: 0.6 },
     searchInput: {
       flex: 1,
-      fontSize: Platform.select({
-        ios: 16,
-        android: 11,
-        web: 13,
-      }),
+      fontSize: FONT_SIZES.md,
       fontFamily: 'Inter-Regular',
       color: colors.textPrimary,
-      outlineWidth: 0,
-      paddingVertical: Platform.OS === 'android' ? 0 : 0,
-      textAlignVertical: Platform.OS === 'android' ? 'center' : 'auto',
-      includeFontPadding: false,
+      paddingVertical: 0,
+      ...(Platform.OS === 'web' && { outlineStyle: 'none' }),
     },
-    searchButton: {
-      backgroundColor: colors.primary,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderRadius: 8,
-      marginLeft: 8,
+    dropdownButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surface,
+      borderRadius: RADIUS.md,
+      paddingHorizontal: Platform.select({
+        android: 6,
+        ios: 6,
+        web: SPACING.md,
+      }),
+      paddingVertical: Platform.select({
+        android: SPACING.sm - 2,
+        ios: SPACING.sm,
+        web: SPACING.md,
+      }),
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      gap: 1,
+      ...SHADOWS.sm,
     },
-    searchButtonText: {
-      fontSize: 14,
+    dropdownButtonSmall: {
+      minWidth: Platform.select({ android: 32, ios: 34, web: 45 }),
+    },
+    dropdownButtonMedium: {
+      minWidth: Platform.select({ android: 42, ios: 46, web: 65 }),
+    },
+    dropdownText: {
+      fontSize: Platform.select({ android: 11, ios: 11, web: FONT_SIZES.sm }),
       fontFamily: 'Inter-SemiBold',
-      color: '#FFFFFF',
+      color: colors.textPrimary,
     },
-    content: {
+    pickerOverlay: {
       flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: SPACING.xxl,
     },
-    contentContainer: {
-      maxWidth: 1024,
-      alignSelf: 'center',
-      width: '100%',
+    pickerContent: {
+      backgroundColor: colors.surface,
+      borderRadius: RADIUS.xl,
+      padding: SPACING.sm,
+      minWidth: 240,
+      maxWidth: 320,
+      maxHeight: 400,
+      ...SHADOWS.lg,
     },
-    searchResultsHeader: {
+    pickerTitle: {
+      fontSize: FONT_SIZES.md,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.textSecondary,
+      textAlign: 'center',
+      paddingVertical: SPACING.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      marginBottom: SPACING.sm,
+    },
+    pickerOption: {
+      paddingVertical: SPACING.md,
+      paddingHorizontal: SPACING.lg,
+      borderRadius: RADIUS.md,
+      marginHorizontal: SPACING.xs,
+      marginVertical: 2,
+    },
+    pickerOptionSelected: { backgroundColor: `${colors.primary}15` },
+    pickerOptionText: {
+      fontSize: FONT_SIZES.md,
+      fontFamily: 'Inter-Regular',
+      color: colors.text,
+      textAlign: 'center',
+    },
+    pickerOptionTextSelected: {
+      fontFamily: 'Inter-SemiBold',
+      color: colors.primary,
+    },
+    content: { flex: 1 },
+    contentContainer: { maxWidth: 1024, alignSelf: 'center', width: '100%' },
+    resultsSection: { paddingHorizontal: SPACING.lg },
+    resultsHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 16,
+      marginBottom: SPACING.lg,
+      marginTop: SPACING.md,
     },
-    searchResultsTitle: {
-      fontSize: 20,
-      fontFamily: 'Inter-SemiBold',
-      color: '#FF8866',
+    resultsTitle: {
+      fontSize: FONT_SIZES.lg,
+      fontFamily: 'Inter-Bold',
+      color: colors.primary,
+      letterSpacing: -0.3,
     },
     dismissButton: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.surface,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.sm,
+      borderRadius: RADIUS.full,
+      backgroundColor: colors.backgroundLight,
+      gap: SPACING.xs,
     },
     dismissButtonText: {
-      fontSize: 14,
+      fontSize: FONT_SIZES.sm,
       fontFamily: 'Inter-Medium',
       color: colors.textSecondary,
     },
@@ -410,203 +433,308 @@ export default function SearchScreen() {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: 32,
-      paddingVertical: 40,
+      paddingHorizontal: SPACING.xxxl,
+      paddingVertical: 60,
     },
     emptyStateIcon: {
-      marginBottom: 16,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: `${colors.primary}10`,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: SPACING.xl,
     },
     emptyStateTitle: {
-      fontSize: 20,
-      fontFamily: 'Inter-SemiBold',
+      fontSize: FONT_SIZES.xl,
+      fontFamily: 'Inter-Bold',
       color: colors.text,
       textAlign: 'center',
-      marginBottom: 8,
+      marginBottom: SPACING.sm,
+      letterSpacing: -0.3,
     },
     emptyStateText: {
-      fontSize: 16,
+      fontSize: FONT_SIZES.md,
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       textAlign: 'center',
       lineHeight: 24,
+      maxWidth: 300,
     },
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.4)',
+      backgroundColor: 'rgba(0,0,0,0.5)',
       justifyContent: 'center',
       alignItems: 'center',
+      padding: SPACING.xxl,
     },
     modalContent: {
       backgroundColor: colors.surface,
-      padding: 24,
-      borderRadius: 12,
-      width: '80%',
-      maxWidth: 420,
+      padding: SPACING.xxl,
+      borderRadius: RADIUS.xl,
+      width: '100%',
+      maxWidth: 380,
       alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 10,
-      elevation: 5,
-      borderWidth: 1,
-      borderColor: colors.border,
+      ...SHADOWS.lg,
     },
+    modalEmoji: { fontSize: 48, marginBottom: SPACING.lg },
     modalTitle: {
-      fontSize: 18,
-      fontFamily: 'Inter-SemiBold',
+      fontSize: FONT_SIZES.lg,
+      fontFamily: 'Inter-Bold',
       color: colors.text,
-      marginBottom: 8,
+      marginBottom: SPACING.sm,
       textAlign: 'center',
+      letterSpacing: -0.3,
     },
     modalSubtitle: {
-      fontSize: 14,
+      fontSize: FONT_SIZES.sm,
       fontFamily: 'Inter-Regular',
       color: colors.textSecondary,
       textAlign: 'center',
-      marginBottom: 16,
+      lineHeight: 22,
     },
-    modalEmoji: {
-      fontSize: 40,
-      marginBottom: 12,
-    },
-
-    saveModalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.7)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    saveModalContent: {
+    loadingModalContent: {
       backgroundColor: colors.surface,
-      padding: 32,
-      borderRadius: 16,
+      padding: SPACING.xxxl,
+      borderRadius: RADIUS.xl,
       alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 10,
-      elevation: 5,
-      borderWidth: 1,
-      borderColor: colors.border,
       minWidth: 280,
+      ...SHADOWS.lg,
     },
-
-    saveModalText: {
-      fontSize: 16,
-      fontFamily: 'Inter-Medium',
+    loadingText: {
+      fontSize: FONT_SIZES.md,
+      fontFamily: 'Inter-SemiBold',
       color: colors.text,
       textAlign: 'center',
-      marginTop: 4, // small spacing between lines
+      marginTop: SPACING.md,
     },
-    mobileBetaFooter: {
-      paddingHorizontal: 24,
-      paddingVertical: 8,
-      backgroundColor: colors.surface,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    mobileBetaText: {
-      fontSize: Platform.OS === 'android' ? 10 : 12,
+    loadingSubtext: {
+      fontSize: FONT_SIZES.sm,
       fontFamily: 'Inter-Regular',
       color: colors.textSecondary,
       textAlign: 'center',
+      marginTop: SPACING.xs,
+    },
+    dropdownRow: {
+      flexDirection: 'row',
+      gap: SPACING.sm,
+      marginTop: isWeb ? 0 : SPACING.sm, // Space below search on mobile
     },
   });
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Full Screen Save Modal */}
-      {showSaveModal && (
-        <Modal
-          transparent
-          animationType="fade"
-          visible={showSaveModal}
-          onRequestClose={() => {}}
-        >
-          <View style={styles.saveModalOverlay}>
-            <View style={styles.saveModalContent}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={[styles.saveModalText, styles.modalEmoji]}>🧠</Text>
-              <Text style={styles.saveModalText}>Generating image</Text>
-              <Text style={styles.saveModalText}>Saving Recipe</Text>
-            </View>
+      {/* Loading Modal */}
+      <Modal transparent animationType="fade" visible={isSearching}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.loadingModalContent}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            {showDetailedProgress ? (
+              <>
+                <Text style={[styles.loadingText, { marginTop: SPACING.lg }]}>
+                  {getProgressEmoji(recipesLoaded, recipeCount)}{' '}
+                  {getProgressMessage(recipesLoaded, recipeCount)}
+                </Text>
+                {recipesLoaded > 0 && (
+                  <Text style={styles.loadingSubtext}>
+                    {recipesLoaded}/{recipeCount} recipes loaded
+                  </Text>
+                )}
+              </>
+            ) : (
+              <Text style={[styles.loadingText, { marginTop: SPACING.lg }]}>
+                🤖 Analyzing your preferences...
+              </Text>
+            )}
           </View>
-        </Modal>
-      )}
+        </View>
+      </Modal>
 
-      {/* Success/Error Modal */}
-      {modalInfo.visible && (
-        <Modal
-          transparent
-          animationType="fade"
-          visible={modalInfo.visible}
-          onRequestClose={closeModal}
+      {/* Count Picker */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={showCountPicker}
+        onRequestClose={() => setShowCountPicker(false)}
+      >
+        <Pressable
+          style={styles.pickerOverlay}
+          onPress={() => setShowCountPicker(false)}
         >
-          <TouchableWithoutFeedback onPress={closeModal}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
-                {modalInfo.emoji && (
-                  <Text style={styles.modalEmoji}>{modalInfo.emoji}</Text>
-                )}
-                <Text style={styles.modalTitle}>{modalInfo.title}</Text>
-                {!!modalInfo.subtitle && (
-                  <Text style={styles.modalSubtitle}>{modalInfo.subtitle}</Text>
-                )}
-              </View>
+          <Pressable>
+            <View style={styles.pickerContent}>
+              <Text style={styles.pickerTitle}>Number of Recipes</Text>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {COUNT_OPTIONS.map((count) => (
+                  <TouchableOpacity
+                    key={count}
+                    style={[
+                      styles.pickerOption,
+                      recipeCount === count && styles.pickerOptionSelected,
+                    ]}
+                    onPress={() => {
+                      setRecipeCount(count);
+                      setShowCountPicker(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.pickerOptionText,
+                        recipeCount === count &&
+                          styles.pickerOptionTextSelected,
+                      ]}
+                    >
+                      {count} recipes
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
-          </TouchableWithoutFeedback>
-        </Modal>
-      )}
+          </Pressable>
+        </Pressable>
+      </Modal>
 
-      {/* Static full-width header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.title}>Hi, {profile?.firstName || 'there'}!</Text>
-          <Text style={styles.subtitle}>
-            What would you like to cook today?
-          </Text>
-        </View>
-        <View style={styles.headerLogoContainer}>
-          <Image
-            source={require('@/assets/images/smart-bites-logo.png')}
-            style={styles.headerLogo}
-            resizeMode="contain"
-          />
-          {Platform.OS !== 'web' && (
-            <View style={styles.betaBadge}>
-              <Text style={styles.betaBadgeText}>Beta</Text>
+      {/* Type Picker */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={showTypePicker}
+        onRequestClose={() => setShowTypePicker(false)}
+      >
+        <Pressable
+          style={styles.pickerOverlay}
+          onPress={() => setShowTypePicker(false)}
+        >
+          <Pressable>
+            <View style={styles.pickerContent}>
+              <Text style={styles.pickerTitle}>Recipe Type</Text>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {TYPE_OPTIONS.map((type) => (
+                  <TouchableOpacity
+                    key={type.value}
+                    style={[
+                      styles.pickerOption,
+                      recipeType === type.value && styles.pickerOptionSelected,
+                    ]}
+                    onPress={() => {
+                      setRecipeType(type.value);
+                      setShowTypePicker(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.pickerOptionText,
+                        recipeType === type.value &&
+                          styles.pickerOptionTextSelected,
+                      ]}
+                    >
+                      {type.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
-          )}
-        </View>
-      </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
-      {/* Responsive shell for search + filters */}
-      <View style={[styles.responsiveShell, { paddingHorizontal: padX }]}>
-        <View style={styles.searchContainer}>
+      {/* Save Modal */}
+      <Modal transparent animationType="fade" visible={showSaveModal}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.loadingModalContent}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.loadingText, { marginTop: SPACING.lg }]}>
+              🧠 Generating image...
+            </Text>
+            <Text style={styles.loadingSubtext}>Saving your recipe</Text>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Info Modal */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={modalInfo.visible}
+        onRequestClose={closeModal}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeModal}>
+          <Pressable>
+            <View style={styles.modalContent}>
+              {modalInfo.emoji && (
+                <Text style={styles.modalEmoji}>{modalInfo.emoji}</Text>
+              )}
+              <Text style={styles.modalTitle}>{modalInfo.title}</Text>
+              {!!modalInfo.subtitle && (
+                <Text style={styles.modalSubtitle}>{modalInfo.subtitle}</Text>
+              )}
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Header
+        title={`Hi, ${profile?.firstName || 'there'}!`}
+        subtitle="What would you like to cook today?"
+      />
+
+      {/* Search */}
+      <View style={styles.searchSection}>
+        <View style={styles.searchRow}>
           <View style={styles.searchInputContainer}>
-            <Search
-              size={20}
-              color={colors.textSecondary}
-              style={styles.searchIcon}
-            />
+            {Platform.OS === 'web' && (
+              <Search
+                size={20}
+                color={colors.textSecondary}
+                style={styles.searchIcon}
+              />
+            )}
             <TextInput
               style={styles.searchInput}
               value={searchQuery}
+              placeholder="recipes or ingredients"
               onChangeText={setSearchQuery}
-              placeholder="Search for recipes or ingredients..."
               placeholderTextColor={colors.textSecondary}
               onSubmitEditing={handleSearch}
               returnKeyType="search"
             />
           </View>
-        </View>
 
+          <TouchableOpacity
+            style={[styles.dropdownButton, styles.dropdownButtonSmall]}
+            onPress={() => setShowCountPicker(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.dropdownText}>{recipeCount}</Text>
+            <ChevronDown
+              size={Platform.OS === 'web' ? 14 : 12}
+              color={colors.textSecondary}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.dropdownButton, styles.dropdownButtonMedium]}
+            onPress={() => setShowTypePicker(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.dropdownText} numberOfLines={1}>
+              {currentTypeLabel.split(' ')[0]}
+            </Text>
+            <ChevronDown
+              size={Platform.OS === 'web' ? 14 : 12}
+              color={colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Filters */}
+      <View style={{ paddingHorizontal: SPACING.lg }}>
         <AllergenFilter
           selectedAllergens={selectedAllergens}
           onToggleFilter={handleToggleAllergenFilter}
           onClearFilters={handleClearAllergenFilters}
         />
-
         <DietaryFilter
           selectedDietary={selectedDietary}
           onToggleFilter={handleToggleDietaryFilter}
@@ -614,56 +742,39 @@ export default function SearchScreen() {
         />
       </View>
 
+      {/* Content */}
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
         }
       >
-        {loading && (
-          <Modal
-            transparent
-            animationType="fade"
-            visible={loading}
-            onRequestClose={() => {}}
-          >
-            <View style={styles.saveModalOverlay}>
-              <View style={styles.saveModalContent}>
-                <ActivityIndicator size="large" color={colors.primary} />
-                <Text style={[styles.saveModalText, styles.modalEmoji]}>
-                  🍳
-                </Text>
-                <Text style={styles.saveModalText}>Cooking up something</Text>
-                <Text style={styles.saveModalText}>
-                  special just for you...
-                </Text>
-              </View>
-            </View>
-          </Modal>
-        )}
-
         <View style={styles.contentContainer}>
           {searchResults.length > 0 && (
-            <View style={[styles.responsiveShell, { paddingHorizontal: padX }]}>
-              <View style={styles.searchResultsHeader}>
-                <Text style={styles.searchResultsTitle}>Search Results</Text>
+            <View style={styles.resultsSection}>
+              <View style={styles.resultsHeader}>
+                <Text style={styles.resultsTitle}>Search Results</Text>
                 <TouchableOpacity
                   style={styles.dismissButton}
                   onPress={() => {
                     setSearchResults([]);
                     setSearchQuery('');
                   }}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.dismissButtonText}>Dismiss</Text>
+                  <X size={16} color={colors.textSecondary} />
+                  <Text style={styles.dismissButtonText}>Clear</Text>
                 </TouchableOpacity>
               </View>
               {searchResults.map((recipe, index) => (
                 <RecipeCard
-                  key={index}
-                  recipe={{
-                    ...recipe,
-                  }}
+                  key={recipe.id || index}
+                  recipe={recipe}
                   onSave={() => handleSaveRecipe(recipe)}
                   onSaveAndFavorite={() => handleSaveAndFavoriteRecipe(recipe)}
                   showSaveButton={true}
@@ -673,7 +784,6 @@ export default function SearchScreen() {
               ))}
             </View>
           )}
-
           {!loading && searchResults.length === 0 && (
             <>
               {featuredRecipes.length > 0 && (
@@ -685,7 +795,6 @@ export default function SearchScreen() {
                   horizontal={true}
                 />
               )}
-
               {favoriteRecipes.length > 0 && (
                 <RecipeSection
                   title="❤️ Your Favorites"
@@ -695,7 +804,6 @@ export default function SearchScreen() {
                   horizontal={true}
                 />
               )}
-
               {recentRecipes.length > 0 && (
                 <RecipeSection
                   title="📚 My Collection"
@@ -705,20 +813,19 @@ export default function SearchScreen() {
                   horizontal={false}
                 />
               )}
-
               {savedRecipes.length === 0 &&
                 featuredRecipes.length === 0 &&
                 recentRecipes.length === 0 && (
                   <View style={styles.emptyState}>
                     <View style={styles.emptyStateIcon}>
-                      <Search size={48} color={colors.textSecondary} />
+                      <Search size={36} color={colors.primary} />
                     </View>
                     <Text style={styles.emptyStateTitle}>
                       Start Your Culinary Journey
                     </Text>
                     <Text style={styles.emptyStateText}>
                       Search for recipes above to discover delicious meals
-                      tailored to your dietary needs and preferences.
+                      tailored to your dietary needs.
                     </Text>
                   </View>
                 )}
@@ -726,15 +833,6 @@ export default function SearchScreen() {
           )}
         </View>
       </ScrollView>
-
-      {/* Mobile Beta Footer */}
-      {Platform.OS !== 'web' && (
-        <View style={styles.mobileBetaFooter}>
-          <Text style={styles.mobileBetaText}>
-            Currently in beta — thanks for testing!
-          </Text>
-        </View>
-      )}
     </SafeAreaView>
   );
 }

@@ -1,4 +1,3 @@
-// app/(tabs)/profile.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -14,12 +13,20 @@ import {
   Linking,
   Image,
   Modal,
-  TouchableWithoutFeedback,
+  Pressable,
   type ScrollView as RNScrollView,
 } from 'react-native';
+import Header from '@/components/Header';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { ThemeColors, useTheme } from '@/contexts/ThemeContext';
+import {
+  useTheme,
+  ThemeColors,
+  SPACING,
+  RADIUS,
+  SHADOWS,
+  FONT_SIZES,
+} from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { useAllergens, ALLERGENS } from '@/contexts/AllergensContext';
 import { useDietary, DIETARY_PREFERENCES } from '@/contexts/DietaryContext';
@@ -30,11 +37,15 @@ import {
   ChevronDown,
   CircleAlert as AlertCircle,
   ExternalLink,
+  User,
+  Shield,
+  Utensils,
+  Settings,
 } from 'lucide-react-native';
-
 import { US_STATES } from '@/constants/States';
 import { formatPhoneNumber, isValidPhoneNumber } from '@/utils/phone';
 import packageJson from '../../package.json';
+import BetaFooter from '@/components/BetaFooter';
 
 const APP_VERSION = packageJson.version;
 
@@ -76,7 +87,6 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [showStates, setShowStates] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
-
   const [modalInfo, setModalInfo] = useState<ModalInfo>({
     visible: false,
     title: '',
@@ -86,59 +96,41 @@ export default function ProfileScreen() {
     setModalInfo({ ...info, visible: true });
   const closeModal = () => setModalInfo((m) => ({ ...m, visible: false }));
 
-  // --------- Scroll to bottom when expanding About ----------
   const scrollRef = useRef<RNScrollView | null>(null);
   useEffect(() => {
-    if (showAbout) {
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollToEnd({ animated: true });
-      });
-    }
+    if (showAbout)
+      requestAnimationFrame(() =>
+        scrollRef.current?.scrollToEnd({ animated: true })
+      );
   }, [showAbout]);
-  const handleContentSizeChange = () => {
-    if (showAbout) {
-      scrollRef.current?.scrollToEnd({ animated: true });
-    }
-  };
-  // ---------------------------------------------------------
-
   useEffect(() => {
-    if (user) {
-      loadProfile();
-    }
+    if (user) loadProfile();
   }, [user]);
 
   const loadProfile = async () => {
     try {
-      const profileData = await UserService.getUserProfile(user?.id!);
-      if (profileData) {
-        setProfile((prev) => ({
-          ...prev,
+      const data = await UserService.getUserProfile(user?.id!);
+      if (data)
+        setProfile((p) => ({
+          ...p,
           email: user?.email || '',
-          firstName: profileData.firstName,
-          lastName: profileData.lastName,
-          address1: profileData.address1 || '',
-          address2: profileData.address2 || '',
-          city: profileData.city || '',
-          state: profileData.state || '',
-          zip: profileData.zip || '',
-          phone: profileData.phone ? formatPhoneNumber(profileData.phone) : '',
+          firstName: data.firstName,
+          lastName: data.lastName,
+          address1: data.address1 || '',
+          address2: data.address2 || '',
+          city: data.city || '',
+          state: data.state || '',
+          zip: data.zip || '',
+          phone: data.phone ? formatPhoneNumber(data.phone) : '',
         }));
-      } else if (user) {
-        // If no profile data but user exists, at least set the email
-        setProfile((prev) => ({
-          ...prev,
-          email: user.email || '',
-        }));
-      }
-    } catch (err) {
-      console.error('Error loading profile:', err);
+      else if (user) setProfile((p) => ({ ...p, email: user.email || '' }));
+    } catch (e) {
+      console.error('Error loading profile:', e);
     }
   };
 
   const saveProfile = async () => {
     if (!user) return;
-
     if (profile.phone && !isValidPhoneNumber(profile.phone)) {
       openModal({
         title: 'Invalid Phone Number',
@@ -147,9 +139,7 @@ export default function ProfileScreen() {
       });
       return;
     }
-
     setLoading(true);
-
     try {
       await UserService.upsertUserProfile({
         userId: user.id,
@@ -162,20 +152,17 @@ export default function ProfileScreen() {
         zip: profile.zip,
         phone: profile.phone.replace(/\D/g, ''),
       });
-
       openModal({
         title: 'Profile Updated!',
-        subtitle: 'Your changes have been saved successfully.',
+        subtitle: 'Your changes have been saved.',
         emoji: '✅',
       });
-    } catch (err: any) {
+    } catch (e: any) {
       openModal({
         title: 'Update Failed',
-        subtitle:
-          err?.message || 'Failed to update profile. Please try again later.',
+        subtitle: e?.message || 'Failed to update profile.',
         emoji: '❌',
       });
-      console.error('Save profile error:', err);
     } finally {
       setLoading(false);
     }
@@ -185,47 +172,24 @@ export default function ProfileScreen() {
     await signOut();
   };
 
- const handleDeleteAccount = async () => {
+  const handleDeleteAccount = async () => {
     if (!user) return;
-
     setLoading(true);
     closeModal();
-
     try {
-      console.log('Attempting to delete account for user:', user.id);
-
       const { data, error } = await supabase.functions.invoke(
         'deleteUserAccount',
-        {
-          method: 'POST',
-          body: {}, // empty body is fine
-        }
+        { method: 'POST', body: {} }
       );
-
-      console.log('Delete function response:', { data, error });
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw new Error(error.message || 'Failed to delete account');
-      }
-
-      if (!data?.success) {
+      if (error) throw new Error(error.message || 'Failed to delete account');
+      if (!data?.success)
         throw new Error(data?.error || 'Account deletion failed');
-      }
-
-      console.log('Account deleted successfully');
-
-      // Sign out and redirect
       await signOut();
       router.replace('/(auth)');
-    } catch (error: any) {
-      console.error('Error deleting account:', error);
-
+    } catch (e: any) {
       openModal({
         title: 'Delete Failed',
-        subtitle:
-          error?.message ||
-          'Failed to delete account. Please try again or contact support.',
+        subtitle: e?.message || 'Failed to delete account.',
         emoji: '❌',
       });
     } finally {
@@ -233,546 +197,450 @@ export default function ProfileScreen() {
     }
   };
 
-  const styles = getStyles(colors);
+  const styles = getStyles(colors, isDark);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Success/Error Modal */}
-      {modalInfo.visible && (
-        <Modal
-          transparent
-          animationType="fade"
-          visible={modalInfo.visible}
-          onRequestClose={closeModal}
-        >
-          <TouchableWithoutFeedback onPress={closeModal}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
-                {modalInfo.emoji && (
-                  <Text style={styles.modalEmoji}>{modalInfo.emoji}</Text>
-                )}
-                <Text style={styles.modalTitle}>{modalInfo.title}</Text>
-                {!!modalInfo.subtitle && (
-                  <Text style={styles.modalSubtitle}>{modalInfo.subtitle}</Text>
-                )}
-                
-                {(modalInfo.primary || modalInfo.secondary) && (
-                  <View style={styles.modalButtons}>
-                    {modalInfo.secondary && (
-                      <TouchableOpacity 
-                        style={styles.modalButton} 
-                        onPress={() => {
-                          if (modalInfo.secondary?.onPress) {
-                            modalInfo.secondary.onPress();
-                          } else {
-                            closeModal();
-                          }
-                        }}
-                      >
-                        <Text style={styles.modalButtonText}>
-                          {modalInfo.secondary.label}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                    
-                    {modalInfo.primary && (
-                      <TouchableOpacity 
-                        style={[styles.modalButton, styles.modalButtonPrimary]} 
-                        onPress={() => {
-                          if (modalInfo.primary?.onPress) {
-                            modalInfo.primary.onPress();
-                          } else {
-                            closeModal();
-                          }
-                        }}
-                      >
-                        <Text style={[styles.modalButtonText, styles.modalButtonTextPrimary]}>
-                          {modalInfo.primary.label}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                )}
-              </View>
+      {/* Modal */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={modalInfo.visible}
+        onRequestClose={closeModal}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeModal}>
+          <Pressable>
+            <View style={styles.modalContent}>
+              {modalInfo.emoji && (
+                <Text style={styles.modalEmoji}>{modalInfo.emoji}</Text>
+              )}
+              <Text style={styles.modalTitle}>{modalInfo.title}</Text>
+              {!!modalInfo.subtitle && (
+                <Text style={styles.modalSubtitle}>{modalInfo.subtitle}</Text>
+              )}
+              {(modalInfo.primary || modalInfo.secondary) && (
+                <View style={styles.modalButtons}>
+                  {modalInfo.secondary && (
+                    <TouchableOpacity
+                      style={styles.modalButtonSecondary}
+                      onPress={() =>
+                        modalInfo.secondary?.onPress
+                          ? modalInfo.secondary.onPress()
+                          : closeModal()
+                      }
+                    >
+                      <Text style={styles.modalButtonSecondaryText}>
+                        {modalInfo.secondary.label}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  {modalInfo.primary && (
+                    <TouchableOpacity
+                      style={styles.modalButtonPrimary}
+                      onPress={() =>
+                        modalInfo.primary?.onPress
+                          ? modalInfo.primary.onPress()
+                          : closeModal()
+                      }
+                    >
+                      <Text style={styles.modalButtonPrimaryText}>
+                        {modalInfo.primary.label}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
             </View>
-          </TouchableWithoutFeedback>
-        </Modal>
-      )}
+          </Pressable>
+        </Pressable>
+      </Modal>
 
-      {/* White header matching other tabs */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.title}>Your Profile</Text>
-          <Text style={styles.subtitle}>Manage your preferences</Text>
-        </View>
-        <View style={styles.headerLogoContainer}>
-          <Image
-            source={require('@/assets/images/smart-bites-logo.png')}
-            style={styles.headerLogo}
-            resizeMode="contain"
-          />
-          {Platform.OS !== 'web' && (
-            <View style={styles.betaBadge}>
-              <Text style={styles.betaBadgeText}>Beta</Text>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {/* NEW: State picker modal (portal) */}
+      {/* State Picker */}
       <Modal
         transparent
         visible={showStates}
         animationType="fade"
         onRequestClose={() => setShowStates(false)}
       >
-        <TouchableWithoutFeedback onPress={() => setShowStates(false)}>
-          <View style={styles.dropdownOverlay} />
-        </TouchableWithoutFeedback>
-
-        <View style={styles.dropdownSheet}>
-          <Text style={styles.dropdownTitle}>Select a state</Text>
-          <ScrollView
-            style={styles.dropdownList}
-            keyboardShouldPersistTaps="handled"
-          >
-            {US_STATES.map((stateItem) => (
-              <TouchableOpacity
-                key={stateItem.code}
-                style={styles.dropdownItem}
-                onPress={() => {
-                  setProfile((prev) => ({ ...prev, state: stateItem.code }));
-                  setShowStates(false);
-                }}
+        <Pressable
+          style={styles.pickerOverlay}
+          onPress={() => setShowStates(false)}
+        >
+          <Pressable>
+            <View style={styles.pickerContent}>
+              <Text style={styles.pickerTitle}>Select State</Text>
+              <ScrollView
+                style={styles.pickerList}
+                showsVerticalScrollIndicator={false}
               >
-                <Text style={styles.dropdownItemText}>
-                  {stateItem.code} — {stateItem.name}
-                </Text>
+                {US_STATES.map((s) => (
+                  <TouchableOpacity
+                    key={s.code}
+                    style={styles.pickerOption}
+                    onPress={() => {
+                      setProfile((p) => ({ ...p, state: s.code }));
+                      setShowStates(false);
+                    }}
+                  >
+                    <Text style={styles.pickerOptionText}>
+                      {s.code} — {s.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity
+                style={styles.pickerCancel}
+                onPress={() => setShowStates(false)}
+              >
+                <Text style={styles.pickerCancelText}>Cancel</Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          <TouchableOpacity
-            style={styles.dropdownCancel}
-            onPress={() => setShowStates(false)}
-          >
-            <Text style={styles.dropdownCancelText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
+            </View>
+          </Pressable>
+        </Pressable>
       </Modal>
 
+      <Header title="Your Profile" subtitle="Manage your preferences" />
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
-        onContentSizeChange={handleContentSizeChange}
-        contentContainerStyle={{ paddingBottom: 5 }}
+        contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.contentContainer}>
-          <View style={styles.formCard}>
-            <View style={styles.form}>
-              {/* Email (read-only) */}
-              <TextInput
-                style={[styles.input, styles.readOnlyInput]}
-                value={profile.email}
-                placeholder="Email"
-                placeholderTextColor={colors.textSecondary}
-                editable={false}
-                selectTextOnFocus={false}
-              />
-              
-              {/* Names */}
-              <TextInput
-                style={styles.input}
-                value={profile.firstName}
-                onChangeText={(text) =>
-                  setProfile((prev) => ({ ...prev, firstName: text }))
-                }
-                placeholder="First name"
-                placeholderTextColor={colors.textSecondary}
-                autoCapitalize="words"
-              />
-              <TextInput
-                style={styles.input}
-                value={profile.lastName}
-                onChangeText={(text) =>
-                  setProfile((prev) => ({ ...prev, lastName: text }))
-                }
-                placeholder="Last name"
-                placeholderTextColor={colors.textSecondary}
-                autoCapitalize="words"
-              />
-
+          {/* Profile Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardIconContainer}>
+                <User size={18} color={colors.primary} />
+              </View>
+              <Text style={styles.cardTitle}>Personal Info</Text>
             </View>
-          </View>
-
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Allergens</Text>
-            {allergensLoading ? (
-              <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
-                <ActivityIndicator size="small" color={colors.primary} />
-              </View>
-            ) : (
-              <View style={styles.chipGrid}>
-                {ALLERGENS.map((allergen) => {
-                  const selected = userAllergens.some(
-                    (a) => a.$id === allergen.$id
-                  );
-                  return (
-                    <TouchableOpacity
-                      key={allergen.$id}
-                      style={[styles.chip, selected && styles.chipSelected]}
-                      onPress={() => toggleAllergen(allergen)}
-                      disabled={allergensLoading}
-                    >
-                      <Text
-                        style={[
-                          styles.chipText,
-                          selected && styles.chipTextSelected,
-                        ]}
-                      >
-                        {allergen.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
-          </View>
-
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitleDiet}>Dietary Preferences</Text>
-            {dietaryLoading ? (
-              <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
-                <ActivityIndicator size="small" color={colors.dietary} />
-              </View>
-            ) : (
-              <View style={styles.chipGrid}>
-                {DIETARY_PREFERENCES.map((pref) => {
-                  const selected = userDietaryPrefs.some(
-                    (p) => p.$id === pref.$id
-                  );
-                  return (
-                    <TouchableOpacity
-                      key={pref.$id}
-                      style={[
-                        styles.chip,
-                        selected && styles.chipSelectedDietary,
-                      ]}
-                      onPress={() => toggleDietaryPref(pref)}
-                      disabled={dietaryLoading}
-                    >
-                      <Text
-                        style={[
-                          styles.chipText,
-                          selected && styles.chipTextSelected,
-                        ]}
-                      >
-                        {pref.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
-          </View>
-
-          <View style={styles.sectionCard}>
-            <View style={styles.settingsRow}>
-              <View style={styles.themeContainer}>
-                <View
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
-                >
-                  {isDark ? (
-                    <Moon size={20} color={colors.text} />
-                  ) : (
-                    <Sun size={20} color={colors.text} />
-                  )}
-                  <Text style={styles.themeText}>
-                    {isDark ? 'Dark' : 'Light'}
-                  </Text>
-                </View>
-                <Switch
-                  value={isDark}
-                  onValueChange={toggleTheme}
-                  trackColor={{ false: '#e6e2d6', true: colors.primary }}
-                  thumbColor="#FFFFFF"
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email</Text>
+              <TextInput
+                style={[styles.input, styles.inputDisabled]}
+                value={profile.email}
+                editable={false}
+                placeholderTextColor={colors.textSecondary}
+              />
+            </View>
+            <View style={styles.inputRow}>
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={styles.inputLabel}>First Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={profile.firstName}
+                  onChangeText={(t) =>
+                    setProfile((p) => ({ ...p, firstName: t }))
+                  }
+                  placeholder="First name"
+                  placeholderTextColor={colors.textSecondary}
+                  autoCapitalize="words"
                 />
               </View>
-
-              <TouchableOpacity
-                style={styles.deleteAccountButton}
-                onPress={() => openModal({
-                  title: 'Delete Account',
-                  subtitle: 'Are you sure you want to permanently delete your account? This action cannot be undone.',
-                  emoji: '⚠️',
-                  primary: { 
-                    label: 'Yes, Delete', 
-                    onPress: handleDeleteAccount 
-                  },
-                  secondary: { 
-                    label: 'Cancel' 
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={styles.inputLabel}>Last Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={profile.lastName}
+                  onChangeText={(t) =>
+                    setProfile((p) => ({ ...p, lastName: t }))
                   }
-                })}
-              >
-                <Text style={styles.deleteAccountText}>Delete Account</Text>
-              </TouchableOpacity>
+                  placeholder="Last name"
+                  placeholderTextColor={colors.textSecondary}
+                  autoCapitalize="words"
+                />
+              </View>
             </View>
           </View>
 
-          <View style={styles.buttonRow}>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.saveButton,
-                loading && { opacity: 0.6 },
-              ]}
-              onPress={saveProfile}
-              disabled={loading}
-            >
-              <Text style={[styles.buttonText, styles.saveButtonText]}>
-                {loading ? 'Saving...' : 'Save'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, styles.signOutButton]}
-              onPress={handleSignOut}
-            >
-              <Text style={[styles.buttonText, styles.signOutButtonText]}>
-                Log Out
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* About / Legal Section (collapsible) */}
-          <View>
-            <TouchableOpacity
-              onPress={() => setShowAbout((v) => !v)}
-              style={styles.aboutToggle}
-            >
-              <Text style={styles.aboutToggleText}>
-                {showAbout ? 'Hide About ▲' : 'Show About ▼'}
-              </Text>
-            </TouchableOpacity>
-
-            {showAbout && (
-              <View style={styles.legalSection}>
-                <View style={styles.disclaimerBox}>
-                  <AlertCircle
-                    size={20}
-                    color="#f59e0b"
-                    style={styles.disclaimerIcon}
-                  />
-                  <Text style={styles.disclaimerText}>
-                    This app helps avoid allergens in recipes but is not a
-                    substitute for professional advice. Always verify
-                    ingredients if you have severe allergies.
-                  </Text>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.link}
-                  onPress={() =>
-                    Linking.openURL(
-                      'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
-                    )
-                  }
-                >
-                  <Text style={styles.linkText}>Terms of Service</Text>
-                  <ExternalLink size={16} color={colors.primary} />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.link}
-                  onPress={() =>
-                    Linking.openURL(
-                      'https://www.privacypolicies.com/live/1a6f589d-84cc-4f85-82b9-802b08c501b2'
-                    )
-                  }
-                >
-                  <Text style={styles.linkText}>Privacy Policy</Text>
-                  <ExternalLink size={16} color={colors.primary} />
-                </TouchableOpacity>
-
-                <Text style={styles.versionText}>Version {APP_VERSION}</Text>
+          {/* Allergens Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View
+                style={[
+                  styles.cardIconContainer,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+              >
+                <Shield size={18} color={colors.primary} />
+              </View>
+              <Text style={styles.cardTitle}>Allergens to Avoid</Text>
+            </View>
+            {allergensLoading ? (
+              <ActivityIndicator
+                size="small"
+                color={colors.primary}
+                style={{ padding: SPACING.lg }}
+              />
+            ) : (
+              <View style={styles.chipGrid}>
+                {ALLERGENS.map((a) => {
+                  const sel = userAllergens.some((x) => x.$id === a.$id);
+                  return (
+                    <TouchableOpacity
+                      key={a.$id}
+                      style={[styles.chip, sel && styles.chipSelected]}
+                      onPress={() => toggleAllergen(a)}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          sel && styles.chipTextSelected,
+                        ]}
+                      >
+                        {a.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             )}
           </View>
+
+          {/* Dietary Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View
+                style={[
+                  styles.cardIconContainer,
+                  { backgroundColor: `${colors.dietary}15` },
+                ]}
+              >
+                <Utensils size={18} color={colors.dietary} />
+              </View>
+              <Text style={[styles.cardTitle, { color: colors.dietary }]}>
+                Dietary Preferences
+              </Text>
+            </View>
+            {dietaryLoading ? (
+              <ActivityIndicator
+                size="small"
+                color={colors.dietary}
+                style={{ padding: SPACING.lg }}
+              />
+            ) : (
+              <View style={styles.chipGrid}>
+                {DIETARY_PREFERENCES.map((d) => {
+                  const sel = userDietaryPrefs.some((x) => x.$id === d.$id);
+                  return (
+                    <TouchableOpacity
+                      key={d.$id}
+                      style={[styles.chip, sel && styles.chipSelectedDietary]}
+                      onPress={() => toggleDietaryPref(d)}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          sel && styles.chipTextSelected,
+                        ]}
+                      >
+                        {d.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+
+          {/* Settings Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View
+                style={[
+                  styles.cardIconContainer,
+                  { backgroundColor: `${colors.accent}15` },
+                ]}
+              >
+                <Settings size={18} color={colors.accent} />
+              </View>
+              <Text style={styles.cardTitle}>Settings</Text>
+            </View>
+            <View style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                {isDark ? (
+                  <Moon size={20} color={colors.text} />
+                ) : (
+                  <Sun size={20} color={colors.text} />
+                )}
+                <Text style={styles.settingLabel}>
+                  {isDark ? 'Dark Mode' : 'Light Mode'}
+                </Text>
+              </View>
+              <Switch
+                value={isDark}
+                onValueChange={toggleTheme}
+                trackColor={{ false: colors.border, true: colors.primary }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+            <TouchableOpacity
+              style={styles.dangerButton}
+              onPress={() =>
+                openModal({
+                  title: 'Delete Account',
+                  subtitle: 'Are you sure? This action cannot be undone.',
+                  emoji: '⚠️',
+                  primary: { label: 'Delete', onPress: handleDeleteAccount },
+                  secondary: { label: 'Cancel' },
+                })
+              }
+            >
+              <Text style={styles.dangerButtonText}>Delete Account</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Buttons */}
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={[styles.primaryButton, loading && { opacity: 0.6 }]}
+              onPress={saveProfile}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.primaryButtonText}>
+                {loading ? 'Saving...' : 'Save Changes'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={handleSignOut}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.secondaryButtonText}>Log Out</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* About */}
+          <TouchableOpacity
+            style={styles.aboutToggle}
+            onPress={() => setShowAbout((v) => !v)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.aboutToggleText}>
+              {showAbout ? 'Hide About' : 'About & Legal'}
+            </Text>
+            <ChevronDown
+              size={18}
+              color={colors.primary}
+              style={{ transform: [{ rotate: showAbout ? '180deg' : '0deg' }] }}
+            />
+          </TouchableOpacity>
+
+          {showAbout && (
+            <View style={styles.aboutSection}>
+              <View style={styles.disclaimerBox}>
+                <AlertCircle
+                  size={20}
+                  color="#f59e0b"
+                  style={{ marginRight: SPACING.md }}
+                />
+                <Text style={styles.disclaimerText}>
+                  This app helps avoid allergens in recipes but is not a
+                  substitute for professional advice.
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.linkRow}
+                onPress={() =>
+                  Linking.openURL(
+                    'https://www.privacypolicies.com/live/53f5c56f-677a-469f-aad9-1253eb6b75e4'
+                  )
+                }
+              >
+                <Text style={styles.linkText}>Terms of Service</Text>
+                <ExternalLink size={16} color={colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.linkRow}
+                onPress={() =>
+                  Linking.openURL(
+                    'https://www.privacypolicies.com/live/1a6f589d-84cc-4f85-82b9-802b08c501b2'
+                  )
+                }
+              >
+                <Text style={styles.linkText}>Privacy Policy</Text>
+                <ExternalLink size={16} color={colors.primary} />
+              </TouchableOpacity>
+              <Text style={styles.versionText}>Version {APP_VERSION}</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
-
-      {/* Mobile Beta Footer */}
-      {Platform.OS !== 'web' && (
-        <View style={styles.mobileBetaFooter}>
-          <Text style={styles.mobileBetaText}>
-            Currently in beta — thanks for testing!
-          </Text>
-        </View>
-      )}
+      <BetaFooter enabled={true} />
     </SafeAreaView>
   );
 }
 
-const getStyles = (colors: ThemeColors) =>
+const getStyles = (colors: ThemeColors, isDark: boolean) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
+    container: { flex: 1, backgroundColor: colors.background },
+    scrollContent: { paddingBottom: SPACING.xxl },
     contentContainer: {
       width: '100%',
-      maxWidth: 1024,
+      maxWidth: 600,
       alignSelf: 'center',
+      paddingHorizontal: SPACING.lg,
     },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 24,
-      paddingTop: Platform.OS === 'android' ? 32 : 4,
-      paddingBottom: 2,
+    card: {
       backgroundColor: colors.surface,
-      marginBottom: 12,
+      borderRadius: RADIUS.lg,
+      padding: SPACING.lg,
+      marginTop: SPACING.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      ...SHADOWS.sm,
     },
-    headerContent: { flex: 1 },
-    headerLogoContainer: {
+    cardHeader: {
+      flexDirection: 'row',
       alignItems: 'center',
-      position: 'relative',
+      marginBottom: SPACING.lg,
     },
-    headerLogo: { width: 72, height: 72, marginLeft: 16 },
-    betaBadge: {
-      position: 'absolute',
-      top: -4,
-      right: -8,
-      backgroundColor: '#FF8866',
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 8,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
-      elevation: 2,
+    cardIconContainer: {
+      width: 32,
+      height: 32,
+      borderRadius: RADIUS.sm,
+      backgroundColor: `${colors.primary}15`,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: SPACING.md,
     },
-    betaBadgeText: {
-      fontSize: 10,
+    cardTitle: {
+      fontSize: FONT_SIZES.lg,
       fontFamily: 'Inter-SemiBold',
-      color: '#FFFFFF',
+      color: colors.primary,
+      letterSpacing: -0.3,
+    },
+    inputGroup: { marginBottom: SPACING.md },
+    inputRow: { flexDirection: 'row', gap: SPACING.md },
+    inputLabel: {
+      fontSize: FONT_SIZES.xs,
+      fontFamily: 'Inter-Medium',
+      color: colors.textSecondary,
+      marginBottom: SPACING.xs,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
-    title: {
-      fontSize: 20,
-      fontFamily: 'Inter-Bold',
-      color: '#FF8866',
-      marginBottom: 8,
-    },
-    subtitle: {
-      fontSize: Platform.select({
-        ios: 16,
-        android: 11,
-        web: 13,
-      }),
-      fontFamily: 'Lato-Regular',
-      color: colors.textSecondary,
-    },
-
-    // Form styling
-    form: { gap: 12 },
-    row: { flexDirection: 'row', gap: 8 },
-    flex1: { flex: 1 },
-    flex2: { flex: 2 },
-    zipContainer: { width: 80 },
-    phoneContainer: { width: 140 },
-
     input: {
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 9,
-      paddingHorizontal: 12,
-      paddingVertical: Platform.OS === 'android' ? 4 : 9,
-      fontSize: Platform.OS === 'android' ? 13 : 15,
+      borderRadius: RADIUS.md,
+      paddingHorizontal: SPACING.md,
+      paddingVertical: Platform.OS === 'android' ? SPACING.sm : SPACING.md,
+      fontSize: FONT_SIZES.md,
       fontFamily: 'Inter-Regular',
       color: colors.text,
       backgroundColor: colors.backgroundLight,
     },
-
-    // NEW: state select button (looks like input)
-    stateSelectButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    stateButtonText: {
-      fontSize: 15,
-      fontFamily: 'Inter-Regular',
-      color: colors.text,
-    },
-
-    // Card wrapper
-    formCard: {
-      backgroundColor: colors.surface,
-      marginHorizontal: Platform.OS === 'android' ? 16 : 12,
-      borderRadius: 12,
-      padding: Platform.OS === 'android' ? 12 : 16,
-      marginBottom: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    sectionCard: {
-      backgroundColor: colors.surface,
-      marginHorizontal: Platform.OS === 'android' ? 16 : 12,
-      borderRadius: 12,
-      padding: Platform.OS === 'android' ? 8 : 16,
-      marginBottom: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    mobileBetaFooter: {
-      paddingHorizontal: 24,
-      paddingVertical: 8,
-      backgroundColor: colors.surface,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    mobileBetaText: {
-      fontSize: Platform.OS === 'android' ? 10 : 12,
-      fontFamily: 'Inter-Regular',
-      color: colors.textSecondary,
-      textAlign: 'center',
-    },
-
-    // Sections
-    sectionTitle: {
-      fontSize: Platform.OS === 'android' ? 16 : 18,
-      fontFamily: 'Inter-SemiBold',
-      color: colors.primary,
-      marginTop: 0,
-      marginBottom: Platform.OS === 'android' ? 4 : 6,
-      paddingHorizontal: 0,
-    },
-    sectionTitleDiet: {
-      fontSize: Platform.OS === 'android' ? 16 : 18,
-      fontFamily: 'Inter-SemiBold',
-      color: colors.dietary,
-      marginTop: 0,
-      marginBottom: Platform.OS === 'android' ? 4 : 6,
-      paddingHorizontal: 0,
-    },
-
-    // Chips
-    chipGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: Platform.OS === 'android' ? 4 : 6,
-      paddingHorizontal: 0,
-      marginBottom: 0,
-    },
+    inputDisabled: { opacity: 0.6 },
+    chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
     chip: {
-      paddingVertical: Platform.OS === 'android' ? 6 : 8,
-      paddingHorizontal: Platform.OS === 'android' ? 10 : 12,
-      borderRadius: 999,
-      borderWidth: 1,
+      paddingVertical: SPACING.sm,
+      paddingHorizontal: SPACING.md,
+      borderRadius: RADIUS.full,
+      borderWidth: 1.5,
       borderColor: colors.border,
       backgroundColor: colors.backgroundLight,
     },
@@ -784,260 +652,221 @@ const getStyles = (colors: ThemeColors) =>
       backgroundColor: colors.dietary,
       borderColor: colors.dietary,
     },
-    chipText: { 
-      fontSize: Platform.OS === 'android' ? 11 : 12, 
-      fontFamily: 'Inter-Medium', 
-      color: colors.text 
+    chipText: {
+      fontSize: FONT_SIZES.sm,
+      fontFamily: 'Inter-Medium',
+      color: colors.text,
     },
-    chipTextSelected: { color: '#fff' },
-
-    readOnlyInput: {
-      backgroundColor: colors.backgroundLight,
-      opacity: 0.7,
-    },
-
-    // Theme toggle
-    settingsRow: {
-      flexDirection: 'row',
-      gap: Platform.OS === 'android' ? 8 : 12,
-      marginBottom: 0,
-      marginTop: 0,
-    },
-    themeContainer: {
-      flex: 1,
-      paddingHorizontal: Platform.OS === 'android' ? 10 : 12,
-      paddingVertical: Platform.OS === 'android' ? 6 : 8,
+    chipTextSelected: { color: '#FFFFFF' },
+    settingRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      backgroundColor: colors.backgroundLight,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.accent,
-    },
-    deleteAccountButton: {
-      flex: 1,
-      paddingHorizontal: Platform.OS === 'android' ? 8 : 12,
-      paddingVertical: Platform.OS === 'android' ? 8 : 8,
-      backgroundColor: colors.error,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.error,
-    },
-    deleteAccountText: {
-      fontSize: Platform.OS === 'android' ? 12 : 16,
-      fontFamily: 'Inter-Medium',
-      color: '#FFFFFF',
-      textAlign: 'center',
-    },
-    themeText: {
-      fontSize: Platform.OS === 'android' ? 12 : 16,
-      fontFamily: 'Inter-Medium',
-      color: colors.text,
-    },
-
-    // Buttons
-    button: {
-      paddingVertical: Platform.OS === 'android' ? 6 : 8,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-    },
-    buttonRow: {
-      flexDirection: 'row',
-      paddingHorizontal: Platform.OS === 'android' ? 16 : 12,
-      gap: Platform.OS === 'android' ? 8 : 12,
-      marginTop: 8,
-      marginBottom: 12,
-    },
-    saveButton: {
-      flex: 1,
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    buttonText: { 
-      fontSize: Platform.OS === 'android' ? 12 : 14, 
-      fontFamily: 'Inter-SemiBold' 
-    },
-    saveButtonText: { color: '#FFFFFF' },
-    signOutButton: { 
-      flex: 1,
-      backgroundColor: colors.backgroundLight, 
-      borderColor: colors.error 
-    },
-    signOutButtonText: { color: colors.error },
-
-    aboutToggle: { alignItems: 'center', paddingVertical: 6, marginBottom: 4 },
-    aboutToggleText: {
-      fontSize: 16,
-      fontFamily: 'Inter-SemiBold',
-      color: colors.primary,
-    },
-
-    // Legal section
-    legalSection: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12 },
-    disclaimerBox: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      backgroundColor: colors.surface,
-      padding: 10,
-      borderRadius: 12,
-      marginBottom: 8,
-      borderWidth: 1,
-      borderColor: '#f59e0b',
-    },
-    disclaimerIcon: { marginRight: 10, marginTop: 2 },
-    disclaimerText: {
-      flex: 1,
-      fontSize: 14,
-      fontFamily: 'Inter-Regular',
-      color: colors.textSecondary,
-      lineHeight: 20,
-    },
-
-    link: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 8,
-      marginBottom: 0,
-      paddingBottom: 0,
-    },
-    linkText: {
-      fontSize: 13,
-      fontFamily: 'Inter-Medium',
-      color: colors.primary,
-      marginRight: 6,
-    },
-    versionText: {
-      fontSize: 14,
-      fontWeight: '700',
-      fontFamily: 'Inter-Regular',
-      color: colors.textSecondary,
-      textAlign: 'center',
-      marginTop: 10,
-    },
-
-    // Modal (success/error)
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.4)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    modalContent: {
-      backgroundColor: colors.surface,
-      padding: 24,
-      borderRadius: 12,
-      width: '80%',
-      maxWidth: 420,
-      alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 10,
-      elevation: 5,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    modalTitle: {
-      fontSize: 18,
-      fontFamily: 'Inter-SemiBold',
-      color: colors.text,
-      marginBottom: 8,
-      textAlign: 'center',
-    },
-    modalSubtitle: {
-      fontSize: 14,
-      fontFamily: 'Inter-Regular',
-      color: colors.textSecondary,
-      textAlign: 'center',
-      marginBottom: 16,
-    },
-    modalEmoji: { fontSize: 40, marginBottom: 12 },
-
-    // Modal buttons
-    modalButtons: {
-      flexDirection: 'row',
-      gap: 12,
-      marginTop: 16,
-      width: '100%',
-    },
-    modalButton: {
-      flex: 1,
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderRadius: 8,
-      alignItems: 'center',
-      backgroundColor: colors.backgroundLight,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    modalButtonPrimary: {
-      backgroundColor: colors.error,
-      borderColor: colors.error,
-    },
-    modalButtonText: {
-      fontSize: 14,
-      fontFamily: 'Inter-SemiBold',
-      color: colors.text,
-    },
-    modalButtonTextPrimary: {
-      color: '#FFFFFF',
-    },
-
-    // NEW: Dropdown modal (portal) styles
-    dropdownOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0,0,0,0.35)',
-    },
-    dropdownSheet: {
-      position: 'absolute',
-      left: 16,
-      right: 16,
-      top: Platform.select({ ios: 120, android: 120, default: 120 }),
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: 12,
-      elevation: 50,
-      zIndex: 99999,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.25,
-      shadowRadius: 10,
-    },
-    dropdownTitle: {
-      fontSize: 16,
-      fontFamily: 'Inter-SemiBold',
-      color: colors.text,
-      marginBottom: 8,
-      textAlign: 'center',
-    },
-    dropdownList: { maxHeight: 300, borderRadius: 8 },
-    dropdownItem: {
-      paddingVertical: 10,
-      paddingHorizontal: 12,
+      paddingVertical: SPACING.md,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },
-    dropdownItemText: {
-      fontSize: 15,
+    settingLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: SPACING.md,
+    },
+    settingLabel: {
+      fontSize: FONT_SIZES.md,
+      fontFamily: 'Inter-Medium',
+      color: colors.text,
+    },
+    dangerButton: {
+      marginTop: SPACING.lg,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.md,
+      backgroundColor: `${colors.error}15`,
+      alignItems: 'center',
+    },
+    dangerButtonText: {
+      fontSize: FONT_SIZES.sm,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.error,
+    },
+    buttonRow: { flexDirection: 'row', gap: SPACING.md, marginTop: SPACING.xl },
+    primaryButton: {
+      flex: 1,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.md,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      ...SHADOWS.sm,
+    },
+    primaryButtonText: {
+      fontSize: FONT_SIZES.md,
+      fontFamily: 'Inter-SemiBold',
+      color: '#FFFFFF',
+    },
+    secondaryButton: {
+      flex: 1,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.md,
+      backgroundColor: colors.backgroundLight,
+      borderWidth: 1.5,
+      borderColor: colors.error,
+      alignItems: 'center',
+    },
+    secondaryButtonText: {
+      fontSize: FONT_SIZES.md,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.error,
+    },
+    aboutToggle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: SPACING.lg,
+      marginTop: SPACING.md,
+      gap: SPACING.sm,
+    },
+    aboutToggleText: {
+      fontSize: FONT_SIZES.md,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.primary,
+    },
+    aboutSection: { paddingBottom: SPACING.lg },
+    disclaimerBox: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      backgroundColor: '#fef3c7',
+      padding: SPACING.md,
+      borderRadius: RADIUS.md,
+      marginBottom: SPACING.md,
+    },
+    disclaimerText: {
+      flex: 1,
+      fontSize: FONT_SIZES.sm,
+      fontFamily: 'Inter-Regular',
+      color: '#92400e',
+      lineHeight: 20,
+    },
+    linkRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: SPACING.md,
+      gap: SPACING.sm,
+    },
+    linkText: {
+      fontSize: FONT_SIZES.sm,
+      fontFamily: 'Inter-Medium',
+      color: colors.primary,
+    },
+    versionText: {
+      fontSize: FONT_SIZES.sm,
+      fontFamily: 'Inter-Bold',
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: SPACING.md,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: SPACING.xxl,
+    },
+    modalContent: {
+      backgroundColor: colors.surface,
+      padding: SPACING.xxl,
+      borderRadius: RADIUS.xl,
+      width: '100%',
+      maxWidth: 380,
+      alignItems: 'center',
+      ...SHADOWS.lg,
+    },
+    modalEmoji: { fontSize: 48, marginBottom: SPACING.lg },
+    modalTitle: {
+      fontSize: FONT_SIZES.lg,
+      fontFamily: 'Inter-Bold',
+      color: colors.text,
+      marginBottom: SPACING.sm,
+      textAlign: 'center',
+    },
+    modalSubtitle: {
+      fontSize: FONT_SIZES.sm,
+      fontFamily: 'Inter-Regular',
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+    modalButtons: {
+      flexDirection: 'row',
+      gap: SPACING.md,
+      marginTop: SPACING.xl,
+      width: '100%',
+    },
+    modalButtonSecondary: {
+      flex: 1,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.md,
+      backgroundColor: colors.backgroundLight,
+      alignItems: 'center',
+    },
+    modalButtonSecondaryText: {
+      fontSize: FONT_SIZES.md,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.text,
+    },
+    modalButtonPrimary: {
+      flex: 1,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.md,
+      backgroundColor: colors.error,
+      alignItems: 'center',
+    },
+    modalButtonPrimaryText: {
+      fontSize: FONT_SIZES.md,
+      fontFamily: 'Inter-SemiBold',
+      color: '#FFFFFF',
+    },
+    pickerOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: SPACING.xxl,
+    },
+    pickerContent: {
+      backgroundColor: colors.surface,
+      borderRadius: RADIUS.xl,
+      padding: SPACING.lg,
+      width: '100%',
+      maxWidth: 340,
+      maxHeight: 400,
+      ...SHADOWS.lg,
+    },
+    pickerTitle: {
+      fontSize: FONT_SIZES.lg,
+      fontFamily: 'Inter-SemiBold',
+      color: colors.text,
+      textAlign: 'center',
+      marginBottom: SPACING.md,
+    },
+    pickerList: { maxHeight: 280 },
+    pickerOption: {
+      paddingVertical: SPACING.md,
+      paddingHorizontal: SPACING.lg,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    pickerOptionText: {
+      fontSize: FONT_SIZES.md,
       fontFamily: 'Inter-Regular',
       color: colors.text,
     },
-    dropdownCancel: {
-      marginTop: 8,
-      alignSelf: 'center',
-      paddingVertical: 10,
-      paddingHorizontal: 14,
+    pickerCancel: {
+      marginTop: SPACING.md,
+      paddingVertical: SPACING.md,
+      alignItems: 'center',
     },
-    dropdownCancelText: {
-      fontSize: 14,
+    pickerCancelText: {
+      fontSize: FONT_SIZES.md,
       fontFamily: 'Inter-SemiBold',
       color: colors.primary,
     },

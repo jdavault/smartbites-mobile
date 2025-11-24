@@ -5,7 +5,6 @@ import { UserService } from './userService';
 import type { User, Session } from '@supabase/supabase-js';
 import {
   APP_URL,
-  isDevelopment,
   RESET_PASSWORD_ROUTE,
 } from '@/config/constants';
 import { Platform } from 'react-native';
