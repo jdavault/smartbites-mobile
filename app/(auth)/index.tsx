@@ -18,6 +18,7 @@ import {
 
 import { useTheme, ThemeColors } from '@/contexts/ThemeContext';
 import ThemedLogo from '@/components/ThemedLogo';
+import BetaBanner from '@/components/BetaBanner';
 
 export default function WelcomeScreen() {
   const { colors } = useTheme();
@@ -154,17 +155,7 @@ export default function WelcomeScreen() {
                       </Text>
                     </TouchableOpacity>
                   </View>
-
-                  {Platform.OS === 'web' && (
-                    <View style={styles.webBetaContainer}>
-                      <View style={styles.webBetaBadge}>
-                        <Text style={styles.webBetaBadgeText}>Beta</Text>
-                      </View>
-                      <Text style={styles.webBetaText}>
-                        Currently in beta — thanks for testing!
-                      </Text>
-                    </View>
-                  )}
+                  <BetaBanner enabled={false} />
                 </Animated.View>
               )}
 
@@ -353,30 +344,5 @@ const getStyles = (
       fontFamily: 'Lato-Regular',
       color: colors.textSecondary,
       textDecorationLine: 'underline',
-    },
-    webBetaContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 12,
-      gap: 8,
-    },
-    webBetaBadge: {
-      backgroundColor: '#FF8866',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    webBetaBadgeText: {
-      fontSize: 11,
-      fontFamily: 'Inter-SemiBold',
-      color: '#FFFFFF',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    webBetaText: {
-      fontSize: 14,
-      fontFamily: 'Inter-Regular',
-      color: colors.textSecondary,
     },
   });
