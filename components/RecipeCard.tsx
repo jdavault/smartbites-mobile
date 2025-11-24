@@ -80,8 +80,8 @@ export default function RecipeCard({
           pathname: '/recipe/search-result',
           params: {
             recipeData: JSON.stringify(recipe),
-            fromSearch: 'true'
-          }
+            fromSearch: 'true',
+          },
         });
       } else {
         // For saved/featured recipes, use the normal ID route
@@ -118,81 +118,70 @@ export default function RecipeCard({
 
           <View style={styles.previewMetadata}>
             <View style={styles.previewMetadataItem}>
-             <Clock size={16} color={colors.text} />
-             <Text style={styles.previewMetadataText}>
-               {recipe.cookTime.replace('minutes', 'min')}
-             </Text>
-           </View>
- 
-           <View style={styles.previewMetadataItem}>
+              <Clock size={16} color={colors.text} />
+              <Text style={styles.previewMetadataText}>
+                {recipe.cookTime.replace('minutes', 'min')}
+              </Text>
+            </View>
+
+            <View style={styles.previewMetadataItem}>
               <Users size={16} color={colors.text} />
               <Text style={styles.previewMetadataText}>
                 {recipe.servings} serving{recipe.servings !== 1 ? 's' : ''}
               </Text>
             </View>
 
-           <View style={styles.difficulty}>
-             <Zap
-               size={16}
-               color={getDifficultyColor(recipe.difficulty)}
-             />
-             <Text
-               style={[
-                 styles.previewMetadataText,
-                 { color: getDifficultyColor(recipe.difficulty) },
-               ]}
-             >
-               {recipe.difficulty}
-             </Text>
-           </View>
-
-            <View style={styles.method}>
-              <Flame
-                size={16}
-                color="#99523d"
-              />
+            <View style={styles.difficulty}>
+              <Zap size={16} color={getDifficultyColor(recipe.difficulty)} />
               <Text
                 style={[
                   styles.previewMetadataText,
-                  { color: "#99523d" },
+                  { color: getDifficultyColor(recipe.difficulty) },
                 ]}
               >
+                {recipe.difficulty}
+              </Text>
+            </View>
+
+            <View style={styles.method}>
+              <Flame size={16} color="#99523d" />
+              <Text style={[styles.previewMetadataText, { color: '#99523d' }]}>
                 {recipe.method || 'Bake'}
               </Text>
             </View>
           </View>
 
-        {showSaveButton && (
-          <View style={styles.cornerActions}>
-            {onSave && (
-              <TouchableOpacity
-                style={[styles.cornerButton, styles.saveCornerButton]}
-                onPress={onSave}
-                disabled={isSaving || isFavoriting}
-              >
-                {isSaving ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <BookmarkPlus size={18} color={colors.text} />
-                )}
-              </TouchableOpacity>
-            )}
+          {showSaveButton && (
+            <View style={styles.cornerActions}>
+              {onSave && (
+                <TouchableOpacity
+                  style={[styles.cornerButton, styles.saveCornerButton]}
+                  onPress={onSave}
+                  disabled={isSaving || isFavoriting}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <BookmarkPlus size={18} color={colors.text} />
+                  )}
+                </TouchableOpacity>
+              )}
 
-            {onSaveAndFavorite && (
-              <TouchableOpacity
-                style={[styles.cornerButton, styles.favoriteCornerButton]}
-                onPress={onSaveAndFavorite}
-                disabled={isSaving || isFavoriting}
-              >
-                {isFavoriting ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Heart size={18} color={colors.error} />
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
+              {onSaveAndFavorite && (
+                <TouchableOpacity
+                  style={[styles.cornerButton, styles.favoriteCornerButton]}
+                  onPress={onSaveAndFavorite}
+                  disabled={isSaving || isFavoriting}
+                >
+                  {isFavoriting ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Heart size={18} color={colors.error} />
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     );
@@ -200,7 +189,10 @@ export default function RecipeCard({
 
   // Show full version with image for saved recipes
   return (
-    <TouchableOpacity style={[styles.card, isHorizontalLayout && styles.cardWithMaxWidth]} onPress={handleCardPress}>
+    <TouchableOpacity
+      style={[styles.card, isHorizontalLayout && styles.cardWithMaxWidth]}
+      onPress={handleCardPress}
+    >
       {getImageUrl() && (
         <Image source={{ uri: getImageUrl()! }} style={styles.image} />
       )}
@@ -260,16 +252,10 @@ export default function RecipeCard({
 
           <View style={styles.method}>
             <Flame size={14} color="#99523d" />
-            <Text
-              style={[
-                styles.methodText,
-                { color: "#99523d" },
-              ]}
-            >
+            <Text style={[styles.methodText, { color: '#99523d' }]}>
               {recipe.method || 'Bake'}
             </Text>
           </View>
-
         </View>
 
         {/* Bottom content: fixed at bottom */}
@@ -287,25 +273,28 @@ export default function RecipeCard({
             </View>
           )}
 
-          {(recipe.allergens?.length > 0 || recipe.dietaryPrefs?.length > 0 || recipe.allergensIncluded?.length > 0) && (
+          {((recipe.allergensToAvoid?.length ?? 0) > 0 ||
+            (recipe.dietaryPrefs?.length ?? 0) > 0 ||
+            (recipe.allergensIncluded?.length ?? 0) > 0) && (
             <View style={styles.tags}>
-              {(recipe.allergens || recipe.allergensToAvoid || []).map((allergen, index) => (
+              {recipe.allergensToAvoid?.map((allergen, index) => (
                 <View key={`allergen-${index}`} style={styles.allergenTag}>
                   <Text style={styles.tagText}>🚫 {allergen}</Text>
                 </View>
-              )) || []}
+              ))}
               {recipe.dietaryPrefs?.map((dietary, index) => (
                 <View key={`dietary-${index}`} style={styles.dietaryTag}>
                   <Text style={styles.tagText}>🌱 {dietary}</Text>
                 </View>
-              )) || []}
-              {recipe.allergensIncluded && recipe.allergensIncluded.length > 0 && 
-                recipe.allergensIncluded.map((allergen, index) => (
-                  <View key={`included-${index}`} style={styles.allergenIncludedTag}>
-                    <Text style={styles.tagText}>⚠️ {allergen}</Text>
-                  </View>
-                ))
-              }
+              ))}
+              {recipe.allergensIncluded?.map((allergen, index) => (
+                <View
+                  key={`included-${index}`}
+                  style={styles.allergenIncludedTag}
+                >
+                  <Text style={styles.tagText}>⚠️ {allergen}</Text>
+                </View>
+              ))}
             </View>
           )}
         </View>

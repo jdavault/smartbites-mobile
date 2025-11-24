@@ -12,6 +12,7 @@ export interface SaveRecipeData {
   isFavorite?: boolean;
 }
 
+
 export interface UserRecipeData {
   id: string;
   title: string;
@@ -21,19 +22,20 @@ export interface UserRecipeData {
   instructions: string[];
   prepTime: string;
   cookTime: string;
+  method: string; // Required in UserRecipeData
   servings: number;
   difficulty: 'easy' | 'medium' | 'hard';
   tags: string[];
   searchQuery: string;
-  searchKey: string;
-  allergens: string[];
+  searchKey?: string;
+  allergensToAvoid: string[];
+  allergensIncluded: string[];
   dietaryPrefs: string[];
   notes: string;
   nutritionInfo: string;
   image?: string;
-  allergensIncluded: string;
-  isFavorite: boolean;
-  actions: string[];
+  isFavorite?: boolean;
+  actions?: any;
   createdAt: string;
 }
 
@@ -83,19 +85,20 @@ export class RecipeService {
         instructions: item.recipes.instructions || [],
         prepTime: item.recipes.prep_time || '',
         cookTime: item.recipes.cook_time || '',
+        method: item.recipes.cooking_method || 'Bake',
         servings: item.recipes.servings || 4,
         difficulty: item.recipes.difficulty || 'easy',
         tags: item.recipes.tags || [],
         searchQuery: item.recipes.search_query || '',
         searchKey: item.recipes.search_key || '',
-        allergens: item.recipes.recipe_allergens?.map((ra: any) => ra.allergens?.name).filter(Boolean) || [],
+        allergensToAvoid: item.recipes.recipe_allergens?.map((ra: any) => ra.allergens?.name).filter(Boolean) || [],
+        allergensIncluded: item.recipes.allergens_included
+          ? item.recipes.allergens_included.split(',').map((s: string) => s.trim()).filter(Boolean)
+          : [],
         dietaryPrefs: item.recipes.recipe_dietary_prefs?.map((rd: any) => rd.dietary_prefs?.name).filter(Boolean) || [],
         notes: item.recipes.notes || '',
         nutritionInfo: item.recipes.nutrition_info || '',
         image: item.recipes.image,
-        allergensIncluded: item.recipes.allergens_included
-          ? item.recipes.allergens_included.split(',').map(s => s.trim()).filter(Boolean)
-          : [],
         isFavorite: item.actions?.includes('favorite') || false,
         actions: item.actions || [],
         createdAt: item.recipes.created_at,
@@ -301,37 +304,67 @@ export class RecipeService {
         allDietaryPrefs?.map((d) => [d.id, d.name]) || []
       );
 
-      return selectedRecipes.map((recipe) => ({
+      interface RecipeAllergenRow {
+        allergen_id: string;
+      }
+      interface RecipeDietRow {
+        dietary_pref_id: string;
+      }
+      interface SupabaseRecipeRow {
+        id: string;
+        title: string;
+        head_note?: string | null;
+        description?: string | null;
+        ingredients?: string[] | null;
+        instructions?: string[] | null;
+        prep_time?: string | null;
+        cook_time?: string | null;
+        servings?: number | null;
+        difficulty?: 'easy' | 'medium' | 'hard' | null;
+        cooking_method?: string | null;
+        tags?: string[] | null;
+        search_query?: string | null;
+        search_key?: string | null;
+        recipe_allergens?: RecipeAllergenRow[] | null;
+        recipe_dietary_prefs?: RecipeDietRow[] | null;
+        notes?: string | null;
+        nutrition_info?: string | null;
+        image?: string | null;
+        allergens_included?: string | null;
+        created_at?: string | null;
+      }
+
+      return selectedRecipes.map((recipe: SupabaseRecipeRow): UserRecipeData => ({
         id: recipe.id,
         title: recipe.title,
         headNote: recipe.head_note || '',
         description: recipe.description || '',
-        ingredients: recipe.ingredients || [],
-        instructions: recipe.instructions || [],
+        ingredients: (recipe.ingredients || []) as string[],
+        instructions: (recipe.instructions || []) as string[],
         prepTime: recipe.prep_time || '',
         cookTime: recipe.cook_time || '',
-        servings: recipe.servings || 4,
-        difficulty: recipe.difficulty || 'easy',
+        servings: (recipe.servings as number) || 4,
+        difficulty: (recipe.difficulty as 'easy' | 'medium' | 'hard') || 'easy',
         method: recipe.cooking_method || 'Bake',
-        tags: recipe.tags || [],
+        tags: (recipe.tags || []) as string[],
         searchQuery: recipe.search_query || '',
         searchKey: recipe.search_key || '',
-        allergens: (recipe.recipe_allergens || [])
-          .map((ra: any) => allergenMap.get(ra.allergen_id))
-          .filter(Boolean),
+        allergensToAvoid: (recipe.recipe_allergens || [])
+          .map((ra: RecipeAllergenRow) => allergenMap.get(ra.allergen_id))
+          .filter(Boolean) as string[],
         dietaryPrefs: (recipe.recipe_dietary_prefs || [])
-          .map((rd: any) => dietaryMap.get(rd.dietary_pref_id))
-          .filter(Boolean),
+          .map((rd: RecipeDietRow) => dietaryMap.get(rd.dietary_pref_id))
+          .filter(Boolean) as string[],
         notes: recipe.notes || '',
         nutritionInfo: recipe.nutrition_info || '',
-        image: recipe.image,
-        allergensIncluded: recipe.allergens_included 
+        image: recipe.image as string | undefined,
+        allergensIncluded: recipe.allergens_included
           ? recipe.allergens_included.split(',').map(s => s.trim()).filter(Boolean)
           : [],
         isFavorite: false,
-        actions: [],
-        createdAt: recipe.created_at,
-      }));
+        actions: [] as any,
+        createdAt: recipe.created_at as string,
+      })) as UserRecipeData[];
     } catch (error) {
       console.error('Error fetching featured recipes:', error);
       return [];
@@ -455,11 +488,11 @@ export class RecipeService {
         }
 
         // Insert allergen relationships for new recipes only
-        if (recipe.allergens && recipe.allergens.length > 0) {
+        if (recipe.allergensToAvoid && recipe.allergensToAvoid.length > 0) {
           const { data: allergenData, error: allergenError } = await supabase
             .from('allergens')
             .select('id, name')
-            .in('name', recipe.allergens);
+            .in('name', recipe.allergensToAvoid);
 
           if (allergenError) throw allergenError;
 
@@ -475,7 +508,7 @@ export class RecipeService {
 
             if (allergenRelError) throw allergenRelError;
             
-            console.log('💾 DEBUG: Inserted allergen relationships for allergens:', recipe.allergens);
+            console.log('💾 DEBUG: Inserted allergen relationships for allergens:', recipe.allergensToAvoid);
           }
         }
 
@@ -578,7 +611,7 @@ export class RecipeService {
       // Update existing relationship
       const currentActions = userRecipe.actions || [];
       const newActions = currentActions.includes('favorite')
-        ? currentActions.filter(action => action !== 'favorite')
+        ? currentActions.filter((action: string) => action !== 'favorite')
         : [...currentActions, 'favorite'];
 
       const { error: updateError } = await supabase

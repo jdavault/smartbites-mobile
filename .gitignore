@@ -37,11 +37,9 @@ android/
 .bolt/
 certs/
 
-#Root env files (don’t commit secrets!)
+#env files (don’t commit secrets!)
 .env
-.env.development
-.env.local
-.env.production
+.env*.template
 
 # typescript
 *.tsbuildinfo

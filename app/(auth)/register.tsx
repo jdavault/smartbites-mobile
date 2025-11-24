@@ -328,7 +328,8 @@ export default function RegisterScreen() {
     }
 
     // Save allergens and dietary preferences after successful registration
-    if (data.user) {
+    const user = data?.user;
+    if (user) {
       try {
         // Save selected allergens
         if (selectedAllergenIds.size > 0) {
@@ -336,7 +337,7 @@ export default function RegisterScreen() {
             selectedAllergenIds.has(a.id)
           );
           await AllergenService.setUserAllergens(
-            data.user.id,
+            user.id,
             selectedAllergenObjects.map((a) => ({ $id: a.id, name: a.name }))
           );
         }
@@ -347,7 +348,7 @@ export default function RegisterScreen() {
             selectedPrefIds.has(d.id)
           );
           await DietaryService.setUserDietaryPrefs(
-            data.user.id,
+            user.id,
             selectedDietaryObjects.map((d) => ({ $id: d.id, name: d.name }))
           );
         }
