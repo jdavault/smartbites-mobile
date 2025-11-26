@@ -5,6 +5,7 @@ import { UserService } from './userService';
 import type { User, Session } from '@supabase/supabase-js';
 import {
   APP_URL,
+  REDIRECT_URLS,
   RESET_PASSWORD_ROUTE,
 } from '@/config/constants';
 import { Platform } from 'react-native';
@@ -148,7 +149,9 @@ export class AuthService {
           ? 'smartbites://reset-password' // force deeplink when running dev client on device
           : 'smartbites://reset-password'; // normal native builds
       // const redirectTo = 'smartbites://reset-password';
-      console.log('Requesting password reset with redirectTo:', redirectTo);
+      console.log('🔧 AuthService.resetPasswordForEmail called');
+      console.log('  Email:', email);
+      console.log('  Redirect URL:', REDIRECT_URLS.resetPassword);
 
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo,

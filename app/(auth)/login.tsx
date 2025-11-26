@@ -27,6 +27,7 @@ import { Spacing } from '@/constants/Spacing';
 import { Fonts, FontSizes } from '@/constants/Typography';
 import ThemedText from '@/components/ThemedText';
 import SmartBitesLogo from '@/assets/images/smart-bites-logo.png';
+import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 
 type ModalInfo = {
   visible: boolean;
@@ -41,6 +42,9 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isKbVisible, setIsKbVisible] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<
+    'google' | 'apple' | null
+  >(null);
 
   const [modalInfo, setModalInfo] = useState<ModalInfo>({
     visible: false,
@@ -49,8 +53,7 @@ export default function LoginScreen() {
     emoji: undefined,
   });
 
-  const { signIn, promptGoogleAsync, request, promptAsync, promptAppleAsync } =
-    useAuth();
+  const { signIn, promptGoogleAsync, promptAppleAsync } = useAuth();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = getStyles(colors, insets);
@@ -221,7 +224,6 @@ export default function LoginScreen() {
 
                   <View style={styles.form}>
                     <View style={styles.inputContainer}>
-                      <Text style={styles.label}>Email</Text>
                       <TextInput
                         style={styles.input}
                         value={email}
@@ -235,7 +237,6 @@ export default function LoginScreen() {
                     </View>
 
                     <View style={styles.inputContainer}>
-                      <Text style={styles.label}>Password</Text>
                       <View style={styles.passwordInputContainer}>
                         <TextInput
                           style={styles.passwordInput}
@@ -282,51 +283,14 @@ export default function LoginScreen() {
                         <Text style={styles.dividerText}>OR</Text>
                         <View style={styles.dividerLine} />
                       </View>
-
-                      <View style={styles.socialButtonsRow}>
-                        <TouchableOpacity
-                          style={[
-                            styles.socialButton,
-                            styles.googleButton,
-                            Platform.OS === 'android' &&
-                              styles.socialButtonFull,
-                          ]}
-                          onPress={handleGoogleLogin}
-                          disabled={loading || !request}
-                        >
-                          <View style={styles.socialButtonContent}>
-                            <Text style={styles.googleColoredG}>G</Text>
-                            <Text
-                              style={[
-                                styles.socialButtonText,
-                                styles.googleButtonText,
-                              ]}
-                            >
-                              Google
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={[styles.socialButton, styles.appleButton]}
-                          onPress={handleAppleLogin}
-                          disabled={loading}
-                        >
-                          <View style={styles.socialButtonContent}>
-                            <Text style={styles.appleIcon}></Text>
-                            <Text
-                              style={[
-                                styles.socialButtonText,
-                                styles.appleButtonText,
-                              ]}
-                            >
-                              Apple
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
+                      <View style={{ marginBottom: 12 }}>
+                        <SocialLoginButtons
+                          onGooglePress={handleGoogleLogin}
+                          onApplePress={handleAppleLogin}
+                          loadingProvider={loadingProvider}
+                          showApple={true}
+                        />
                       </View>
-
-                      {/* Sign up */}
                       <View style={styles.signupRow}>
                         <Text style={styles.footerText}>
                           Don&apos;t have an account?{' '}
@@ -372,22 +336,33 @@ export default function LoginScreen() {
 
 const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
   StyleSheet.create({
+    container: {
+      flexGrow: 1,
+      paddingHorizontal: 20, // slightly tighter
+      paddingVertical: 20, // was 32
+      backgroundColor: colors.background,
+      justifyContent: 'center',
+    },
+
     content: {
       flex: 1,
-      paddingHorizontal: 24,
+      paddingHorizontal: 20, // was 24
     },
 
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingTop: 16,
-      paddingBottom: 20,
+      paddingTop: 8, // was 16
+      paddingBottom: 8, // was 20
     },
-    backButton: { padding: 8 },
+    backButton: {
+      padding: 4, // was 8
+    },
 
     main: { flex: 1 },
+
     scrollInner: {
-      paddingBottom: 24, // space so last field isn't tight against keyboard
+      paddingBottom: 16, // was 24
       alignItems: 'center',
     },
 
@@ -398,33 +373,45 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     },
 
     brandLogo: {
-      width: 200,
-      height: 200,
+      width: 175, // was 200
+      height: 175, // was 200
       alignSelf: 'center',
-      marginBottom: 0,
+      marginTop: 4, // adds a tiny buffer but less overall
+      marginBottom: 4, // was 0
+      resizeMode: 'contain',
     },
+
     subtitle: {
-      fontSize: 20,
-      lineHeight: 24,
+      fontSize: 18, // was 20
+      lineHeight: 22, // was 24
       fontFamily: Fonts.heading,
       color: colors.textSecondary,
       textAlign: 'center',
       fontWeight: '700',
       marginTop: 0,
-      marginBottom: 10,
+      marginBottom: 20,
     },
 
-    form: { gap: 20 },
-    actions: { gap: 8 },
-    inputContainer: { gap: 8 },
+    form: {
+      gap: 16, // was 20
+    },
+    actions: {
+      gap: 6, // was 8
+    },
 
+    inputContainer: {
+      gap: 4, // was 8 – tighter around field
+    },
+
+    // You *can* keep labels, just make them lighter/smaller
     label: {
-      fontSize: 16,
+      fontSize: 14, // was 16
       fontFamily: Fonts.bodyBold,
       color: colors.textSecondary,
     },
+
     input: {
-      height: 50,
+      height: 46, // was 50
       borderWidth: 1,
       borderColor: colors.accent,
       borderRadius: Spacing.sm,
@@ -439,7 +426,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     },
 
     passwordInputContainer: {
-      height: 50,
+      height: 46, // was 50
       borderColor: colors.accent,
       borderRadius: Spacing.sm,
       flexDirection: 'row',
@@ -449,21 +436,23 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     },
     passwordInput: {
       flex: 1,
-      paddingVertical: 12,
+      paddingVertical: 10, // was 12
       paddingHorizontal: Spacing.md,
       fontFamily: Fonts.body,
       fontSize: FontSizes.md,
       color: colors.textPrimary,
       outlineWidth: 0,
     },
-    eyeButton: { padding: 12 },
+    eyeButton: {
+      padding: 10, // was 12
+    },
 
     button: {
       backgroundColor: colors.primary,
-      paddingVertical: 16,
+      paddingVertical: 14, // was 16
       borderRadius: 12,
       alignItems: 'center',
-      marginTop: 8,
+      marginTop: 6, // was 8
     },
     buttonDisabled: { opacity: 0.6 },
     buttonText: {
@@ -473,7 +462,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     },
 
     googleButton: {
-      paddingVertical: 16,
+      paddingVertical: 14, // was 16
       borderRadius: 12,
       alignItems: 'center',
       borderWidth: 1,
@@ -491,17 +480,23 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       color: '#FFFFFF',
     },
 
+    // Divider just above social buttons – tighter to get Google/Apple higher
     divider: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginVertical: Spacing.md,
+      marginTop: 8, // after primary button
+      marginBottom: 0, // was 0 but we keep it tight
     },
-    dividerLine: { flex: 1, height: 1, backgroundColor: colors.accent },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: colors.accent,
+    },
     dividerText: {
       fontFamily: Fonts.body,
       fontSize: FontSizes.sm,
       color: colors.accentLight,
-      marginHorizontal: Spacing.md,
+      marginHorizontal: Spacing.sm, // was Spacing.md
     },
 
     socialButtonsRow: {
@@ -510,7 +505,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     },
     socialButton: {
       flex: 1,
-      paddingVertical: 16,
+      paddingVertical: 14, // was 16
       borderRadius: 12,
       alignItems: 'center',
       borderWidth: 1,
@@ -520,9 +515,10 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       fontFamily: Fonts.heading,
       fontSize: FontSizes.md,
     },
+
     socialNote: {
       alignItems: 'center',
-      paddingVertical: 12,
+      paddingVertical: 10, // slightly tighter
     },
     socialNoteText: {
       fontSize: 14,
@@ -530,6 +526,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       color: colors.textSecondary,
       fontStyle: 'italic',
     },
+
     signupRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -548,7 +545,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
 
     forgotPasswordContainer: {
       alignItems: 'center',
-      marginTop: Spacing.md,
+      marginTop: Spacing.sm, // was md
     },
     forgotPasswordLink: {
       fontFamily: Fonts.body,
@@ -559,13 +556,13 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
 
     // Footer sits at the bottom of the screen, independent of keyboard movement
     footer: {
-      paddingTop: 8,
-      paddingBottom: insets.bottom + 24,
-      paddingHorizontal: 24,
+      paddingTop: 4, // was 8
+      paddingBottom: insets.bottom + 20, // was +24
+      paddingHorizontal: 20,
       backgroundColor: 'transparent',
     },
     copyright: {
-      fontSize: 14,
+      fontSize: 13, // was 14
       textAlign: 'center',
     },
 
@@ -578,8 +575,8 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     },
     modalContent: {
       backgroundColor: '#FFFFFF',
-      paddingHorizontal: 24,
-      paddingVertical: 32,
+      paddingHorizontal: 20, // was 24
+      paddingVertical: 28, // was 32
       borderRadius: 12,
       width: '80%',
       maxWidth: 420,
@@ -607,6 +604,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
       fontSize: 40,
       marginBottom: 12,
     },
+
     googleIcon: {
       fontWeight: 'bold',
       fontSize: 18,
@@ -615,6 +613,7 @@ const getStyles = (colors: ThemeColors, insets: { bottom: number }) =>
     appleIcon: {
       fontSize: 18,
     },
+
     socialButtonFull: {
       flex: 1,
     },

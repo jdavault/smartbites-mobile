@@ -42,7 +42,6 @@ import AllergenFilter from '@/components/AllergenFilter';
 import DietaryFilter from '@/components/DietaryFilter';
 import { mapOpenAIRecipeToRecipe } from '@/utils/recipeMapping';
 
-// Then DELETE the local SPACING, RADIUS, SHADOWS, FONT_SIZES definitions from each file
 type ModalInfo = {
   visible: boolean;
   title: string;
@@ -75,14 +74,14 @@ export default function SearchScreen() {
     toggleFavorite,
     deleteRecipe,
     generateFeaturedRecipes,
-    loading: recipesLoading,
+    loading: recipesLoading, // 👈 this is the one we care about
   } = useRecipes();
   const { userAllergens, toggleAllergen } = useAllergens();
   const { userDietaryPrefs, toggleDietaryPref } = useDietary();
+  const [uiReady, setUiReady] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [savingRecipeId, setSavingRecipeId] = useState<string | null>(null);
   const [favoritingRecipeId, setFavoritingRecipeId] = useState<string | null>(
@@ -119,6 +118,13 @@ export default function SearchScreen() {
     setSelectedAllergens(userAllergens);
     setSelectedDietary(userDietaryPrefs);
   }, [userAllergens, userDietaryPrefs]);
+
+  useEffect(() => {
+    // Android needs more time to settle
+    const delay = Platform.OS === 'android' ? 1100 : 900;
+    const timer = setTimeout(() => setUiReady(true), delay);
+    return () => clearTimeout(timer);
+  }, []);
 
   const allergensFilter = ALLERGENS.map((a) => ({
     ...a,
@@ -260,7 +266,7 @@ export default function SearchScreen() {
     });
   const handleClearDietaryFilters = () =>
     selectedDietary.forEach((d) => {
-      const o = DIETARY_PREFERENCES.find((x) => x.name === d.name);
+      const o = ALLERGENS.find((x) => x.name === d.name);
       if (o) toggleDietaryPref(o);
     });
 
@@ -295,7 +301,7 @@ export default function SearchScreen() {
     },
     searchInputContainer: {
       flex: 1,
-      flexShrink: 1, // 👈 Allow it to shrink
+      flexShrink: 1,
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: colors.surface,
@@ -518,13 +524,13 @@ export default function SearchScreen() {
     dropdownRow: {
       flexDirection: 'row',
       gap: SPACING.sm,
-      marginTop: isWeb ? 0 : SPACING.sm, // Space below search on mobile
+      marginTop: isWeb ? 0 : SPACING.sm,
     },
   });
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Loading Modal */}
+      {/* Loading Modal for AI recipe generation */}
       <Modal transparent animationType="fade" visible={isSearching}>
         <View style={styles.modalOverlay}>
           <View style={styles.loadingModalContent}>
@@ -755,9 +761,10 @@ export default function SearchScreen() {
         }
       >
         <View style={styles.contentContainer}>
+          {/* Search results */}
           {searchResults.length > 0 && (
             <View style={styles.resultsSection}>
-              <View style={styles.resultsHeader}>
+              <View className={styles.resultsHeader}>
                 <Text style={styles.resultsTitle}>Search Results</Text>
                 <TouchableOpacity
                   style={styles.dismissButton}
@@ -784,7 +791,32 @@ export default function SearchScreen() {
               ))}
             </View>
           )}
-          {!loading && searchResults.length === 0 && (
+
+          {/* Initial recipes loading state:
+             - while recipes are loading OR
+             - while user not loaded yet OR
+             - before uiReady "debounce" kicks in
+          */}
+          {(recipesLoading || !user || !uiReady) &&
+            searchResults.length === 0 && (
+              <View style={styles.emptyState}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={[styles.loadingText, { marginTop: SPACING.lg }]}>
+                  Personalizing your SmartBites feed...
+                </Text>
+                <Text style={styles.loadingSubtext}>
+                  Fetching featured recipes and your saved collection.
+                </Text>
+              </View>
+            )}
+
+          {/* Home sections / empty state AFTER:
+               - recipes finished loading
+               - user is loaded
+               - uiReady debounce has passed
+               - no active search results
+          */}
+          {uiReady && !recipesLoading && user && searchResults.length === 0 && (
             <>
               {featuredRecipes.length > 0 && (
                 <RecipeSection
@@ -795,6 +827,7 @@ export default function SearchScreen() {
                   horizontal={true}
                 />
               )}
+
               {favoriteRecipes.length > 0 && (
                 <RecipeSection
                   title="❤️ Your Favorites"
@@ -804,6 +837,7 @@ export default function SearchScreen() {
                   horizontal={true}
                 />
               )}
+
               {recentRecipes.length > 0 && (
                 <RecipeSection
                   title="📚 My Collection"
@@ -813,6 +847,7 @@ export default function SearchScreen() {
                   horizontal={false}
                 />
               )}
+
               {savedRecipes.length === 0 &&
                 featuredRecipes.length === 0 &&
                 recentRecipes.length === 0 && (

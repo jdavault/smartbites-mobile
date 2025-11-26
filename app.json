@@ -41,7 +41,12 @@
         "NSCameraUsageDescription": "This app uses the camera to scan items for allergy-friendly recipes.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
+        },
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["smartbites"]
+          }
+        ]
       },
       "appleTeamId": "GEVW9YV737"
     },
@@ -62,6 +67,15 @@
               "scheme": "https",
               "host": "smartbites.food",
               "pathPrefix": "/reset-password"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "smartbites"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]

@@ -1,5 +1,6 @@
+// contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, View, ActivityIndicator, Text } from 'react-native';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { useRouter } from 'expo-router';
@@ -7,22 +8,8 @@ import { AuthService } from '@/services/authService';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
-import { makeRedirectUri } from 'expo-auth-session';
-import { useAuthRequest } from 'expo-auth-session/providers/google';
-//import { useAuthRequest as useAppleAuthRequest } from 'expo-auth-session/providers/apple';
-import { ResponseType, CodeChallengeMethod } from 'expo-auth-session';
-
-// Configure WebBrowser for better OAuth handling
-if (Platform.OS === 'web') {
-  WebBrowser.maybeCompleteAuthSession();
-}
-
-const iosClientId =
-  '1010197305867-f3kuf70gl65tapvmj3kouiaff9bt36tb.apps.googleusercontent.com';
-const androidClientId =
-  '1010197305867-skot0d309k02prooif9o3vci80fhlb0r.apps.googleusercontent.com';
-const webClientId =
-  '1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com';
+// Ensure WebBrowser cleanup for OAuth flows
+WebBrowser.maybeCompleteAuthSession();
 
 interface AuthContextType {
   user: User | null;
@@ -35,166 +22,154 @@ interface AuthContextType {
   ) => Promise<{ error: any; data?: { user: any; session: any } }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  request: any;
-  promptAsync: any;
   promptGoogleAsync: () => Promise<void>;
   promptAppleAsync: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const isAuthURL = (url: string): boolean => {
+// Only treat real password-recovery links as reset
+const isPasswordResetURL = (url: string): boolean =>
+  url.includes('type=recovery');
+
+// Simple SmartBites loading screen while auth bootstraps
+function AuthLoadingScreen() {
   return (
-    url.includes('type=recovery') ||
-    url.includes('code=') ||
-    url.includes('access_token=') ||
-    url.includes('refresh_token=')
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: '#F9F8F2', // Rice
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {/* Swap this Text for your logo Image later if you want */}
+      <Text
+        style={{
+          fontSize: 26,
+          fontWeight: '700',
+          marginBottom: 12,
+          color: '#253031', // Iron Black
+        }}
+      >
+        SmartBites
+      </Text>
+      <ActivityIndicator size="large" />
+      <Text
+        style={{
+          marginTop: 8,
+          color: '#253031',
+          fontSize: 14,
+        }}
+      >
+        Loading your allergy-aware experience…
+      </Text>
+    </View>
   );
-};
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // true until first getSession completes
 
-  const redirectUri = makeRedirectUri({
-    scheme: 'smartbites',
-    preferLocalhost: Platform.OS === 'web',
-  });
+  // =======================
+  // Redirect URIs
+  // =======================
 
-  // Google sign-in (Expo AuthSession) - only for mobile
-  const [request, response, promptAsync] = useAuthRequest({
-    responseType: ResponseType.Code,
-    codeChallengeMethod:
-      Platform.OS === 'web' ? undefined : CodeChallengeMethod.S256,
-    iosClientId: Platform.OS === 'ios' ? iosClientId : undefined,
-    androidClientId: Platform.OS === 'android' ? androidClientId : undefined,
-    webClientId: Platform.OS === 'web' ? webClientId : undefined,
-    scopes: ['openid', 'email', 'profile'],
-    redirectUri,
-    extraParams: {},
-  });
+  // Web: Supabase sends users back here
+  const webRedirectUri =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : 'https://smartbites.food';
 
-  // Debug logging for redirect URI (after request is initialized)
-  useEffect(() => {
-    console.log('🔍 Google OAuth Debug Info:');
-    console.log('  Platform:', Platform.OS);
-    console.log('  Redirect URI:', redirectUri);
-    console.log('  Web Client ID:', webClientId);
-    console.log('  Request ready:', !!request);
-  }, [request, redirectUri]);
+  // Native: must match app.json `"scheme": "smartbites"`
+  // and be in Supabase Auth Redirect URLs.
+  const nativeRedirectUri = 'smartbites://auth';
 
-  useEffect(() => {
-    if (Platform.OS === 'web') return; // Skip for web
-    console.log('🔍 Google response received:', response);
-    if (response?.type === 'success') {
-      console.log('🔍 Google success response:', response);
-      const authCode = response.params?.code;
-      console.log('🔍 Auth Code found:', !!authCode);
-      if (authCode) handleGoogleSignIn(authCode);
-      else console.error('No auth code found in Google response');
-    } else if (response?.type === 'error') {
-      console.error('🔍 Google OAuth error:', response.error);
-      console.error('🔍 Google OAuth error params:', response.params);
-    }
-  }, [response]);
+  // =======================
+  // Session bootstrap + auth change listener
+  // =======================
 
-  const handleGoogleSignIn = async (authCode?: string) => {
-    if (Platform.OS === 'web') return; // This should not be called on web
-    console.log('🔍 Attempting Google sign-in with auth code:', !!authCode);
-    if (!authCode) return;
-    try {
-      // Exchange the authorization code for tokens via Supabase
-      const { error } = await AuthService.signInWithOAuth(
-        'google',
-        response?.url || '',
-        false
-      );
-      console.log(
-        '🔍 Supabase Google sign-in result:',
-        error ? 'ERROR' : 'SUCCESS'
-      );
-      if (error) throw error;
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-    }
-  };
-
-  // Initial session restore + subscribe to auth changes
   useEffect(() => {
     let mounted = true;
-    (async () => {
-      try {
-        const { session, error } = await AuthService.getSession();
-        if (!mounted) return;
-        if (error) {
-          console.error('getSession error:', error);
-          if (
-            error.message?.includes('refresh_token_not_found') ||
-            error.message?.includes('Invalid Refresh Token')
-          ) {
-            await AuthService.signOut();
-          }
-          setUser(null);
-          setSession(null);
-        } else {
-          setUser(session?.user ?? null);
-          setSession(session ?? null);
-        }
-      } catch (e) {
-        console.error('initialize auth error:', e);
+
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (!mounted) return;
+
+      if (error) {
+        console.error('Session error:', error);
         setUser(null);
         setSession(null);
-      } finally {
-        if (mounted) setLoading(false);
+      } else {
+        setUser(session?.user ?? null);
+        setSession(session ?? null);
       }
-    })();
+      setLoading(false); // initial auth bootstrap complete
+    });
 
-    const { data: sub } = AuthService.onAuthStateChange((_event, s) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
-      setUser(s?.user ?? null);
-      setSession(s ?? null);
+      setUser(session?.user ?? null);
+      setSession(session ?? null);
       setLoading(false);
     });
 
     return () => {
       mounted = false;
-      sub?.subscription?.unsubscribe?.();
+      subscription?.unsubscribe();
     };
   }, []);
 
-  // Handle auth links
+  // =======================
+  // After-login navigation
+  // =======================
+
   useEffect(() => {
-    if (Platform.OS !== 'web') return;
-    const url = window.location.href;
-    if (isAuthURL(url)) {
-      console.log('Web auth URL detected, letting reset-password handle it');
-    }
-  }, []);
+    if (loading) return;
+    if (!user) return;
+
+    console.log('✅ Authenticated user detected, routing to /(tabs)');
+    router.replace('/(tabs)');
+  }, [user, loading, router]);
+
+  // =======================
+  // Deep link handling (reset password only)
+  // =======================
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    const handleAuthLink = (incomingUrl: string) => {
-      console.log('🔗 URL received in AuthContext:', incomingUrl);
-      if (isAuthURL(incomingUrl)) {
-        console.log('✅ Detected as auth URL, routing to reset-password');
+
+    const handleAuthLink = (url: string) => {
+      if (isPasswordResetURL(url)) {
+        console.log('📧 Password reset URL detected:', url);
         router.replace({
           pathname: '/reset-password',
-          params: { originalUrl: encodeURIComponent(incomingUrl) },
+          params: { originalUrl: encodeURIComponent(url) },
         });
-        return true;
+      } else {
+        // For OAuth callback (smartbites://auth?code=...), we let WebBrowser /
+        // exchangeCodeForSession handle it; just log here.
+        console.log('🔗 Non-reset auth URL received:', url);
       }
-      return false;
     };
+
     Linking.getInitialURL().then((url) => url && handleAuthLink(url));
+
     const subscription = Linking.addEventListener('url', ({ url }) =>
       handleAuthLink(url)
     );
+
     return () => subscription.remove();
   }, [router]);
 
-  // Public API
+  // =======================
+  // Public API methods: email/password
+  // =======================
+
   const signUp = async (
     email: string,
     password: string,
@@ -222,80 +197,194 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     setUser(null);
     setSession(null);
+    await supabase.auth.signOut();
     try {
-      const { error } = await AuthService.signOut();
-      if (error) console.error('signOut error:', error);
+      router.replace('/login');
     } catch (e) {
-      console.error('Sign out exception:', e);
+      console.log('signOut navigation error:', e);
     }
   };
 
-  const promptGoogleAsync = async () => {
-    if (Platform.OS === 'web') {
-      // Use Supabase's built-in OAuth for web
-      try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: window.location.origin,
-          },
-        });
+  // =======================
+  // Google OAuth via Supabase
+  // =======================
 
-        if (error) {
-          console.error('Supabase OAuth error:', error);
-          throw error;
+  const promptGoogleAsync = async () => {
+    const redirectTo =
+      Platform.OS === 'web' ? webRedirectUri : nativeRedirectUri;
+
+    console.log('🔍 Starting Google OAuth via Supabase');
+    console.log('   Platform:', Platform.OS);
+    console.log('   redirectTo:', redirectTo);
+
+    if (Platform.OS === 'web') {
+      // Web: Supabase will redirect the browser
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+        },
+      });
+
+      if (error) {
+        console.error('Google OAuth error (web):', error);
+        alert('Failed to initiate Google sign-in. Please try again.');
+      }
+      return;
+    }
+
+    // Native: get the URL, then open it in a browser ourselves
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true, // important on native
+      },
+    });
+
+    if (error) {
+      console.error('Google OAuth error (native):', error);
+      alert('Failed to initiate Google sign-in. Please try again.');
+      return;
+    }
+
+    if (!data?.url) {
+      console.error('Google OAuth: no auth URL returned from Supabase');
+      alert('Failed to start Google sign-in. Please try again.');
+      return;
+    }
+
+    console.log('✅ Google OAuth auth URL:', data.url);
+
+    // Open Google login in a browser / custom tab
+    const result = await WebBrowser.openAuthSessionAsync(
+      data.url,
+      nativeRedirectUri
+    );
+    console.log('🔍 WebBrowser result:', result);
+
+    if (result.type === 'success' && result.url) {
+      // Parse the redirect URL to get the `code`
+      const parsed = Linking.parse(result.url);
+      const code = parsed.queryParams?.code as string | undefined;
+
+      console.log('🔍 Parsed callback URL:', parsed);
+      console.log('🔍 OAuth code present:', !!code);
+
+      if (code) {
+        const { data: exchangeData, error: exchangeError } =
+          await supabase.auth.exchangeCodeForSession(code);
+
+        if (exchangeError) {
+          console.error('❌ Error exchanging code for session:', exchangeError);
+          alert('Failed to complete Google sign-in. Please try again.');
+        } else {
+          console.log(
+            '✅ Exchanged code for session, user:',
+            exchangeData.session?.user?.id
+          );
+          // onAuthStateChange listener will update user/session,
+          // and the "after-login" effect will route to /(tabs)
         }
-      } catch (error) {
-        console.error('Google OAuth error:', error);
       }
-    } else if (request) {
-      try {
-        await promptAsync();
-      } catch (error) {
-        console.error('Google OAuth prompt error:', error);
-      }
+    } else if (result.type === 'cancel') {
+      console.log('ℹ️ Google sign-in cancelled by user.');
     }
   };
 
   const promptAppleAsync = async () => {
+    const redirectTo =
+      Platform.OS === 'web' ? webRedirectUri : nativeRedirectUri;
+
+    console.log('🔍 Starting Apple OAuth via Supabase');
+    console.log('   Platform:', Platform.OS);
+    console.log('   redirectTo:', redirectTo);
+
     if (Platform.OS === 'web') {
-      // Use Supabase's built-in OAuth for web
-      try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'apple',
-          options: {
-            redirectTo: window.location.origin,
-          },
-        });
+      // Web: let Supabase handle the full redirect flow
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo,
+        },
+      });
 
-        if (error) {
-          console.error('Supabase Apple OAuth error:', error);
-          throw error;
-        }
-      } catch (error) {
-        console.error('Apple OAuth error:', error);
+      if (error) {
+        console.error('Apple OAuth error (web):', error);
+        alert('Failed to initiate Apple sign-in. Please try again.');
       }
-    } else {
-      // const credential = await AppleAuthentication.signInAsync({
-      //   requestedScopes: [
-      //     AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-      //     AppleAuthentication.AppleAuthenticationScope.EMAIL,
-      //   ],
-      // });
+      return;
+    }
 
-      // if (credential.identityToken) {
-      //   const { error } = await supabase.auth.signInWithIdToken({
-      //     provider: 'apple',
-      //     token: credential.identityToken,
-      //   });
+    // Native: same pattern as Google
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true, // important on native
+      },
+    });
 
-      //   if (error) {
-      //     console.error('Supabase Apple sign-in error:', error);
-      //     throw error;
-      //   }
-      throw new Error('Apple Sign-In not yet implemented');
+    if (error) {
+      console.error('Apple OAuth error (native):', error);
+      alert('Failed to initiate Apple sign-in. Please try again.');
+      return;
+    }
+
+    if (!data?.url) {
+      console.error('Apple OAuth: no auth URL returned from Supabase');
+      alert('Failed to start Apple sign-in. Please try again.');
+      return;
+    }
+
+    console.log('✅ Apple OAuth auth URL:', data.url);
+
+    const result = await WebBrowser.openAuthSessionAsync(
+      data.url,
+      nativeRedirectUri
+    );
+    console.log('🔍 Apple WebBrowser result:', result);
+
+    if (result.type === 'success' && result.url) {
+      const parsed = Linking.parse(result.url);
+      const code = parsed.queryParams?.code as string | undefined;
+
+      console.log('🔍 Parsed Apple callback URL:', parsed);
+      console.log('🔍 Apple OAuth code present:', !!code);
+
+      if (code) {
+        const { data: exchangeData, error: exchangeError } =
+          await supabase.auth.exchangeCodeForSession(code);
+
+        if (exchangeError) {
+          console.error(
+            '❌ Error exchanging Apple code for session:',
+            exchangeError
+          );
+          alert('Failed to complete Apple sign-in. Please try again.');
+        } else {
+          console.log(
+            '✅ Apple sign-in complete, user:',
+            exchangeData.session?.user?.id
+          );
+          // onAuthStateChange + after-login effect will route to /(tabs)
+        }
+      }
+    } else if (result.type === 'cancel') {
+      console.log('ℹ️ Apple sign-in cancelled by user.');
     }
   };
+
+  // =======================
+  // Gate the entire app on auth loading
+  // =======================
+
+  if (loading) {
+    // While Supabase is figuring out if there's an existing session,
+    // DO NOT render any routes (no +not-found, no empty tabs).
+    return <AuthLoadingScreen />;
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -306,8 +395,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signOut,
         promptGoogleAsync,
-        request,
-        promptAsync,
         promptAppleAsync,
       }}
     >

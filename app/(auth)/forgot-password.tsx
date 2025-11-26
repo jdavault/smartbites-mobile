@@ -84,10 +84,36 @@ export default function ForgotPasswordScreen() {
 
     setSending(true);
     try {
-      // This triggers Supabase to send a magic recovery link that lands on RESET_REDIRECT
-      console.log(`RESET_REDIRECT to ${RESET_REDIRECT}`);
-      const { error } = await AuthService.resetPasswordForEmail(trimmedEmail);
-      if (error) throw error;
+      console.log(`📧 Sending reset email to: ${trimmedEmail}`);
+      console.log(`📍 Redirect URL: ${RESET_REDIRECT}`);
+
+      const { error, data } = await AuthService.resetPasswordForEmail(
+        trimmedEmail
+      );
+
+      console.log('📧 Reset response:', { data, error });
+
+      if (error) {
+        console.error('❌ Reset error details:', {
+          message: error.message,
+          status: error.status,
+          code: error.code,
+          details: error,
+        });
+
+        // More specific error messages
+        if (error.message?.includes('rate')) {
+          throw new Error(
+            'Too many reset attempts. Please wait an hour and try again.'
+          );
+        } else if (error.message?.includes('not found')) {
+          throw new Error(
+            'Email address not found. Please check and try again.'
+          );
+        } else {
+          throw error;
+        }
+      }
 
       setModalInfo({
         visible: true,

@@ -13,7 +13,17 @@ additional_redirect_urls = [
   "https://supabase-studio.ngrok.io",   # Supabase Studio tunnel
   "http://localhost:8081",              # Expo web dev (your usual port)
   "exp://127.0.0.1:19000",
-  "exp://192.168.7.131:19000"
+  "exp://192.168.7.131:19000",
+  "http://localhost:8081/reset-password",
+  "smartbites://reset-password",
+  "https://dev.smartbites.food/reset-password",
+  "https://smartbites.ngrok.io/reset-password",
+  "https://smartbites.food/reset-password",
+  "https://ahikcpeeuyaxyssscgqk.supabase.co/auth/v1/callback",
+  "http://localhost:19006",
+  "smartbites://",
+  "smartbites://auth",
+  "https://auth.expo.io/@jdavault01/allergy-aware-recipe-finder"
 ]
 
 enable_refresh_token_rotation = true
