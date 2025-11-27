@@ -33,9 +33,8 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.allergy-aware-recipe-finder",
-      "buildNumber": "75",
+      "buildNumber": "78",
       "associatedDomains": ["applinks:smartbites.food"],
-      "urlSchemes": ["smartbites"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "This app uses the camera to scan items for allergy-friendly recipes.",
@@ -51,7 +50,7 @@
       "appleTeamId": "GEVW9YV737"
     },
     "android": {
-      "versionCode": 35,
+      "versionCode": 36,
       "package": "cooking.safeplate.allergyawarerecipefinder",
       "splash": {
         "image": "./assets/images/splash-android.png",

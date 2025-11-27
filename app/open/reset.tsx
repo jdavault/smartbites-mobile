@@ -1,4 +1,4 @@
-// app/(auth)/open/reset.tsx
+// app/open/reset.tsx
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { useRouter, useLocalSearchParams, type Href } from 'expo-router';
@@ -20,11 +20,21 @@ export default function ResetBridge() {
     const redirectUrl = decodeURIComponent(rawRedirect.toString());
 
     // Deep-link version of the Supabase ConfirmationURL
-    const schemeUrl = redirectUrl.replace(
-      /^https:\/\/[^/]+\/auth\/v1\/verify/,
-      'smartbites://reset-password'
-    );
+    // const schemeUrl = redirectUrl.replace(
+    //   /^https:\/\/[^/]+\/auth\/v1\/verify/,
+    //   'smartbites://reset-password'
+    // );
 
+    // app/open/reset.tsx (updated)
+    const schemeUrl = redirectUrl
+      .replace(
+        /^https:\/\/[^/]+\/auth\/v1\/verify/,
+        'smartbites://reset-password'
+      )
+      .replace(
+        'redirect_to=https%3A%2F%2Fsmartbites.food%2Freset-password',
+        'redirect_to=smartbites%3A%2F%2Freset-password'
+      );
     // Internal SPA fallback route
     const spaFallback: Href = {
       pathname: '/(auth)/reset-password',
