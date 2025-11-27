@@ -47,17 +47,6 @@ export default function ForgotPasswordScreen() {
     title: '',
   });
 
-  // Replace the RESET_REDIRECT block with this:
-  // const RESET_REDIRECT = Platform.select({
-  //   web:
-  //     typeof window !== 'undefined'
-  //       ? `${window.location.origin}/reset-password`
-  //       : 'https://smartbites.food/reset-password',
-  //   default: __DEV__exchangeCodeForSession(a
-  //     ? 'http://localhost:8081/reset-password' // Simulator / cable-tether tests
-  //     : 'smartbites://reset-password', // ← force scheme on iOS/Android //Linking.createURL('/reset-password'), // smartbites://reset-password
-  // })!;
-
   const RESET_REDIRECT = REDIRECT_URLS.resetPassword;
 
   const handleSendEmail = async () => {

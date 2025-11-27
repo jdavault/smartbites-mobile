@@ -74,15 +74,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true); // true until first getSession completes
 
-  // =======================
-  // Redirect URIs
-  // =======================
-
-  // Web: Supabase sends users back here
-  const webRedirectUri =
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : 'https://smartbites.food';
+  // FIX: Use Platform.OS to safely determine the redirect URI
+  const webRedirectUri = Platform.select({
+    web:
+      typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin + '/auth/callback'
+        : 'https://smartbites.food/auth/callback',
+    default: 'https://smartbites.food/auth/callback',
+  }) as string;
 
   // Native: must match app.json `"scheme": "smartbites"`
   // and be in Supabase Auth Redirect URLs.
