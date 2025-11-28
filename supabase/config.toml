@@ -82,19 +82,13 @@ max_frequency = "5s"
 [auth.external.google]
 enabled = true
 client_id = "1010197305867-brcm0n9qc0v95ksrem0ljbiiktnout24.apps.googleusercontent.com"
-secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+secret = "env(AUTH_EXTERNAL_GOOGLE_SECRET)"
 redirect_uri = "https://supabase-api.ngrok.io/auth/v1/callback"
 
 # --- APPLE OAUTH PROVIDER (stub for later) ---
 [auth.external.apple]
 enabled = true
 client_id = "com.anonymous.allergy-aware-recipe-finder.signin"
-secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
+secret = "env(AUTH_EXTERNAL_APPLE_SECRET)"
 redirect_uri = "https://supabase-api.ngrok.io/auth/v1/callback"
 skip_nonce_check = false
-
-[functions.generate-recipes]
-enabled = true
-verify_jwt = false
-import_map = "./functions/generate-recipes/deno.json"
-entrypoint = "./functions/generate-recipes/index.ts"

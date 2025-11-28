@@ -25,7 +25,7 @@ export async function getOpenAIKey(): Promise<string> {
   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
   if (!supabaseUrl) throw new Error('EXPO_PUBLIC_SUPABASE_URL is required');
 
-  const edgeUrl = `${supabaseUrl}/functions/v1/getOpenAIKey`;
+  const edgeUrl = `${supabaseUrl}/functions/v1/get-openai-key`;
 
   const {
     data: { session },
