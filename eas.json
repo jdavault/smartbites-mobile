@@ -51,6 +51,7 @@
     "production": {
       "distribution": "store",
       "channel": "production",
+      "autoSubmit": true,
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_APP_ENV": "production",

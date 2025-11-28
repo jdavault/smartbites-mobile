@@ -20,8 +20,8 @@ serve(async (req) => {
   try {
     // Create a Supabase client with the service role key
     const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('BASE_URL') ?? '',
+      Deno.env.get('SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
           autoRefreshToken: false,
@@ -38,8 +38,8 @@ serve(async (req) => {
 
     // Create a client to verify the user's token
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('BASE_URL') ?? '',
+      Deno.env.get('ANON_KEY') ?? '',
       {
         global: {
           headers: { Authorization: authHeader },

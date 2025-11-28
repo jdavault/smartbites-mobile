@@ -1,7 +1,5 @@
-// utils/generateAIRecipes.ts
-// Generate recipes in parallel with configurable count and variant
-
 import { callOpenAI, type ChatMessage } from '@/lib/openai';
+import { supabase } from '@/lib/supabase';
 
 export interface GeneratedRecipe {
   title: string;
@@ -40,9 +38,7 @@ export const VARIANT_LABELS: Record<RecipeVariant, string> = {
 // All variants except 'mix'
 const ALL_VARIANTS: Exclude<RecipeVariant, 'mix'>[] = ['quick', 'standard', 'gourmet', 'budget', 'comfort'];
 
-/**
- * Generate a single recipe with a specific variant
- */
+
 async function generateSingleRecipe(
   query: string,
   allergensToAvoid: string[] = [],
@@ -50,91 +46,23 @@ async function generateSingleRecipe(
   variant: Exclude<RecipeVariant, 'mix'> = 'standard',
   seed: number = 7
 ): Promise<GeneratedRecipe> {
-  const allergensBlock = allergensToAvoid.length
-    ? `- Avoid these allergens: ${allergensToAvoid.join(', ')}.
-- Do not include any ingredients containing these allergens.
-- In "allergensToAvoid", list all avoided allergens from: Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)
-- In "allergensIncluded", list all allergens present in recipe ingredients.`
-    : '';
-
-  const dietBlock = dietaryPrefs.length
-    ? `- Follow these dietary preferences: ${dietaryPrefs.join(', ')}.
-- In "dietaryPrefs", list applicable preferences from: Mediterranean, Low-Sodium, Keto, Diabetic, Vegan, Vegetarian, Whole-30, Paleo`
-    : '';
-
-  // Variant-specific instructions
-  const variantInstructions: Record<Exclude<RecipeVariant, 'mix'>, string> = {
-    quick: '- Focus on quick preparation (under 30 minutes total time)\n- Minimize prep steps\n- Use readily available ingredients',
-    standard: '- Balance between ease and quality\n- Moderate prep and cook time\n- Use common ingredients',
-    gourmet: '- Emphasize restaurant-quality results\n- More sophisticated techniques\n- Premium ingredients acceptable',
-    budget: '- Focus on affordable ingredients\n- Minimize expensive items\n- Maximize value and taste',
-    comfort: '- Classic, comforting flavors\n- Family-friendly\n- Satisfying and hearty'
-  };
-
-  const system = `You are a professional culinary recipe writer. Generate a single detailed recipe in valid JSON.
-
-Contract:
-{
-  "title": string,
-  "headNote": string,        // <=160 chars
-  "description": string,
-  "ingredients": string[],   // <=12
-  "instructions": string[],  // <=8
-  "prepTime": string,
-  "cookTime": string,
-  "servings": 4,
-  "difficulty": "easy"|"medium"|"hard",
-  "method": string,
-  "tags": string[],          // <=6
-  "searchQuery": string,
-  "allergensToAvoid": string[],
-  "dietaryPrefs": string[],
-  "allergensIncluded": string[],
-  "notes": string,
-  "nutritionInfo": string
-}
-
-Rules:
-- JSON only, no prose
-- Title: Descriptive, capitalized
-- HeadNote: max 160 characters
-- Ingredients: ≤12 items
-- Instructions: ≤8 clear steps
-- Servings: exactly 4
-- Tags: convenience descriptors only (e.g., quick, one-pot)
-- Allergens: mutually exclusive arrays covering full list`;
-
-  const user = `Generate 1 recipe for: "${query}"
-${variantInstructions[variant]}
-${allergensBlock}
-${dietBlock}
-Split allergens [Eggs, Fish, Milk, Peanuts, Sesame, Shellfish, Soybeans, Tree Nuts, Wheat (Gluten)] into:
-- "allergensToAvoid" (NOT present)
-- "allergensIncluded" (present)
-Set "searchQuery" to "${query}".`;
-
-  const messages: ChatMessage[] = [
-    { role: 'system', content: system.trim() },
-    { role: 'user', content: user.trim() },
-  ];
-
-  const data = await callOpenAI(messages, {
-    model: DEFAULT_MODEL,
-    temperature: 0.3,
-    max_tokens: 800,
-    seed,
-    response_format: { type: 'json_object' }
+  
+  const { data, error } = await supabase.functions.invoke('generate-recipes', {
+    body: {
+      searchQuery: query,
+      allergensToAvoid,
+      dietaryPrefs,
+      variant,
+      seed
+    }
   });
 
-  const raw = data?.choices?.[0]?.message?.content ?? '{}';
-  const recipe = JSON.parse(raw);
+  if (error) {
+    throw new Error(error.message || 'Failed to generate recipe');
+  }
 
-  return {
-    ...recipe,
-    searchQuery: query,
-  };
+  return data.recipe;
 }
-
 /**
  * Get variants for a given count and selected variant
  */
