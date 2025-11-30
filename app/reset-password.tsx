@@ -318,58 +318,25 @@ export default function ResetPasswordScreen() {
           }
           // app/reset-password.tsx - Replace the mobile branch (around line 340)
         } else {
-          // MOBILE
-          const tokenValue = params.token;
-          const codeValue = params.code;
+          // Mobile reset rules:
+          // - code present  -> Supabase auth code (PKCE) -> exchangeCodeForSession
+          // - token=pkce_*  -> legacy safety net -> exchangeCodeForSession
+          // - token (other) -> classic OTP recovery -> verifyOtp
+          const recoveryToken = params.token;
+          const recoveryType = params.type;
 
-          if (tokenValue?.startsWith('pkce_')) {
-            // Direct PKCE token (shouldn't happen anymore but keep for safety)
-            pushDbg('=== Mobile: PKCE token - exchangeCodeForSession ===');
-            try {
-              const { data, error } =
-                await supabaseClient.auth.exchangeCodeForSession(currentUrl);
-              // ... rest of PKCE handling
-            } catch (e: any) {
-              pushDbg(`✗ Mobile PKCE exchange exception: ${e?.message}`);
-            }
-          } else if (codeValue) {
-            // Authorization code from Supabase redirect - use exchangeCodeForSession
-            pushDbg(
-              '=== Mobile: Authorization code - exchangeCodeForSession ==='
-            );
-            pushDbg(`Code: ${codeValue.substring(0, 12)}...`);
-            try {
-              const { data, error } =
-                await supabaseClient.auth.exchangeCodeForSession(currentUrl);
+          if (recoveryToken && (!recoveryType || recoveryType === 'recovery')) {
+            pushDbg('=== Mobile: verifyOtp(recovery) with token_hash ===');
+            pushDbg(`Token: ${recoveryToken.substring(0, 20)}...`);
 
-              if (!error && data?.session) {
-                pushDbg('✓ Mobile code exchange successful!');
-                sessionEstablished = true;
-                if (isMounted) {
-                  setUserEmail(data.session.user?.email || null);
-                  setMode('reset');
-                  setHeaderStatus(
-                    'Enter a new password to complete your reset.'
-                  );
-                }
-              } else {
-                pushDbg(`✗ Mobile code exchange failed: ${error?.message}`);
-              }
-            } catch (e: any) {
-              pushDbg(`✗ Mobile code exchange exception: ${e?.message}`);
-            }
-          } else if (tokenValue) {
-            // Regular OTP token (non-PKCE) - use verifyOtp
-            pushDbg(`=== Mobile: OTP token - verifyOtp ===`);
-            pushDbg(`Token: ${tokenValue.substring(0, 12)}...`);
             try {
               const { data, error } = await supabaseClient.auth.verifyOtp({
-                token_hash: tokenValue,
+                token_hash: recoveryToken,
                 type: 'recovery',
               });
 
               if (!error && data?.session) {
-                pushDbg('✓ Mobile OTP verification successful!');
+                pushDbg('✓ Recovery verifyOtp successful!');
                 sessionEstablished = true;
                 if (isMounted) {
                   setUserEmail(data.session.user?.email || null);
@@ -379,13 +346,30 @@ export default function ResetPasswordScreen() {
                   );
                 }
               } else {
-                pushDbg(`✗ Mobile OTP failed: ${error?.message}`);
+                pushDbg(`✗ verifyOtp(recovery) failed: ${error?.message}`);
               }
             } catch (e: any) {
-              pushDbg(`✗ Mobile OTP exception: ${e?.message}`);
+              pushDbg(`✗ verifyOtp exception: ${e?.message}`);
+            }
+          } else if (params.code) {
+            // OAuth callback (Google/Apple) - client owns the flow state
+            pushDbg('=== Mobile: OAuth callback - exchangeCodeForSession ===');
+            try {
+              const { data, error } =
+                await supabaseClient.auth.exchangeCodeForSession(currentUrl);
+
+              if (!error && data?.session) {
+                pushDbg('✓ OAuth exchange successful!');
+                sessionEstablished = true;
+                // ... handle OAuth session
+              } else {
+                pushDbg(`✗ OAuth exchange failed: ${error?.message}`);
+              }
+            } catch (e: any) {
+              pushDbg(`✗ OAuth exception: ${e?.message}`);
             }
           } else {
-            pushDbg('Mobile: no token/code found.');
+            pushDbg('Mobile: no token or code found.');
           }
         }
 
