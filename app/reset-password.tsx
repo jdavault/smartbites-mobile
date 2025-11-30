@@ -71,9 +71,8 @@ export default function ResetPasswordScreen() {
     setIsResettingPassword(true);
 
     const processReset = async () => {
-      // ---- Debug helpers (env-gated) ----
-      const DEBUG = true;
-      // (typeof DEBUG_APP !== 'undefined' && DEBUG_APP) || isDevelopment;
+      const DEBUG =
+        (typeof DEBUG_APP !== 'undefined' && DEBUG_APP) || isDevelopment;
       const debugMessages: string[] = [];
       const pushDbg = (line: string) => {
         debugMessages.push(line);
