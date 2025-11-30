@@ -1,17 +1,19 @@
+// app/(tabs)/_layout.tsx
 import { Tabs } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Search, ChefHat, User } from 'lucide-react-native';
-import { Redirect } from 'expo-router';
+import { Redirect, usePathname } from 'expo-router';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
   const { colors } = useTheme();
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
 
-  if (loading) {
+  if (loading || pathname?.includes('reset-password')) {
     return null;
   }
 

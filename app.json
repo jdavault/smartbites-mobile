@@ -33,7 +33,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.allergy-aware-recipe-finder",
-      "buildNumber": "81",
+      "buildNumber": "82",
       "associatedDomains": ["applinks:smartbites.food"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -50,7 +50,7 @@
       "appleTeamId": "GEVW9YV737"
     },
     "android": {
-      "versionCode": 40,
+      "versionCode": 41,
       "package": "cooking.safeplate.allergyawarerecipefinder",
       "splash": {
         "image": "./assets/images/splash-android.png",

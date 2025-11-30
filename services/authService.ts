@@ -135,23 +135,18 @@ export class AuthService {
 
   static async resetPasswordForEmail(email: string) {
     try {
-      const isDev = __DEV__; // Expo sets this true in dev
 
-      const isExpoDevClient =
-        typeof navigator !== 'undefined' &&
-        navigator.userAgent?.toLowerCase().includes('expo');
-
-      // // Web uses Universal Links, Mobile uses Deep Links
-      const redirectTo =
-        Platform.OS === 'web' && !isDev
-          ? `${APP_URL}${RESET_PASSWORD_ROUTE}` // real web users
-          : isExpoDevClient
-          ? 'smartbites://reset-password' // force deeplink when running dev client on device
-          : 'smartbites://reset-password'; // normal native builds
-      // const redirectTo = 'smartbites://reset-password';
+  const baseUrl = process.env.EXPO_PUBLIC_APP_BASE_URL || 'https://smartbites.food';
+  
+  const redirectTo = Platform.OS === 'web'
+    ? `${baseUrl}/reset-password`
+    : 'smartbites://reset-password';      
+      console.log('🔧 Reset password request:', { email, redirectTo });
+      
       console.log('🔧 AuthService.resetPasswordForEmail called');
+      console.log('  Platform:', Platform.OS);
       console.log('  Email:', email);
-      console.log('  Redirect URL:', REDIRECT_URLS.resetPassword);
+      console.log('  Redirect URL:', redirectTo);
 
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo,

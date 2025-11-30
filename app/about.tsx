@@ -1,4 +1,4 @@
-// app/(auth)/about.tsx
+// app/about.tsx
 import React from 'react';
 import {
   View,
@@ -90,10 +90,10 @@ export default function AboutScreen() {
                 <View style={styles.featureContent}>
                   <Text style={styles.featureTitle}>Allergy-Safe Cooking</Text>
                   <Text style={styles.featureText}>
-                    We currently focus on helping you cook safely at home. Future
-                    versions of SmartBites will go further — helping you find
-                    allergy-friendly restaurants and safe menu items while dining
-                    out.
+                    We currently focus on helping you cook safely at home.
+                    Future versions of SmartBites will go further — helping you
+                    find allergy-friendly restaurants and safe menu items while
+                    dining out.
                   </Text>
                 </View>
               </View>
@@ -108,9 +108,9 @@ export default function AboutScreen() {
                   </Text>
                   <Text style={styles.featureText}>
                     Search restaurant menus for allergy-aware and diet-friendly
-                    items. Filter by specific allergens and dietary preferences to
-                    quickly spot safer dishes when dining out. Pilot locations
-                    first, then broader rollout.
+                    items. Filter by specific allergens and dietary preferences
+                    to quickly spot safer dishes when dining out. Pilot
+                    locations first, then broader rollout.
                   </Text>
                 </View>
               </View>
@@ -123,8 +123,8 @@ export default function AboutScreen() {
                   <Text style={styles.featureTitle}>For Everyone</Text>
                   <Text style={styles.featureText}>
                     Whether you're newly diagnosed or have been navigating
-                    allergies for years, SmartBites is here to simplify your food
-                    choices and bring confidence back to your kitchen.
+                    allergies for years, SmartBites is here to simplify your
+                    food choices and bring confidence back to your kitchen.
                   </Text>
                 </View>
               </View>

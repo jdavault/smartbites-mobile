@@ -1,3 +1,4 @@
+// app/(auth)/_layout.tsx
 import { Stack } from 'expo-router';
 
 export default function AuthLayout() {
@@ -6,9 +7,7 @@ export default function AuthLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="login" />
       <Stack.Screen name="register" />
-      <Stack.Screen name="about" />
-      <Stack.Screen name="contact" />
-      <Stack.Screen name="support" />
+      <Stack.Screen name="forgot-password" />
     </Stack>
   );
 }

@@ -13,7 +13,7 @@ export default function ResetBridge() {
   useEffect(() => {
     if (!rawRedirect) {
       // No redirect provided → just push user to reset-password screen
-      router.replace({ pathname: '/(auth)/reset-password' });
+      router.replace({ pathname: '/reset-password' });
       return;
     }
 
@@ -37,7 +37,7 @@ export default function ResetBridge() {
       );
     // Internal SPA fallback route
     const spaFallback: Href = {
-      pathname: '/(auth)/reset-password',
+      pathname: '/reset-password',
       params: { redirect: redirectUrl },
     };
 

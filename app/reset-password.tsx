@@ -1,4 +1,4 @@
-// app/(auth)/reset-password.tsx
+// app/reset-password.tsx
 import React, { useEffect, useMemo, useState, Fragment } from 'react';
 import {
   ActivityIndicator,
@@ -43,7 +43,7 @@ export default function ResetPasswordScreen() {
   const router = useRouter();
   const routerParams = useLocalSearchParams();
   const { colors: theme } = useTheme();
-  const { signIn } = useAuth();
+  const { signIn, setIsResettingPassword } = useAuth();
   const styles = useMemo(() => getStyles(theme), [theme]);
 
   const [initializing, setInitializing] = useState(true);
@@ -68,11 +68,12 @@ export default function ResetPasswordScreen() {
 
   useEffect(() => {
     let isMounted = true;
+    setIsResettingPassword(true);
 
     const processReset = async () => {
       // ---- Debug helpers (env-gated) ----
-      const DEBUG =
-        (typeof DEBUG_APP !== 'undefined' && DEBUG_APP) || isDevelopment;
+      const DEBUG = true;
+      // (typeof DEBUG_APP !== 'undefined' && DEBUG_APP) || isDevelopment;
       const debugMessages: string[] = [];
       const pushDbg = (line: string) => {
         debugMessages.push(line);
@@ -111,16 +112,13 @@ export default function ResetPasswordScreen() {
 
         // 1) Determine current URL (web vs native)
         let currentUrl: string | null = null;
+
         if (Platform.OS === 'web' && typeof window !== 'undefined') {
           currentUrl = window.location.href;
           pushDbg(`Web URL: ${currentUrl}`);
         } else {
-          const initialUrl = await Linking.getInitialURL();
-          pushDbg(`Initial URL: ${initialUrl || 'none'}`);
-
-          if (initialUrl) {
-            currentUrl = initialUrl;
-          } else if (routerParams.originalUrl) {
+          // ✅ MOBILE: prefer routerParams.originalUrl from AuthProvider
+          if (routerParams.originalUrl) {
             try {
               currentUrl = decodeURIComponent(
                 routerParams.originalUrl as string
@@ -128,6 +126,14 @@ export default function ResetPasswordScreen() {
               pushDbg(`Decoded from router: ${currentUrl}`);
             } catch (e) {
               pushDbg(`Decode error: ${e}`);
+            }
+          }
+
+          if (!currentUrl) {
+            const initialUrl = await Linking.getInitialURL();
+            pushDbg(`Initial URL: ${initialUrl || 'none'}`);
+            if (initialUrl) {
+              currentUrl = initialUrl;
             }
           }
         }
@@ -150,24 +156,19 @@ export default function ResetPasswordScreen() {
           pushDbg(`Converted deep link to web fallback: ${currentUrl}`);
         }
 
+        const isActuallyMobile =
+          Platform.OS !== 'web' ||
+          (typeof window !== 'undefined' &&
+            window.navigator?.userAgent?.includes('Mobile'));
+
         // 2) Pick client
         let supabaseClient: SupabaseClient<any, 'public', 'public', any, any>;
         if (currentUrl.startsWith('smartbites://')) {
           pushDbg('Deep link detected - forcing mobile client');
           supabaseClient = supabaseMobile;
         } else {
-          const isActuallyMobile =
-            Platform.OS !== 'web' ||
-            (typeof window !== 'undefined' &&
-              window.navigator?.userAgent?.includes('Mobile'));
           supabaseClient = isActuallyMobile ? supabaseMobile : supabaseWeb;
         }
-
-        // (Optional) extra flag for logs
-        const isActuallyMobile =
-          Platform.OS !== 'web' ||
-          (typeof window !== 'undefined' &&
-            window.navigator?.userAgent?.includes('Mobile'));
 
         pushDbg('=== Reset Password Process Started ===');
         pushDbg(`Platform.OS: ${Platform.OS}`);
@@ -315,21 +316,58 @@ export default function ResetPasswordScreen() {
           } else {
             pushDbg('Web: no token or code found.');
           }
+          // app/reset-password.tsx - Replace the mobile branch (around line 340)
         } else {
-          // Mobile: always verify via OTP; accept token or code (Supabase may rewrite token→code)
-          const tokenHash = params.token ?? params.code;
-          if (tokenHash) {
+          // MOBILE
+          const tokenValue = params.token;
+          const codeValue = params.code;
+
+          if (tokenValue?.startsWith('pkce_')) {
+            // Direct PKCE token (shouldn't happen anymore but keep for safety)
+            pushDbg('=== Mobile: PKCE token - exchangeCodeForSession ===');
+            try {
+              const { data, error } =
+                await supabaseClient.auth.exchangeCodeForSession(currentUrl);
+              // ... rest of PKCE handling
+            } catch (e: any) {
+              pushDbg(`✗ Mobile PKCE exchange exception: ${e?.message}`);
+            }
+          } else if (codeValue) {
+            // Authorization code from Supabase redirect - use exchangeCodeForSession
             pushDbg(
-              `=== Mobile: verifyOtp with token_hash=${tokenHash.substring(
-                0,
-                12
-              )}... ===`
+              '=== Mobile: Authorization code - exchangeCodeForSession ==='
             );
+            pushDbg(`Code: ${codeValue.substring(0, 12)}...`);
+            try {
+              const { data, error } =
+                await supabaseClient.auth.exchangeCodeForSession(currentUrl);
+
+              if (!error && data?.session) {
+                pushDbg('✓ Mobile code exchange successful!');
+                sessionEstablished = true;
+                if (isMounted) {
+                  setUserEmail(data.session.user?.email || null);
+                  setMode('reset');
+                  setHeaderStatus(
+                    'Enter a new password to complete your reset.'
+                  );
+                }
+              } else {
+                pushDbg(`✗ Mobile code exchange failed: ${error?.message}`);
+              }
+            } catch (e: any) {
+              pushDbg(`✗ Mobile code exchange exception: ${e?.message}`);
+            }
+          } else if (tokenValue) {
+            // Regular OTP token (non-PKCE) - use verifyOtp
+            pushDbg(`=== Mobile: OTP token - verifyOtp ===`);
+            pushDbg(`Token: ${tokenValue.substring(0, 12)}...`);
             try {
               const { data, error } = await supabaseClient.auth.verifyOtp({
-                token_hash: tokenHash,
+                token_hash: tokenValue,
                 type: 'recovery',
               });
+
               if (!error && data?.session) {
                 pushDbg('✓ Mobile OTP verification successful!');
                 sessionEstablished = true;
@@ -347,7 +385,7 @@ export default function ResetPasswordScreen() {
               pushDbg(`✗ Mobile OTP exception: ${e?.message}`);
             }
           } else {
-            pushDbg('Mobile: no token/code found for verifyOtp.');
+            pushDbg('Mobile: no token/code found.');
           }
         }
 
@@ -430,6 +468,7 @@ export default function ResetPasswordScreen() {
 
     return () => {
       isMounted = false;
+      setIsResettingPassword(false);
     };
   }, []);
 
@@ -454,7 +493,7 @@ export default function ResetPasswordScreen() {
       const { error } = await AuthService.updatePassword(password);
       if (error) throw error;
 
-      // Try auto-sign-in
+      setIsResettingPassword(false);
       if (userEmail) {
         try {
           const { error: signInError } = await signIn(userEmail, password);

@@ -1,9 +1,9 @@
-// contexts/AuthContext.tsx
+// contexts/AuthContext.tsx -- recently updated
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Platform, View, ActivityIndicator, Text } from 'react-native';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import { AuthService } from '@/services/authService';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -24,13 +24,23 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   promptGoogleAsync: () => Promise<void>;
   promptAppleAsync: () => Promise<void>;
+  setIsResettingPassword: (isResetting: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Only treat real password-recovery links as reset
-const isPasswordResetURL = (url: string): boolean =>
-  url.includes('type=recovery');
+const isPasswordResetURL = (url: string): boolean => {
+  // Supabase verify endpoint with recovery
+  if (url.includes('/auth/v1/verify') && url.includes('recovery')) return true;
+
+  // Deep link directly to reset-password
+  if (url.startsWith('smartbites://reset-password')) return true;
+
+  // Generic safety net
+  if (url.includes('type=recovery')) return true;
+
+  return false;
+};
 
 // Simple SmartBites loading screen while auth bootstraps
 function AuthLoadingScreen() {
@@ -70,17 +80,18 @@ function AuthLoadingScreen() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true); // true until first getSession completes
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
-  // FIX: Use Platform.OS to safely determine the redirect URI
   const webRedirectUri = Platform.select({
     web:
       typeof window !== 'undefined' && window.location?.origin
-        ? window.location.origin + '/auth/callback'
-        : 'https://smartbites.food/auth/callback',
-    default: 'https://smartbites.food/auth/callback',
+        ? window.location.origin
+        : 'https://smartbites.food',
+    default: 'https://smartbites.food',
   }) as string;
 
   // Native: must match app.json `"scheme": "smartbites"`
@@ -112,6 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
+
       setUser(session?.user ?? null);
       setSession(session ?? null);
       setLoading(false);
@@ -130,10 +142,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
     if (!user) return;
+    111;
 
-    console.log('✅ Authenticated user detected, routing to /(tabs)');
+    // Skip if password reset in progress (belt and suspenders)
+    if (isResettingPassword) {
+      console.log('🔐 Password reset flag set, skipping redirect');
+      return;
+    }
+
+    // Only redirect if we're on an auth-only route
+    const authOnlyRoutes = [
+      '/(auth)',
+      '/(auth)/login',
+      '/(auth)/register',
+      '/(auth)/forgot-password',
+      '/auth',
+      '/', // if you ever use root as a splash
+    ];
+
+    const shouldRedirect = authOnlyRoutes.some(
+      (route) => pathname === route || pathname?.startsWith(`${route}/`)
+    );
+
+    if (!shouldRedirect) {
+      console.log(`📍 Authenticated on ${pathname}, staying put`);
+      return;
+    }
+
+    console.log('✅ Authenticated on auth route, redirecting to /(tabs)');
     router.replace('/(tabs)');
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname, isResettingPassword]);
 
   // =======================
   // Deep link handling (reset password only)
@@ -395,6 +433,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         promptGoogleAsync,
         promptAppleAsync,
+        setIsResettingPassword,
       }}
     >
       {children}

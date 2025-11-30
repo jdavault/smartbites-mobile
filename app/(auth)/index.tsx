@@ -178,17 +178,17 @@ export default function WelcomeScreen() {
 
             {/* Bottom: footer links (column uses space-between to push this down) */}
             <View style={styles.footer}>
-              <Link href="/(auth)/about" asChild>
+              <Link href="/about" asChild>
                 <TouchableOpacity>
                   <Text style={styles.footerLink}>About</Text>
                 </TouchableOpacity>
               </Link>
-              <Link href="/(auth)/contact" asChild>
+              <Link href="/contact" asChild>
                 <TouchableOpacity>
                   <Text style={styles.footerLink}>Contact</Text>
                 </TouchableOpacity>
               </Link>
-              <Link href="/(auth)/support" asChild>
+              <Link href="/support" asChild>
                 <TouchableOpacity>
                   <Text style={styles.footerLink}>Support</Text>
                 </TouchableOpacity>

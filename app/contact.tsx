@@ -1,4 +1,4 @@
-// ContactScreen.tsx
+// app/contact
 import React from 'react';
 import {
   View,
@@ -60,9 +60,9 @@ export default function ContactScreen() {
           >
             <View style={styles.contentContainer}>
               <Text style={styles.paragraph}>
-                We&apos;d love to hear from you. Whether you have questions about
-                billing, employment, partnerships, or general inquiries — reach
-                out!
+                We&apos;d love to hear from you. Whether you have questions
+                about billing, employment, partnerships, or general inquiries —
+                reach out!
               </Text>
 
               <View style={styles.contactItem}>
